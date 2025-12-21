@@ -1,0 +1,65 @@
+/* src/app/layout/Sidebar/style.css */
+.app-nav {
+  width: 240px;
+  background: #111111;
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100vh;
+  transition: width 0.3s ease;
+}
+
+.nav-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 2rem;
+  padding-left: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #a0a0a0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Solución para que el icono se vea correctamente */
+.nav-link svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0; /* Evita que el icono se aplaste */
+}
+
+.nav-link:hover {
+  background: #222;
+  color: white;
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: white;
+}
+
+.nav-link.active svg {
+  stroke: white;
+}
+
+@media (max-width: 768px) {
+  .app-nav {
+    width: 80px;
+    align-items: center;
+  }
+  .nav-link span,
+  .nav-header {
+    display: none;
+  }
+}

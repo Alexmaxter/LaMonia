@@ -1,0 +1,64 @@
+/* src/shared/ui/Button/style.css */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  font-family: inherit;
+  user-select: none;
+}
+
+/* Efecto de pulsación para móviles */
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* Variantes */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: #fee2e2;
+  border-color: var(--danger);
+}
+
+/* Utilidad de ancho completo */
+.w-full {
+  width: 100%;
+}
+
+/* Estado deshabilitado (Para evitar doble clic) */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}

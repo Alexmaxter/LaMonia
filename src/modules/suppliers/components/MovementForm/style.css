@@ -1,0 +1,313 @@
+/* Scope V3 */
+.movement-form-v3 {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1f2937;
+}
+
+/* --- HEADER & TABS --- */
+.mf-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mf-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+}
+.mf-type-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.movement-form-v3 .mf-pill-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.movement-form-v3 .mf-pill-btn.active {
+  background: #111827 !important;
+  color: white !important;
+  border-color: #111827 !important;
+}
+
+/* --- MONEY SECTION --- */
+.mf-section-money {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+.mf-money-input {
+  width: 100%;
+  text-align: center;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 3rem;
+  font-weight: 700;
+  padding: 0;
+  margin: 0;
+  caret-color: #3b82f6;
+}
+.mf-money-input::placeholder {
+  color: #e5e7eb;
+}
+.amount-invoice {
+  color: #ef4444;
+}
+.amount-payment {
+  color: #10b981;
+}
+.amount-note {
+  color: #3b82f6;
+}
+
+/* --- STOCK SECTION (NUEVO) --- */
+.mf-section-stock {
+  background: #f9fafb;
+  padding: 10px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mf-stock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mf-stock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f3f4f6;
+}
+
+.mf-stock-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  flex: 1;
+}
+
+.mf-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Widget Contador */
+.mf-counter-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mf-counter-btn {
+  border: none;
+  background: #e5e7eb;
+  color: #374151;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+.mf-counter-btn:hover {
+  background: #d1d5db;
+}
+.mf-counter-btn.minus {
+  color: #ef4444;
+}
+.mf-counter-btn.plus {
+  color: #10b981;
+}
+
+.mf-counter-val {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111;
+  padding: 0 5px;
+}
+
+/* Add Manual */
+.mf-divider-dashed {
+  border-top: 1px dashed #d1d5db;
+  margin: 5px 0;
+}
+.mf-manual-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mf-input-subtle {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.mf-input-subtle:focus {
+  border-bottom-color: #3b82f6;
+}
+.mf-btn-icon-add {
+  background: #e5e7eb;
+  border: none;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+}
+
+.mf-btn-icon.delete {
+  color: #ef4444;
+  background: transparent;
+  padding: 5px;
+  opacity: 0.6;
+}
+.mf-btn-icon.delete:hover {
+  opacity: 1;
+  background: #fee2e2;
+  border-radius: 6px;
+}
+.mf-empty-msg {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  padding: 10px;
+}
+
+/* --- INPUTS & FOOTER --- */
+.mf-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mf-grid-row {
+  display: flex;
+  gap: 10px;
+}
+.mf-grid-row > * {
+  flex: 1;
+}
+
+.movement-form-v3 .mf-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  background: white;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+.movement-form-v3 .mf-input:focus {
+  border-color: #111827;
+}
+
+/* --- BUTTONS --- */
+.mf-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.mf-btn-submit {
+  flex: 1;
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.mf-btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 0 16px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+/* Estilos para el paso de selección de proveedor */
+.mf-container-wrapper {
+  width: 100%;
+}
+
+.mf-step-selector {
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.mf-step-title {
+  margin-bottom: 15px;
+  color: #374151;
+}
+
+.mf-supplier-select {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  margin-bottom: 15px;
+}
+
+.mf-help-text {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.mf-supplier-header {
+  background: #f3f4f6;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mf-supplier-label {
+  color: #6b7280;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
