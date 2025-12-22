@@ -4,82 +4,79 @@ import "./style.css";
 
 export function MovementForm({
   suppliers = [],
+  supplierId = null,
   preSelectedSupplier = null,
   initialValues = null,
   onSubmit,
   onCancel,
   onDelete,
 }) {
-  // --- ESTADO INTERNO ---
+  // --- ESTADO ---
   let selectedSupplier = preSelectedSupplier;
+  if (!selectedSupplier && supplierId && suppliers.length > 0) {
+    selectedSupplier = suppliers.find((s) => s.id === supplierId);
+  }
 
-  // Contenedor principal del formulario
   const container = el("div", { className: "mf-container-wrapper" });
 
-  // Función para volver a renderizar el formulario cuando cambia el proveedor
   const render = () => {
     container.innerHTML = "";
 
-    // 1. CASO: NO HAY PROVEEDOR SELECCIONADO (Paso previo)
-    if (!selectedSupplier) {
+    // 1. SELECCIÓN DE PROVEEDOR
+    if (!selectedSupplier && !initialValues) {
       const title = el(
         "h3",
         { className: "mf-step-title" },
-        "Selecciona un Proveedor"
+        "Selecciona Proveedor"
       );
 
       const select = el(
         "select",
         { className: "mf-supplier-select" },
-        el("option", { value: "" }, "-- Elegir de la lista --"),
+        el("option", { value: "" }, "-- Elegir --"),
         ...suppliers.map((s) => el("option", { value: s.id }, s.name))
       );
 
       select.onchange = (e) => {
-        const found = suppliers.find((s) => s.id === e.target.value);
-        if (found) {
-          selectedSupplier = found;
-          render(); // Recargar formulario con la config del proveedor
-        }
+        selectedSupplier = suppliers.find((s) => s.id === e.target.value);
+        if (selectedSupplier) render();
       };
 
       container.append(
-        el(
-          "div",
-          { className: "mf-step-selector" },
-          title,
-          select,
-          el(
-            "p",
-            { className: "mf-help-text" },
-            "El formulario se adaptará a la configuración del proveedor (Stock o Dinero)."
-          )
-        )
+        el("div", { className: "mf-step-selector" }, title, select)
       );
       return;
     }
 
-    // 2. CASO: PROVEEDOR SELECCIONADO (Formulario Real)
-    // Determinar modo (Stock vs Dinero) basado en el proveedor
-    const currentMode =
-      selectedSupplier.providerType === "stock" ? "stock" : "money";
+    const supplierName = selectedSupplier
+      ? selectedSupplier.name
+      : initialValues
+      ? "Proveedor"
+      : "Desconocido";
 
-    // Estado del Formulario
+    // Determinar modo (stock vs money)
+    const currentMode = selectedSupplier
+      ? selectedSupplier.providerType === "stock"
+        ? "stock"
+        : "money"
+      : "money";
+
+    // 2. INICIALIZAR VALORES
     let currentType = initialValues?.type || "invoice";
     let rawAmount = initialValues?.amount
       ? Math.round(initialValues.amount * 100)
       : 0;
 
-    // Items de Stock (Carga defaults si es nuevo)
+    // --- LÓGICA DE STOCK ITEMS ---
     let stockItems = [];
     if (initialValues?.items) {
-      stockItems = [...initialValues.items];
-    } else if (currentMode === "stock") {
+      stockItems = JSON.parse(JSON.stringify(initialValues.items));
+    } else if (currentMode === "stock" && selectedSupplier) {
       const defaults =
         selectedSupplier.stockItems || selectedSupplier.defaultItems || [];
       stockItems = defaults.map((item) => {
         const name = typeof item === "object" ? item.name : item;
-        return { name: name, quantity: 0, isDefault: true };
+        return { name, quantity: 0 };
       });
     }
 
@@ -89,103 +86,152 @@ export function MovementForm({
       const d = initialValues.date.seconds
         ? new Date(initialValues.date.seconds * 1000)
         : new Date(initialValues.date);
-      currentDate = d.toISOString().split("T")[0];
+      const offset = d.getTimezoneOffset() * 60000;
+      currentDate = new Date(d - offset).toISOString().slice(0, 10);
     }
 
-    // --- UI COMPONENTS DEL FORMULARIO ---
-
-    // Header con Nombre del Proveedor (útil si vinimos del selector)
+    // --- UI HEADER ---
     const headerInfo = el(
       "div",
       { className: "mf-supplier-header" },
-      el("span", { className: "mf-supplier-label" }, "Registrando para:"),
-      el("strong", {}, selectedSupplier.name)
+      el(
+        "span",
+        { className: "mf-supplier-label" },
+        initialValues ? "Editando movimiento de:" : "Registrando para:"
+      ),
+      el("strong", {}, supplierName)
     );
 
-    // TABS (Tipo)
+    // --- TABS TIPO ---
     const typeContainer = el("div", { className: "mf-type-selector" });
     const renderTypeButtons = () => {
       typeContainer.innerHTML = "";
       const types = [
-        { id: "invoice", label: currentMode === "stock" ? "Entrada" : "Deuda" },
+        {
+          id: "invoice",
+          label: currentMode === "stock" ? "Entrada" : "Deuda/Factura",
+        },
         { id: "payment", label: currentMode === "stock" ? "Salida" : "Pago" },
-        { id: "note", label: "Nota" },
+        { id: "credit_note", label: "Nota Crédito" },
       ];
 
       types.forEach((t) => {
+        const isActive = currentType === t.id;
         const btn = el(
           "button",
           {
             type: "button",
-            className: `mf-pill-btn ${currentType === t.id ? "active" : ""}`,
+            className: `mf-pill-btn ${isActive ? "active" : ""}`,
           },
           t.label
         );
-
         btn.onclick = () => {
           currentType = t.id;
           renderTypeButtons();
-          if (amountInput)
-            amountInput.className = `mf-money-input amount-${currentType}`;
-          if (invoiceGroup)
-            invoiceGroup.style.display =
-              t.id === "invoice" && currentMode === "money" ? "block" : "none";
+          if (amountInput) updateAmountColor();
         };
         typeContainer.appendChild(btn);
       });
     };
 
-    // SECCIÓN DINERO
-    let moneySection = null;
-    let amountInput = null;
+    // --- SECCIÓN DINERO ---
+    let amountInput;
+    const updateAmountColor = () => {
+      if (amountInput)
+        amountInput.className = `mf-money-input amount-${currentType}`;
+    };
+
+    const formatMoney = (cents) => {
+      if (!cents) return "";
+      return (
+        "$ " +
+        (cents / 100).toLocaleString("es-AR", { minimumFractionDigits: 2 })
+      );
+    };
 
     if (currentMode === "money") {
-      const formatMoneyValue = (cents) => {
-        if (cents === 0) return "";
-        const val = cents / 100;
-        return (
-          "$ " +
-          val.toLocaleString("es-AR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })
-        );
-      };
-
       amountInput = el("input", {
         type: "tel",
-        className: `mf-money-input amount-${currentType}`,
-        value: formatMoneyValue(rawAmount),
+        className: "mf-money-input",
+        value: formatMoney(rawAmount),
         placeholder: "$ 0,00",
-        autocomplete: "off",
       });
 
-      amountInput.addEventListener("input", (e) => {
-        const digits = e.target.value.replace(/\D/g, "");
-        rawAmount = digits ? parseInt(digits, 10) : 0;
-        e.target.value = formatMoneyValue(rawAmount);
-      });
-      moneySection = el("div", { className: "mf-section-money" }, amountInput);
+      amountInput.oninput = (e) => {
+        const val = e.target.value.replace(/\D/g, "");
+        rawAmount = val ? parseInt(val) : 0;
+        e.target.value = formatMoney(rawAmount);
+      };
+      updateAmountColor();
     }
 
-    // SECCIÓN STOCK
+    // --- SECCIÓN STOCK (RENDERIZADO) ---
+    // Esta es la parte mejorada solicitada:
     let stockSection = null;
+
     if (currentMode === "stock") {
-      const stockListContainer = el("div", { className: "mf-stock-list" });
-      const renderStockList = () => {
-        stockListContainer.innerHTML = "";
+      const listContainer = el("div", { className: "mf-stock-list" });
+
+      const renderStockItems = () => {
+        listContainer.innerHTML = "";
+
         if (stockItems.length === 0) {
-          stockListContainer.appendChild(
-            el("div", { className: "mf-empty-msg" }, "Sin ítems configurados.")
+          listContainer.append(
+            el(
+              "div",
+              { className: "mf-empty-msg" },
+              "No hay items configurados"
+            )
           );
         }
+
         stockItems.forEach((item, idx) => {
-          const updateQty = (delta) => {
-            stockItems[idx].quantity = Math.max(
-              0,
-              stockItems[idx].quantity + delta
-            );
-            renderStockList(); // Re-render simple para actualizar contadores
+          // Widget contador [-] # [+]
+          const displayVal = el(
+            "span",
+            { className: "mf-counter-val" },
+            item.quantity
+          );
+
+          const btnMinus = el(
+            "button",
+            { type: "button", className: "mf-counter-btn minus" },
+            "-"
+          );
+          btnMinus.onclick = () => {
+            if (item.quantity > 0) {
+              item.quantity--;
+              displayVal.innerText = item.quantity;
+            }
+          };
+
+          const btnPlus = el(
+            "button",
+            { type: "button", className: "mf-counter-btn plus" },
+            "+"
+          );
+          btnPlus.onclick = () => {
+            item.quantity++;
+            displayVal.innerText = item.quantity;
+          };
+
+          const counterWrapper = el(
+            "div",
+            { className: "mf-counter-wrapper" },
+            btnMinus,
+            displayVal,
+            btnPlus
+          );
+
+          // Botón eliminar item de la lista (opcional, útil si se agregó manualmente)
+          const btnDeleteRow = el(
+            "button",
+            { type: "button", className: "mf-btn-icon delete" },
+            Icon("trash")
+          );
+          btnDeleteRow.onclick = () => {
+            stockItems.splice(idx, 1);
+            renderStockItems(); // Re-renderizar lista
           };
 
           const row = el(
@@ -195,77 +241,63 @@ export function MovementForm({
             el(
               "div",
               { className: "mf-row-actions" },
-              el(
-                "button",
-                {
-                  type: "button",
-                  className: "mf-counter-btn minus",
-                  onclick: () => updateQty(-1),
-                },
-                "-"
-              ),
-              el(
-                "span",
-                { className: "mf-counter-val" },
-                item.quantity.toString()
-              ),
-              el(
-                "button",
-                {
-                  type: "button",
-                  className: "mf-counter-btn plus",
-                  onclick: () => updateQty(1),
-                },
-                "+"
-              ),
-              el(
-                "button",
-                {
-                  type: "button",
-                  className: "mf-btn-icon delete",
-                  onclick: () => {
-                    stockItems.splice(idx, 1);
-                    renderStockList();
-                  },
-                },
-                Icon("trash")
-              )
+              counterWrapper,
+              btnDeleteRow
             )
           );
-          stockListContainer.appendChild(row);
+
+          listContainer.append(row);
         });
       };
 
-      // Agregar Manual
-      const nameIn = el("input", {
+      // Input para agregar items manuales al vuelo
+      const inputManual = el("input", {
         type: "text",
         className: "mf-input-subtle",
-        placeholder: "+ Otro ítem",
+        placeholder: "+ Agregar otro item...",
       });
-      const btnAdd = el(
+      const btnAddManual = el(
         "button",
         { type: "button", className: "mf-btn-icon-add" },
         Icon("plus")
-      );
-      const handleAdd = () => {
-        if (!nameIn.value.trim()) return;
-        stockItems.push({ name: nameIn.value, quantity: 1 });
-        nameIn.value = "";
-        renderStockList();
-      };
-      btnAdd.onclick = handleAdd;
+      ); // Icono plus genérico o texto "+"
 
-      renderStockList();
+      const addManualAction = () => {
+        const val = inputManual.value.trim();
+        if (val) {
+          stockItems.push({ name: val, quantity: 1 }); // Agrega con 1 por defecto
+          inputManual.value = "";
+          renderStockItems();
+        }
+      };
+
+      btnAddManual.onclick = addManualAction;
+      inputManual.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addManualAction();
+        }
+      };
+
+      const manualAddContainer = el(
+        "div",
+        { className: "mf-manual-add" },
+        inputManual,
+        btnAddManual
+      );
+
+      renderStockItems();
+
       stockSection = el(
         "div",
         { className: "mf-section-stock" },
-        stockListContainer,
+        listContainer,
         el("div", { className: "mf-divider-dashed" }),
-        el("div", { className: "mf-manual-add" }, nameIn, btnAdd)
+        manualAddContainer
       );
     }
 
-    // INPUTS COMUNES
+    // --- INPUTS COMUNES ---
     const dateInput = el("input", {
       type: "date",
       className: "mf-input",
@@ -274,99 +306,92 @@ export function MovementForm({
     const descInput = el("input", {
       type: "text",
       className: "mf-input",
-      placeholder: "Descripción / Nota",
+      placeholder: "Descripción (Opcional)",
       value: initialValues?.description || "",
     });
-    const invoiceNumberInput = el("input", {
-      type: "text",
-      className: "mf-input",
-      placeholder: "N° Comprobante",
-      value: initialValues?.invoiceNumber || "",
-    });
-    const invoiceGroup = el(
-      "div",
-      { className: "mf-form-group" },
-      invoiceNumberInput
-    );
-    if (currentMode !== "money" || currentType !== "invoice")
-      invoiceGroup.style.display = "none";
 
-    // BOTONES ACCIÓN
+    // Botón Submit
     const btnSubmit = el(
       "button",
-      { type: "submit", className: "mf-btn-submit" },
-      initialValues ? "Guardar" : "Registrar"
+      {
+        type: "submit",
+        className: "mf-btn-submit",
+      },
+      initialValues ? "Guardar Cambios" : "Registrar Movimiento"
     );
-    const actionsContainer = el("div", { className: "mf-actions" }, btnSubmit);
-    if (initialValues && onDelete) {
-      const btnDel = el(
-        "button",
-        { type: "button", className: "mf-btn-delete" },
-        Icon("trash")
-      );
-      btnDel.onclick = onDelete;
-      actionsContainer.prepend(btnDel);
-    }
 
-    // Renderizado Tabs inicial
-    renderTypeButtons();
-
-    // Armado del Formulario final
     const form = el(
       "form",
       {
         className: "movement-form-v3",
         onsubmit: (e) => {
           e.preventDefault();
+          // Validaciones básicas
           if (currentMode === "money" && rawAmount <= 0)
-            return alert("Ingresa un monto válido");
-          const validItems =
-            currentMode === "stock"
-              ? stockItems.filter((i) => i.quantity > 0)
-              : [];
-          if (currentMode === "stock" && validItems.length === 0)
-            return alert("Ingresa cantidades");
+            return alert("Monto inválido");
 
-          onSubmit({
-            supplierId: selectedSupplier.id,
+          // Validación Stock: al menos un item con cantidad > 0
+          if (currentMode === "stock") {
+            const hasItems = stockItems.some((i) => i.quantity > 0);
+            if (!hasItems)
+              return alert("Debes indicar cantidad en al menos un item");
+          }
+
+          const payload = {
+            supplierId: selectedSupplier
+              ? selectedSupplier.id
+              : initialValues.supplierId,
             type: currentType,
             transactionMode: currentMode,
             date: dateInput.value,
             description: descInput.value,
-            invoiceNumber:
-              currentMode === "money" && currentType === "invoice"
-                ? invoiceNumberInput.value
-                : null,
-            amount: currentMode === "money" ? rawAmount / 100 : 0,
-            items: validItems,
-          });
+            amount: rawAmount / 100,
+            items: stockItems, // Enviamos el array modificado
+          };
+
+          onSubmit(payload);
         },
       },
       headerInfo,
-      el(
-        "div",
-        { className: "mf-header" },
-        el("label", { className: "mf-label" }, "Transacción"),
-        typeContainer
-      ),
+      el("div", { className: "mf-header" }, typeContainer),
+
       el(
         "div",
         { className: "mf-body" },
-        currentMode === "money" ? moneySection : stockSection
+        currentMode === "money"
+          ? el("div", { className: "mf-section-money" }, amountInput)
+          : null,
+        currentMode === "stock" ? stockSection : null
       ),
+
       el(
         "div",
         { className: "mf-footer" },
-        el("div", { className: "mf-grid-row" }, dateInput, invoiceGroup),
+        dateInput,
         descInput,
-        actionsContainer
+        el(
+          "div",
+          { className: "mf-actions" },
+          initialValues && onDelete
+            ? el(
+                "button",
+                {
+                  type: "button",
+                  className: "mf-btn-delete",
+                  onclick: onDelete,
+                },
+                Icon("trash")
+              )
+            : null,
+          btnSubmit
+        )
       )
     );
 
+    renderTypeButtons();
     container.append(form);
   };
 
-  // Inicio
   render();
   return container;
 }

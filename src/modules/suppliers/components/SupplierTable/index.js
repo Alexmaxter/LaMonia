@@ -1,5 +1,6 @@
 import { el } from "../../../../core/dom.js";
 import { Icon } from "../../../../shared/ui/Icon.js";
+import "./style.css";
 
 /**
  * Componente interno para manejar la visualización de dinero

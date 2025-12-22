@@ -1,6 +1,6 @@
 // src/main.js
 import { Router } from "./core/router.js";
-import { MainLayout } from "./app/layout/MainLayout.js";
+import { MainLayout } from "./app/layout/MainLayout/index.js";
 import { el } from "./core/dom.js";
 import "./style.css";
 
@@ -19,11 +19,11 @@ const routes = {
       );
   },
   suppliers: () =>
-    import("./modules/suppliers/views/SuppliersListView.js").then(
+    import("./modules/suppliers/views/SupplierListView/index.js").then(
       (m) => m.SuppliersListView
     ),
   "supplier-detail": () =>
-    import("./modules/suppliers/views/SupplierDetailView.js").then(
+    import("./modules/suppliers/views/SupplierDetailView/index.js").then(
       (m) => m.SupplierDetailView
     ),
 };

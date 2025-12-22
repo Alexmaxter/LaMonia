@@ -1,346 +1,273 @@
 /* src/modules/suppliers/components/SupplierDetail/style.css */
 
-.detail-container {
+.supplier-detail-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-bottom: 80px;
+  gap: 24px;
   width: 100%;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-out;
 }
 
-/* --- HEADER CARD --- */
+/* --- TARJETA DE CABECERA (HERO) --- */
 .supplier-header-card {
-  background: white;
+  background-color: var(--bg-panel); /* Fondo oscuro del panel */
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Sombra suave y moderna */
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Fila Superior: Info y Saldo */
-.card-top-row {
-  padding: 24px 24px 10px 24px;
+.header-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 15px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.header-left {
-  flex: 1;
+.header-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-avatar {
+  width: 56px;
+  height: 56px;
+  background-color: var(--bg-input);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+}
+
+.header-avatar svg {
+  width: 28px;
+  height: 28px;
+}
+
+.header-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.header-meta {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.header-balance {
+  text-align: right;
+  min-width: 120px;
+}
+
+.balance-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.balance-amount {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* --- ESTADOS DE COLOR PARA SALDOS --- */
+.text-debt {
+  color: var(--danger);
+} /* Rojo */
+.text-favor {
+  color: var(--success);
+} /* Verde */
+.text-neutral {
+  color: var(--text-main);
+}
+
+.header-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 20px 0;
+  opacity: 0.6;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* --- TÍTULO DE SECCIÓN --- */
+.section-title {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-left: 8px;
+  margin-bottom: 8px;
+}
+
+/* --- LISTA DE MOVIMIENTOS --- */
+.tx-list-wrapper {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 12px;
 }
 
-.header-right {
+.tx-card {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  gap: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.tx-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  background-color: var(--bg-input);
+}
+
+/* --- ICONOS Y COLORES DE MOVIMIENTOS --- */
+.tx-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-icon-wrapper svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Colores estrictos: Rojo y Verde */
+.tx-danger {
+  background-color: rgba(239, 68, 68, 0.15); /* Rojo */
+  color: var(--danger);
+}
+
+.tx-success {
+  background-color: rgba(34, 197, 94, 0.15); /* Verde */
+  color: var(--success);
+}
+
+.tx-success-light {
+  background-color: rgba(
+    34,
+    197,
+    94,
+    0.08
+  ); /* Verde más clarito para Nota de Crédito */
+  color: #4ade80; /* Un tono de verde más suave */
+}
+
+.tx-neutral {
+  background-color: var(--bg-input);
+  color: var(--text-secondary);
+}
+
+/* --- TEXTOS DE LA FILA --- */
+.tx-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-main-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.tx-sub-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* --- COLUMNA DE MONTO --- */
+.tx-amount-col {
   text-align: right;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: center;
 }
 
-.card-divider {
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    #eee,
-    transparent
-  ); /* Separador sutil */
-  width: 100%;
-  margin: 5px 0;
-}
-
-/* Fila Inferior: Botones */
-.card-actions-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr; /* Nuevo más grande */
-  gap: 12px;
-  padding: 15px 24px 24px 24px;
-  background-color: #fff;
-}
-
-/* Botones */
-.card-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: row; /* Icono al lado del texto por defecto */
-  gap: 8px;
-  padding: 12px 10px;
-  border-radius: 12px;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-action-btn:active {
-  transform: scale(0.96);
-}
-
-/* Estilos de Botones */
-.btn-secondary {
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid transparent;
-}
-.btn-secondary:hover {
-  background-color: #e5e7eb;
-  color: #111;
-}
-.btn-secondary svg {
-  stroke: #4b5563;
-  width: 18px;
-  height: 18px;
-}
-
-/* Botón Primario (Nuevo Movimiento) - Color más acorde (Negro moderno o Azul oscuro) */
-.btn-primary {
-  background-color: #1f2937; /* Gris muy oscuro / Negro suave */
-  color: white;
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.2);
-}
-.btn-primary:hover {
-  background-color: #111827; /* Casi negro */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-.btn-primary svg {
-  stroke: white;
-  width: 18px;
-  height: 18px;
-}
-
-/* TIPOGRAFÍA */
-.sh-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 6px;
-  line-height: 1.2;
-}
-
-.sh-alias-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #f3f4f6;
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 0.8rem;
-  color: #4b5563;
-  font-weight: 500;
-  cursor: pointer;
-  align-self: flex-start; /* Evita que ocupe todo el ancho */
-  border: 1px solid #e5e7eb;
-}
-
-.sh-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: #9ca3af;
-  margin-bottom: 2px;
-  letter-spacing: 0.5px;
-}
-
-.balance-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.sh-amount {
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums; /* Alinea bien los números */
-}
-
-/* COLORES */
-.color-debt {
-  color: #dc2626;
-} /* Rojo moderno */
-.color-pay {
-  color: #059669;
-} /* Verde moderno */
-.color-stock {
-  color: #2563eb;
-} /* Azul moderno */
-
-/* ESTADO OCULTO (Puntos) */
-.amount-hidden,
-.amount-hidden-text {
-  color: #6b7280 !important;
-  font-family: "Courier New", Courier, monospace;
-  letter-spacing: -1px;
-}
-
-.toggle-balance-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: #d1d5db;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s, color 0.2s;
-}
-.toggle-balance-btn:hover {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-/* ========================================= */
-/* ADAPTACIÓN MÓVIL (Nombre, Alias, Monto, Botones) */
-/* ========================================= */
-@media (max-width: 600px) {
-  .card-top-row {
-    flex-direction: column;
-    align-items: flex-start; /* Alineado a la izquierda para lectura natural */
-    gap: 20px;
-    padding-bottom: 5px;
-  }
-
-  /* 1. Bloque Nombre y Alias */
-  .header-left {
-    width: 100%;
-    align-items: flex-start;
-  }
-  .sh-name {
-    font-size: 1.6rem; /* Un poco más grande en móvil */
-  }
-  .sh-alias-badge {
-    margin-top: 5px;
-    font-size: 0.85rem;
-    padding: 6px 14px;
-  }
-
-  /* 2. Bloque Monto (Debajo del nombre) */
-  .header-right {
-    width: 100%;
-    align-items: flex-start; /* A la izquierda */
-    border-top: 1px dashed #eee; /* Separador sutil */
-    padding-top: 15px;
-    margin-top: 5px;
-  }
-  .balance-wrapper {
-    flex-direction: row-reverse; /* Pone el ojo a la derecha del monto si quieres, o normal */
-    justify-content: flex-end; /* O start */
-    width: 100%;
-    justify-content: space-between; /* Monto izquierda, ojo derecha */
-  }
-  .sh-amount {
-    font-size: 2rem; /* Monto bien grande */
-  }
-
-  /* 3. Botones (Abajo) */
-  .card-actions-row {
-    padding: 15px 20px 25px 20px;
-    gap: 10px;
-  }
-  .card-action-btn {
-    flex-direction: column; /* Icono arriba en móvil para ahorrar espacio horizontal */
-    font-size: 0.75rem;
-    padding: 12px 5px;
-  }
-  .card-action-btn span {
-    margin-top: 4px;
-  }
-}
-
-/* LISTA */
-.transaction-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-.trans-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  display: grid;
-  grid-template-columns: auto 1fr auto; /* Date Info Amount */
-  align-items: center;
-  gap: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f3f4f6;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.trans-card:active {
-  background-color: #fafafa;
-  transform: scale(0.99);
-}
-
-.trans-date-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
-  background-color: #f9fafb;
-  border-radius: 10px;
-  color: #374151;
-}
-.td-day {
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1;
-}
-.td-month {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
-.trans-info {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.ti-desc {
-  font-weight: 600;
+.tx-amount {
   font-size: 1rem;
-  color: #111827;
+  font-weight: 700;
 }
-.ti-meta {
-  font-size: 0.8rem;
-  color: #9ca3af;
+
+/* Reutilizar colores para el texto del monto */
+.tx-amount.tx-danger {
+  color: var(--danger);
+}
+.tx-amount.tx-success {
+  color: var(--success);
+}
+.tx-amount.tx-success-light {
+  color: #4ade80;
+}
+
+.tx-balance-snap {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
   margin-top: 2px;
 }
 
-.trans-amounts-col {
-  text-align: right;
-}
-.trans-amount {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-.border-l-debt {
-  border-left: 4px solid #dc2626;
-}
-.border-l-pay {
-  border-left: 4px solid #059669;
-}
-.border-l-stock {
-  border-left: 4px solid #2563eb;
+/* --- ESTADO VACÍO --- */
+.empty-state-container {
+  text-align: center;
+  padding: 48px;
+  background-color: var(--bg-panel);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  color: var(--text-secondary);
 }
 
-.empty-history {
-  text-align: center;
-  padding: 40px;
-  color: #9ca3af;
-  font-style: italic;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 600px) {
+  .header-top-row {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .header-balance {
+    text-align: center;
+    width: 100%;
+  }
+  .header-actions {
+    justify-content: center;
+  }
 }

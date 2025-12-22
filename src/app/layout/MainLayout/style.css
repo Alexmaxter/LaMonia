@@ -1,65 +1,64 @@
-/* src/app/layout/Sidebar/style.css */
-.app-nav {
-  width: 240px;
-  background: #111111;
-  border-right: 1px solid var(--border);
-  padding: 1.5rem 1rem;
+.app-container {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  height: 100vh;
-  transition: width 0.3s ease;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #121212;
+  position: relative; /* Necesario para posicionar el overlay */
 }
 
-.nav-header {
-  font-size: 1.1rem;
-  font-weight: 700;
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  position: relative;
+  width: 100%; /* Asegura que ocupe el ancho en móvil */
+}
+
+/* --- ELEMENTOS MÓVILES --- */
+.mobile-menu-btn {
+  display: none; /* Oculto en PC */
+  position: fixed;
+  top: 15px;
+  right: 15px; /* Lo ponemos a la derecha para fácil acceso con el pulgar */
+  z-index: 900;
+  background: #2563eb;
   color: white;
-  margin-bottom: 2rem;
-  padding-left: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.nav-link {
-  display: flex;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: #a0a0a0;
-  padding: 12px 16px;
-  border-radius: 10px;
-  transition: all 0.2s ease-in-out;
+  justify-content: center;
 }
 
-/* Solución para que el icono se vea correctamente */
-.nav-link svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0; /* Evita que el icono se aplaste */
+.sidebar-overlay {
+  display: none; /* Oculto siempre por defecto */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 950; /* Entre el contenido y el sidebar */
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-.nav-link:hover {
-  background: #222;
-  color: white;
-}
-
-.nav-link.active {
-  background: var(--primary);
-  color: white;
-}
-
-.nav-link.active svg {
-  stroke: white;
-}
-
+/* Reglas solo para Celular */
 @media (max-width: 768px) {
-  .app-nav {
-    width: 80px;
-    align-items: center;
+  .mobile-menu-btn {
+    display: flex; /* Aparece el botón */
   }
-  .nav-link span,
-  .nav-header {
-    display: none;
+
+  .sidebar-overlay.visible {
+    display: block;
+    opacity: 1;
+  }
+
+  .main-content {
+    padding: 1rem;
+    padding-top: 70px; /* Espacio para no chocar con header imaginario si hubiera */
   }
 }

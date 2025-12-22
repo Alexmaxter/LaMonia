@@ -2,7 +2,7 @@
 .search-box {
   display: flex;
   align-items: center;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
   padding: 10px 16px;
   border-radius: 12px;
   gap: 12px;
@@ -10,25 +10,25 @@
   width: 100%;
   max-width: 400px;
   margin-bottom: 20px;
+  background-color: var(--bg-input); /* Asegurar fondo correcto */
 }
 
 .search-box:focus-within {
   border-color: var(--primary); /* Resalta con el color principal de la app */
-  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .search-box svg {
   width: 18px;
   height: 18px;
-  color: #666;
+  color: var(--text-secondary); /* Icono gris claro */
   flex-shrink: 0;
 }
 
 .search-field {
   background: transparent;
   border: none;
-  color: black;
-  color: 00000;
+  color: var(--text-main); /* Corregido: Texto principal (blanco en dark) */
   width: 100%;
   outline: none;
   font-size: 0.95rem;
@@ -36,5 +36,5 @@
 }
 
 .search-field::placeholder {
-  color: #555;
+  color: var(--text-muted);
 }

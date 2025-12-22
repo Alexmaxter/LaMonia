@@ -1,37 +1,29 @@
 :root {
-  /* --- PALETA DE COLORES --- */
-  --primary: #2563eb; /* Azul Principal */
-  --primary-dark: #1e40af;
-  --primary-light: #eff6ff;
+  /* --- PALETA DE COLORES (Tema Oscuro) --- */
+  --bg-app: #121212; /* Fondo principal de la pantalla */
+  --bg-panel: #1e1e1e; /* Fondo de tarjetas, sidebar, modales */
+  --bg-input: #2a2a2a; /* Fondo de inputs */
 
-  --success: #16a34a; /* Verde */
-  --success-bg: #dcfce7;
+  --primary: #2563eb; /* Azul Principal (Botones, Links activos) */
+  --primary-hover: #1d4ed8;
 
-  --danger: #dc2626; /* Rojo */
-  --danger-bg: #fee2e2;
+  --success: #22c55e; /* Verde (Pagos, Exito) */
+  --danger: #ef4444; /* Rojo (Deudas, Errores, Borrar) */
+  --warning: #f59e0b; /* Amarillo/Naranja (Alertas) */
 
-  --warning: #ca8a04; /* Amarillo/Ocre */
-  --warning-bg: #fef9c3;
+  --text-main: #ffffff; /* Texto principal */
+  --text-secondary: #a3a3a3; /* Texto secundario / Etiquetas */
+  --text-muted: #525252; /* Texto deshabilitado */
 
-  --text-main: #0f172a; /* Texto Oscuro */
-  --text-secondary: #64748b; /* Texto Gris */
-  --text-light: #94a3b8; /* Texto Claro */
-
-  --bg-app: #f8fafc; /* Fondo gris app */
-  --bg-card: #ffffff; /* Fondo blanco tarjetas */
-  --border: #e2e8f0; /* Bordes */
-
-  /* --- MEDIDAS --- */
-  --nav-height-mobile: 65px;
-  --sidebar-width-desktop: 250px;
-  --radius-md: 12px;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --border-color: #333333; /* Bordes sutiles */
+  --radius-md: 8px; /* Borde redondeado estándar */
 }
 
-/* --- RESET GLOBAL --- */
-* {
+/* --- RESET & BASICS --- */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -39,283 +31,83 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh;
-  background-color: var(--bg-app);
-  font-family: var(--font-sans);
-  color: var(--text-main);
-  line-height: 1.5;
-  overflow-x: hidden;
-}
-
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* --- CONTENIDO PRINCIPAL --- */
-.main-content {
-  width: 100%;
-  padding: 20px;
-  /* Espacio abajo para que en móvil no se corte el final por los botones flotantes */
-  padding-bottom: 140px;
-  margin: 0;
-}
-
-/* =========================================
-   NAVEGACIÓN (MOBILE FIRST)
-   ========================================= */
-.app-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: var(--nav-height-mobile);
-  background: #ffffff; /* Fondo blanco explícito */
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 2000; /* Siempre encima */
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
-}
-
-.nav-link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  color: var(--text-light);
-  font-size: 0.75rem;
-  width: 100%;
   height: 100%;
-  transition: color 0.2s;
-}
-.nav-link svg {
-  width: 24px;
-  height: 24px;
-  margin-bottom: 4px;
-  stroke-width: 2px;
-}
-.nav-link.active {
-  color: var(--primary);
-  font-weight: 600;
-}
-.nav-header {
-  display: none;
-} /* Oculto en móvil */
-
-/* =========================================
-   MEDIA QUERY: ESCRITORIO (> 768px)
-   ========================================= */
-@media (min-width: 768px) {
-  /* Sidebar Fija Izquierda */
-  .app-nav {
-    top: 0;
-    left: 0;
-    bottom: auto;
-    width: var(--sidebar-width-desktop);
-    height: 100vh;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    border-top: none;
-    border-right: 1px solid var(--border);
-    padding-top: 20px;
-    background: #ffffff; /* IMPORTANTE: Fondo blanco */
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
-  }
-
-  .nav-header {
-    display: block;
-    padding: 0 24px 30px;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--primary);
-  }
-
-  .nav-link {
-    flex-direction: row;
-    height: auto;
-    padding: 14px 24px;
-    font-size: 1rem;
-    color: var(--text-secondary);
-    justify-content: flex-start;
-    gap: 12px;
-    border-right: 3px solid transparent;
-  }
-  .nav-link:hover {
-    background-color: var(--primary-light);
-    color: var(--primary);
-  }
-  .nav-link.active {
-    background-color: var(--primary-light);
-    color: var(--primary);
-    border-right-color: var(--primary);
-  }
-  .nav-link svg {
-    margin-bottom: 0;
-  }
-
-  /* Ajuste de Contenido */
-  .main-content {
-    margin-left: var(--sidebar-width-desktop);
-    width: calc(100% - var(--sidebar-width-desktop));
-    padding: 40px;
-  }
-
-  /* Ocultar botones flotantes en PC (Opcional, si quieres verlos borra esto) */
-  .fab-btn,
-  .fab-mini {
-    display: none;
-  }
-}
-
-/* =========================================
-   COMPONENTES UI
-   ========================================= */
-
-/* --- Banner "Saldo Total" --- */
-.summary-banner {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  color: white;
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.summary-label {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  font-weight: 500;
-}
-.summary-total {
-  font-size: 1.8rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-/* --- Cards de Proveedores (GRID + FLEXBOX) --- */
-.suppliers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
-.supplier-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.supplier-card:active {
-  transform: scale(0.98);
-}
-.supplier-card:hover {
-  border-color: var(--primary-light);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Header de la tarjeta: Avatar - Info - Botón */
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.supplier-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--primary-light);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.card-info {
-  flex: 1; /* Ocupa el espacio central */
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.card-name {
-  font-weight: 700;
+  background-color: var(--bg-app);
   color: var(--text-main);
-  font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.card-alias {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased; /* Texto más nítido en Mac */
 }
 
-/* El botón + dentro de la tarjeta */
-.btn-card-action {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  border: 1px solid var(--border);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0; /* No se aplasta */
-  margin-left: 8px; /* Separación */
-  transition: all 0.2s;
+/* --- ELEMENTOS DE FORMULARIO GLOBALES --- */
+/* (Define el estilo base para inputs que no sean componentes específicos) */
+input,
+select,
+textarea {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
 }
-.btn-card-action:hover {
-  background: var(--primary);
-  color: white;
+
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--primary);
 }
-.btn-card-action .icon-svg {
-  width: 20px;
-  height: 20px;
+
+/* --- SCROLLBAR PERSONALIZADO (Estilo Dark) --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
 }
 
-/* Cuerpo de la tarjeta */
-.card-body {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 10px;
-  border-top: 1px dashed #e2e8f0;
+/* --- UTILIDADES VISUALES --- */
+
+/* Animación suave al cambiar de vista */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
-.balance-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #94a3b8;
-  font-weight: 600;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.balance-value {
-  font-weight: 700;
-  font-size: 1rem;
+
+/* Tipografía útil */
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.text-bold {
+  font-weight: bold;
+}
+.text-sm {
+  font-size: 0.85rem;
 }
 .text-danger {
   color: var(--danger);
@@ -323,105 +115,43 @@ body {
 .text-success {
   color: var(--success);
 }
-.text-stock {
-  color: var(--warning);
-  font-size: 0.9rem;
-}
-
-/* --- BOTONES FLOTANTES (FAB) --- */
-.fab-btn {
-  position: fixed;
-  bottom: 90px;
-  right: 20px; /* Derecha */
-  left: auto;
-
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 900;
-  transition: transform 0.2s;
-}
-.fab-btn:active {
-  transform: scale(0.9);
-}
-
-.fab-mini {
-  position: fixed;
-  bottom: 165px; /* Encima del grande */
-  right: 30px; /* Centrado */
-  left: auto;
-
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: white;
+.text-secondary {
   color: var(--text-secondary);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Espaciados rápidos */
+.mt-1 {
+  margin-top: 0.5rem;
+}
+.mt-2 {
+  margin-top: 1rem;
+}
+.mb-1 {
+  margin-bottom: 0.5rem;
+}
+.mb-2 {
+  margin-bottom: 1rem;
+}
+.gap-1 {
+  gap: 0.5rem;
+}
+.gap-2 {
+  gap: 1rem;
+}
+
+/* Flexbox Helpers */
+.flex {
   display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 900;
 }
-.fab-mini:hover {
-  color: var(--primary);
-  border-color: var(--primary);
+.justify-between {
+  justify-content: space-between;
 }
-
-.fab-btn .icon-svg {
-  width: 28px;
-  height: 28px;
-}
-.fab-mini .icon-svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* --- UTILIDADES GLOBALES --- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-.btn-secondary {
-  background: white;
-  border: 1px solid var(--border);
-  color: var(--text-main);
-}
-.w-full {
-  width: 100%;
-}
-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-}
-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
-}
-.icon-svg {
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
+.justify-end {
+  justify-content: flex-end;
 }

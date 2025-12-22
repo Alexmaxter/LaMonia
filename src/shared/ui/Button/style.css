@@ -28,26 +28,27 @@
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: var(--primary-hover);
 }
 
 .btn-secondary {
-  background: white;
-  border: 1px solid var(--border);
-  color: var(--text-main);
+  background: transparent; /* Corregido: Transparente para Dark Mode */
+  border: 1px solid var(--border-color);
+  color: var(--text-main); /* Corregido: Color texto main */
 }
 
 .btn-secondary:hover {
-  background: #f1f5f9;
+  background: var(--bg-input); /* Fondo sutil al hover */
+  border-color: var(--text-secondary);
 }
 
 .btn-danger {
-  background: var(--danger-bg);
+  background: rgba(239, 68, 68, 0.15); /* Rojo transparente */
   color: var(--danger);
 }
 
 .btn-danger:hover {
-  background: #fee2e2;
+  background: rgba(239, 68, 68, 0.25);
   border-color: var(--danger);
 }
 
@@ -58,7 +59,7 @@
 
 /* Estado deshabilitado (Para evitar doble clic) */
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(0.5);
 }

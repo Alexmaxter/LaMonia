@@ -1,45 +1,83 @@
-// src/app/layout/Sidebar/index.js
 import { el } from "../../../core/dom.js";
 import { Icon } from "../../../shared/ui/Icon.js";
+import { MENU_ITEMS } from "../../../config/menu.js";
 import "./style.css";
 
 export function Sidebar(currentRoute) {
-  // Definición de rutas con iconos corregidos
-  // NOTA: Verifica en src/shared/ui/Icon.js que existan 'home' y 'truck' (o 'truckPlus')
-  const routes = [
-    { id: "dashboard", label: "Inicio", icon: "dollar" },
-    { id: "suppliers", label: "Proveedores", icon: "truckPlus" },
-  ];
+  // 1. Contenedor Principal (ASIDE)
+  const container = el("aside", { className: "app-sidebar" });
 
-  const header = el("div", { className: "nav-header" }, "Mi Negocio");
-  const nav = el("nav", { className: "app-nav" }, header);
+  // 2. Header
+  const header = el(
+    "div",
+    { className: "app-sidebar__header" },
+    el("h2", { className: "app-sidebar__title" }, "Mi Negocio")
+  );
 
-  routes.forEach((route) => {
-    // Si la ruta actual coincide o si estamos en el detalle de un proveedor, marcamos "suppliers" como activo
-    const isActive =
-      currentRoute === route.id ||
-      (route.id === "suppliers" && currentRoute === "supplier-detail") ||
-      (currentRoute === "" && route.id === "dashboard");
+  // 3. Navegación
+  const nav = el("nav", { className: "app-sidebar__nav" });
+  const ul = el("ul", { className: "app-sidebar__list" });
 
+  MENU_ITEMS.forEach((item) => {
+    // --- LÓGICA DE ACTIVACIÓN ---
+    // 1. Dashboard: Activo si la ruta es vacía o "dashboard"
+    const isDashboard =
+      item.id === "dashboard" &&
+      (currentRoute === "" || currentRoute === "dashboard");
+
+    // 2. Proveedores: Activo si es "suppliers" O si estamos en el detalle "supplier-detail"
+    // (Esto mantiene el botón iluminado cuando entras a ver un proveedor específico)
+    const isSuppliers =
+      item.id === "suppliers" &&
+      (currentRoute === "suppliers" || currentRoute === "supplier-detail");
+
+    // 3. Otros menús futuros (Coincidencia exacta)
+    const isExactMatch = currentRoute === item.id;
+
+    const isActive = isDashboard || isSuppliers || isExactMatch;
+
+    // --- CREACIÓN DEL DOM ---
+
+    // Icono (El color se controla vía CSS con 'currentColor')
+    const iconElement = Icon(item.icon);
+
+    // Link (A)
     const link = el(
       "a",
       {
-        href: `#${route.id}`,
-        className: `nav-link ${isActive ? "active" : ""}`,
-        onclick: (e) => {
-          // Limpieza manual de clases para feedback instantáneo
-          document
-            .querySelectorAll(".nav-link")
-            .forEach((l) => l.classList.remove("active"));
-          e.currentTarget.classList.add("active");
-        },
+        href: `#${item.id}`,
+        className: `app-sidebar__link ${isActive ? "active" : ""}`,
       },
-      Icon(route.icon),
-      el("span", {}, route.label)
+      iconElement,
+      el("span", {}, item.label)
     );
 
-    nav.appendChild(link);
+    // UX MÓVIL: Cerrar menú al hacer click en una opción
+    link.addEventListener("click", () => {
+      const sidebar = document.querySelector(".app-sidebar");
+      const overlay = document.querySelector(".sidebar-overlay");
+
+      // Si el menú está abierto (modo móvil), lo cerramos
+      if (sidebar && sidebar.classList.contains("open")) {
+        sidebar.classList.remove("open");
+      }
+      if (overlay) {
+        overlay.classList.remove("visible");
+      }
+    });
+
+    // Li wrapper (Semántica correcta)
+    const li = el("li", {}, link);
+    ul.appendChild(li);
   });
 
-  return nav;
+  nav.appendChild(ul);
+
+  // 4. Footer (Opcional - Versión)
+  const footer = el("div", { className: "app-sidebar__footer" }, "v1.0.0");
+
+  // Armado final
+  container.append(header, nav, footer);
+
+  return container;
 }

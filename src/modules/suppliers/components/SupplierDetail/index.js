@@ -1,343 +1,217 @@
-// src/modules/suppliers/components/SupplierDetail/index.js
 import { el } from "../../../../core/dom.js";
 import { Icon } from "../../../../shared/ui/Icon.js";
+import { Button } from "../../../../shared/ui/Button/index.js";
+import { formatCurrency } from "../../../../core/utils/currency.js";
+import { dateUtils } from "../../../../core/utils/dateUtils.js";
 import "./style.css";
 
 export function SupplierDetail({
   supplier,
   transactions = [],
-  onDeleteTransaction,
-  onEditTransaction,
+  onTransactionClick,
   onOpenPdf,
   onOpenConfig,
   onNewMovement,
 }) {
   const isStock = supplier.providerType === "stock";
 
-  // =======================================================
-  // 1. CÁLCULO CONTABLE
-  // =======================================================
-  const compareTransactions = (a, b) => {
-    const dateA = a.dateObj.getTime();
-    const dateB = b.dateObj.getTime();
-    if (dateA !== dateB) return dateA - dateB;
-    const createdA = a.createdAt?.seconds ? a.createdAt.seconds : 0;
-    const createdB = b.createdAt?.seconds ? b.createdAt.seconds : 0;
-    if (createdA !== createdB) return createdA - createdB;
-    return (a.id || "").localeCompare(b.id || "");
+  // Configuración de visualización: Rojo para boletas, Verde para pagos/notas
+  const getTypeConfig = (type) => {
+    switch (type) {
+      case "invoice":
+        return { label: "Boleta", icon: "clipboard", className: "tx-danger" };
+      case "payment":
+        return { label: "Pago", icon: "dollarSign", className: "tx-success" };
+      case "note":
+      case "credit_note":
+        return {
+          label: "Nota de Crédito",
+          icon: "fileMinus",
+          className: "tx-success-light",
+        };
+      default:
+        return { label: "Movimiento", icon: "box", className: "tx-neutral" };
+    }
   };
 
   const rawTxs = transactions.map((t) => ({
     ...t,
-    dateObj: t.date?.seconds
-      ? new Date(t.date.seconds * 1000)
-      : new Date(t.date),
+    dateObj: dateUtils.parse(t.date) || new Date(),
   }));
-  const chronTxs = [...rawTxs].sort(compareTransactions);
-  let processedTxs = [];
 
-  if (isStock) {
-    processedTxs = chronTxs;
-  } else {
-    const currentBalance = parseFloat(supplier.balance || 0);
-    const historySum = chronTxs.reduce((sum, t) => {
-      const amount = parseFloat(t.amount || 0);
-      return t.type === "invoice" ? sum + amount : sum - amount;
-    }, 0);
-    const initialDrift = currentBalance - historySum;
-    let runningBalance = initialDrift;
+  const chronTxs = [...rawTxs].sort((a, b) => a.dateObj - b.dateObj);
+  let runningBalance = 0;
 
-    processedTxs = chronTxs.map((t) => {
-      const amount = parseFloat(t.amount || 0);
-      if (t.type === "invoice") runningBalance += amount;
-      else runningBalance -= amount;
-      return { ...t, snapshotBalance: runningBalance };
-    });
-  }
-  const viewTxs = [...processedTxs].sort((a, b) => compareTransactions(b, a));
+  // --- LÓGICA AGREGADA: CÁLCULO DE TOTALES DE ITEMS PARA EL SALDO SUPERIOR ---
+  const totalsMap = {};
 
-  // =======================================================
-  // 2. HEADER VISUAL
-  // =======================================================
+  const processedTxs = chronTxs.map((t) => {
+    const amount = parseFloat(t.amount || 0);
+    if (t.type === "invoice") runningBalance += amount;
+    else runningBalance -= amount;
 
-  let balanceFormatted = "";
-  let balanceRawClass = "";
-  let statusText = "";
-
-  if (isStock) {
-    const debts = supplier.stockDebt || {};
-    const items = Object.entries(debts).filter(([_, qty]) => qty > 0);
-    if (items.length === 0) {
-      balanceFormatted = "Sin deuda";
-      balanceRawClass = "color-pay";
-      statusText = "Estado";
-    } else {
-      balanceFormatted = items.map(([k, q]) => `${q} ${k}`).join(" | ");
-      balanceRawClass = "color-stock";
-      statusText = "Stock Pendiente";
+    // Sumar items para el total de la tarjeta
+    if (t.items) {
+      t.items.forEach((item) => {
+        totalsMap[item.name] =
+          (totalsMap[item.name] || 0) + (item.quantity || 0);
+      });
     }
-  } else {
-    const bal = parseFloat(supplier.balance || 0);
-    balanceFormatted = new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(bal);
 
-    if (bal > 10) {
-      balanceRawClass = "color-debt";
-      statusText = "Deuda Total";
-    } else if (bal < -10) {
-      balanceRawClass = "color-pay";
-      statusText = "Saldo a Favor";
-    } else {
-      balanceRawClass = "color-pay";
-      statusText = "Cuenta al día";
-    }
-  }
+    return { ...t, snapshotBalance: runningBalance };
+  });
 
-  // --- LÓGICA DE PRIVACIDAD ---
-  let isBalanceVisible = true;
+  const viewTxs = [...processedTxs].reverse();
 
-  const amountEl = el(
-    "span",
-    { className: `sh-amount ${balanceRawClass}` },
-    balanceFormatted
-  );
+  // Texto de items totales (ej: "15 hielo | 10 bidón")
+  const totalItemsString = Object.entries(totalsMap)
+    .map(([name, qty]) => `${qty} ${name}`)
+    .join(" | ");
 
-  const toggleBtn = el(
-    "button",
-    {
-      className: "toggle-balance-btn",
-      title: "Mostrar/Ocultar saldo",
-    },
-    Icon("eye")
-  );
-
-  // Botones de Acción
-  const btnConfig = el(
-    "button",
-    { className: "card-action-btn btn-secondary", onclick: onOpenConfig },
-    Icon("settings"),
-    el("span", {}, "Config")
-  );
-  const btnPdf = el(
-    "button",
-    { className: "card-action-btn btn-secondary", onclick: onOpenPdf },
-    Icon("fileText"),
-    el("span", {}, "Ver PDF")
-  );
-  const btnNew = el(
-    "button",
-    { className: "card-action-btn btn-primary", onclick: onNewMovement },
-    Icon("plus"),
-    el("span", {}, "Nuevo")
-  );
-
-  const actionsRow = el(
+  return el(
     "div",
-    { className: "card-actions-row" },
-    btnPdf,
-    btnConfig,
-    btnNew
-  );
-
-  const headerCard = el(
-    "div",
-    { className: "supplier-header-card" },
+    { className: "supplier-detail-container" },
     el(
       "div",
-      { className: "card-top-row" },
+      { className: "supplier-header-card" },
       el(
         "div",
-        { className: "header-left" },
-        el("div", { className: "sh-name" }, supplier.name),
-        supplier.alias
-          ? el(
-              "div",
-              {
-                className: "sh-alias-badge",
-                onclick: () => {
-                  navigator.clipboard.writeText(supplier.alias);
-                  alert("Alias copiado");
-                },
-              },
-              Icon("copy"),
-              " " + supplier.alias
-            )
-          : null
-      ),
-      el(
-        "div",
-        { className: "header-right" },
-        el("span", { className: "sh-label" }, statusText),
-        el("div", { className: "balance-wrapper" }, amountEl, toggleBtn)
-      )
-    ),
-    el("div", { className: "card-divider" }),
-    actionsRow
-  );
-
-  // =======================================================
-  // 3. LISTA DE MOVIMIENTOS
-  // =======================================================
-
-  let transactionListContent;
-  if (viewTxs.length === 0) {
-    transactionListContent = el(
-      "div",
-      { className: "empty-history" },
-      "No hay movimientos registrados."
-    );
-  } else {
-    const cards = viewTxs.map((t) => {
-      const day = t.dateObj.getDate();
-      const month = t.dateObj
-        .toLocaleDateString("es-AR", { month: "short" })
-        .toUpperCase()
-        .replace(".", "");
-
-      let amountStr = "";
-      let colorClass = "";
-      let borderClass = "";
-      let typeLabel = "";
-      let snapshotBalanceStr = null;
-
-      if (isStock) {
-        const itemsStr = (t.items || [])
-          .map((i) => `${i.quantity} ${i.name}`)
-          .join(", ");
-        amountStr = (t.type === "invoice" ? "+ " : "- ") + itemsStr;
-        colorClass = "color-stock";
-        borderClass = "border-l-stock";
-        typeLabel = t.type === "invoice" ? "Entrada" : "Salida";
-      } else {
-        const val = parseFloat(t.amount);
-        const moneyFmt = new Intl.NumberFormat("es-AR", {
-          style: "currency",
-          currency: "ARS",
-        });
-        amountStr = moneyFmt.format(val);
-
-        if (t.type === "invoice") {
-          typeLabel = t.invoiceNumber ? `Boleta #${t.invoiceNumber}` : "Boleta";
-          amountStr = "+ " + amountStr;
-          colorClass = "color-debt";
-          borderClass = "border-l-debt";
-        } else {
-          typeLabel = t.type === "payment" ? "Pago" : "Nota Crédito";
-          amountStr = "- " + amountStr;
-          colorClass = "color-pay";
-          borderClass = "border-l-pay";
-        }
-
-        if (t.snapshotBalance !== undefined) {
-          const snapVal = moneyFmt.format(t.snapshotBalance);
-          const snapColor = t.snapshotBalance > 5 ? "#dc2626" : "#16a34a";
-          // IMPORTANTE: Clase 'sensitive-data' añadida
-          snapshotBalanceStr = el(
-            "div",
-            {
-              className: "sensitive-data",
-              style: `font-size: 0.75rem; color: ${snapColor}; margin-top: 4px; font-weight: 600; text-align: right;`,
-            },
-            `Saldo: ${snapVal}`
-          );
-        }
-      }
-
-      return el(
-        "div",
-        {
-          className: `trans-card ${borderClass}`,
-          onclick: () => onEditTransaction(t),
-        },
+        { className: "header-top-row" },
         el(
           "div",
-          { className: "trans-date-box" },
-          el("span", { className: "td-day" }, day),
-          el("span", { className: "td-month" }, month)
-        ),
-        el(
-          "div",
-          { className: "trans-info" },
-          el("span", { className: "ti-desc" }, typeLabel),
+          { className: "header-identity" },
           el(
-            "span",
-            { className: "ti-meta" },
-            t.description ||
-              t.dateObj.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+            "div",
+            { className: "header-avatar" },
+            Icon(isStock ? "box" : "users")
+          ),
+          el(
+            "div",
+            { className: "header-info" },
+            el("h2", { className: "header-name" }, supplier.name),
+            supplier.cuit
+              ? el(
+                  "div",
+                  { className: "header-meta" },
+                  `CUIT: ${supplier.cuit}`
+                )
+              : null
           )
         ),
         el(
           "div",
-          { className: "trans-amounts-col" },
-          // IMPORTANTE: Clase 'sensitive-data' añadida
+          { className: "header-balance" },
+          el(
+            "span",
+            { className: "balance-label" },
+            isStock ? "Ítems Totales" : "Saldo Total"
+          ),
           el(
             "div",
-            { className: `trans-amount ${colorClass} sensitive-data` },
-            amountStr
-          ),
-          snapshotBalanceStr
+            {
+              className: `balance-amount ${
+                supplier.balance > 0 ? "text-debt" : "text-favor"
+              }`,
+            },
+            // CAMBIO PUNTUAL: Mostrar items totales si es stock, sino dinero
+            isStock && totalItemsString
+              ? totalItemsString
+              : formatCurrency(supplier.balance)
+          )
         )
-      );
-    });
-    transactionListContent = el(
-      "div",
-      { className: "transaction-list" },
-      ...cards
-    );
-  }
-
-  const container = el(
-    "div",
-    { className: "detail-container" },
-    headerCard,
-    el(
-      "h3",
-      { style: { fontSize: "1rem", color: "#666", margin: "10px 0 5px 5px" } },
-      "Historial de Cuenta"
+      ),
+      el("div", { className: "header-divider" }),
+      el(
+        "div",
+        { className: "header-actions" },
+        Button({
+          text: "Reporte",
+          icon: "fileText",
+          variant: "secondary",
+          onClick: onOpenPdf,
+        }),
+        Button({
+          text: "Configurar",
+          icon: "settings",
+          variant: "secondary",
+          onClick: onOpenConfig,
+        }),
+        Button({
+          text: "Nuevo Movimiento",
+          icon: "plus",
+          variant: "primary",
+          onClick: onNewMovement,
+        })
+      )
     ),
-    transactionListContent
+
+    el("h3", { className: "section-title" }, "Historial de Movimientos"),
+
+    el(
+      "div",
+      { className: "tx-list-wrapper" },
+      viewTxs.length === 0
+        ? el(
+            "div",
+            { className: "empty-state-container" },
+            "No hay movimientos"
+          )
+        : viewTxs.map((t) => {
+            const config = getTypeConfig(t.type);
+            const isInvoice = t.type === "invoice";
+
+            const itemsText =
+              t.items && t.items.length > 0
+                ? t.items.map((i) => `${i.quantity} ${i.name}`).join(" | ")
+                : "";
+
+            return el(
+              "div",
+              {
+                className: "tx-card",
+                onclick: () => onTransactionClick && onTransactionClick(t),
+              },
+              el(
+                "div",
+                { className: `tx-icon-wrapper ${config.className}` },
+                Icon(config.icon)
+              ),
+              el(
+                "div",
+                { className: "tx-info" },
+                el(
+                  "div",
+                  { className: "tx-main-text" },
+                  t.invoiceNumber ? `Boleta #${t.invoiceNumber}` : config.label
+                ),
+                el(
+                  "div",
+                  { className: "tx-sub-text" },
+                  dateUtils.format(t.dateObj)
+                )
+              ),
+              el(
+                "div",
+                { className: "tx-amount-col" },
+                isStock && isInvoice && itemsText
+                  ? el(
+                      "div",
+                      { className: `tx-items-display ${config.className}` },
+                      itemsText
+                    )
+                  : el(
+                      "div",
+                      { className: `tx-amount ${config.className}` },
+                      `${isInvoice ? "+ " : "- "}${formatCurrency(t.amount)}`
+                    ),
+                el(
+                  "small",
+                  { className: "tx-balance-snap" },
+                  `Saldo: ${formatCurrency(t.snapshotBalance)}`
+                )
+              )
+            );
+          })
+    )
   );
-
-  // --- LÓGICA DEL TOGGLE (Texto x Puntos) ---
-  toggleBtn.onclick = () => {
-    isBalanceVisible = !isBalanceVisible;
-
-    // 1. Header Balance
-    amountEl.textContent = isBalanceVisible ? balanceFormatted : "••••••••";
-    if (isBalanceVisible) {
-      amountEl.className = `sh-amount ${balanceRawClass}`;
-    } else {
-      amountEl.className = `sh-amount amount-hidden`;
-    }
-
-    // 2. Icono
-    toggleBtn.innerHTML = "";
-    toggleBtn.appendChild(Icon(isBalanceVisible ? "eye" : "eyeOff"));
-
-    // 3. Lista de Movimientos (Reemplazo de texto)
-    const sensitiveEls = container.querySelectorAll(".sensitive-data");
-    sensitiveEls.forEach((el) => {
-      if (!isBalanceVisible) {
-        // Ocultar: Guardamos valor original en dataset y mostramos puntos
-        if (!el.dataset.realValue) {
-          el.dataset.realValue = el.textContent;
-        }
-        el.textContent = "••••••••";
-        el.classList.add("amount-hidden-text"); // Clase para estilo grisáceo
-      } else {
-        // Mostrar: Restauramos desde dataset
-        if (el.dataset.realValue) {
-          el.textContent = el.dataset.realValue;
-        }
-        el.classList.remove("amount-hidden-text");
-      }
-    });
-  };
-
-  return container;
 }

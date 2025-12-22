@@ -1,77 +1,117 @@
+// src/core/router.js
 export class Router {
   constructor(routes, appContainer) {
-    this.routes = routes; // Objeto con las rutas definidoras en main.js
-    this.appContainer = appContainer; // El <div> donde se dibujarán las vistas
-    this.currentParams = {}; // Almacén temporal para pasar datos (ej: el proveedor seleccionado)
+    this.routes = routes;
+    this.appContainer = appContainer;
   }
 
   init() {
-    // 1. Escuchar cuando cambia la URL (Flechas atrás/adelante o clicks)
+    // Escuchamos cambios en la URL
     window.addEventListener("hashchange", () => this.handleLocation());
-
-    // 2. Cargar la ruta inicial al abrir la app
     this.handleLocation();
   }
 
-  // Método para navegar manualmente desde el código (ej: al hacer click en una tarjeta)
+  /**
+   * Navega a una ruta actualizando el Hash y los Query Params.
+   * @param {string} routeId - El identificador de la ruta (ej: 'supplier-detail')
+   * @param {object} params - Datos simples (ej: { id: '123' }). No pasar objetos complejos aquí.
+   */
   navigateTo(routeId, params = null) {
-    // Si hay parámetros (ej: un objeto proveedor), los guardamos en memoria asociados a la ruta destino
+    let url = `#${routeId}`;
+
     if (params) {
-      this.currentParams[routeId] = params;
+      // Convertimos el objeto a string de consulta (ej: ?id=123&mode=edit)
+      const searchParams = new URLSearchParams(params);
+      url += `?${searchParams.toString()}`;
     }
-    // Cambiamos el hash, lo que disparará el evento 'hashchange'
-    window.location.hash = routeId;
+
+    window.location.hash = url;
   }
 
   async handleLocation() {
-    // 1. Obtener la ruta actual (quitando el #)
-    // Si está vacío, vamos al dashboard por defecto
-    const hash = window.location.hash.slice(1) || "dashboard";
+    // 1. Obtener hash limpio (sin el #)
+    const rawHash = window.location.hash.slice(1) || "dashboard";
 
-    // Limpiamos extra queries si las hubiera
-    const routeName = hash.split("?")[0];
+    // 2. Separar la ruta de los parámetros (ej: "supplier-detail?id=123")
+    const [routeName, queryString] = rawHash.split("?");
 
-    // 2. Buscar la función que carga esa ruta
     const routeHandler = this.routes[routeName];
 
-    // 3. Limpiar el contenedor (Borrar la vista anterior)
-    this.appContainer.innerHTML = "";
+    // OPTIMIZACIÓN UX: Mostrar Spinner inmediato
+    // Esto evita que la pantalla parezca "congelada" mientras se descarga el módulo JS
+    this._showLoading();
 
-    // Si la ruta no existe, mostramos error 404
+    // Manejo de 404
     if (!routeHandler) {
       this.appContainer.innerHTML =
         "<h2 style='text-align:center; margin-top:50px;'>404 - Página no encontrada</h2>";
       return;
     }
 
+    // 3. Parsear los parámetros de la URL
+    const params = {};
+    if (queryString) {
+      const searchParams = new URLSearchParams(queryString);
+      for (const [key, value] of searchParams.entries()) {
+        params[key] = value;
+      }
+    }
+
     try {
-      // 4. Ejecutar el handler.
-      // Como en main.js usamos dynamic imports (import(...).then(...)), esto devuelve una Promesa.
-      // Esperamos a que el archivo JS de la vista se descargue.
+      // 4. Cargar el módulo (Lazy Loading) y ejecutar la vista
+      // Aquí es donde ocurre la espera de red
       const viewFunction = await routeHandler();
 
-      // 5. Instanciar el componente
-      // Le inyectamos dos herramientas clave a la vista:
-      // - navigateTo: Para que la vista pueda cambiar de página
-      // - params: Los datos que le mandaron (ej: el proveedor a editar)
       const component = await viewFunction({
-        navigateTo: (route, params) => this.navigateTo(route, params),
-        params: this.currentParams[routeName] || null,
+        navigateTo: (r, p) => this.navigateTo(r, p),
+        params: params,
       });
 
-      // 6. Pegar el componente en el DOM
-      // Aceptamos tanto nodos DOM (document.createElement) como strings HTML
+      // 5. Limpiar Spinner y Renderizar
+      this.appContainer.innerHTML = ""; // Quitamos el spinner
+
       if (component instanceof Node) {
         this.appContainer.appendChild(component);
       } else if (typeof component === "string") {
         this.appContainer.innerHTML = component;
       }
-
-      // Limpiar params usados para no dejar basura en memoria (opcional, pero buena práctica)
-      // this.currentParams[routeName] = null;
     } catch (error) {
       console.error("Error en el Router:", error);
-      this.appContainer.innerHTML = `<div style="color:var(--danger); padding:20px;">Error al cargar la vista: ${error.message}</div>`;
+      this.appContainer.innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">
+        <h3>Error al cargar la vista</h3>
+        <p>${error.message}</p>
+      </div>`;
     }
+  }
+
+  // Helper interno para mostrar el estado de carga
+  _showLoading() {
+    // Inyectamos estilos inline para asegurar que funcione sin depender de un CSS externo
+    const spinnerHtml = `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        min-height: 300px;
+        color: var(--text-secondary, #666);
+      ">
+        <div class="spinner-ring" style="
+          width: 40px;
+          height: 40px;
+          border: 4px solid rgba(0,0,0,0.1);
+          border-left-color: var(--primary, #007bff);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 15px;
+        "></div>
+        <p style="font-size: 0.9rem;">Cargando...</p>
+        <style>
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+      </div>
+    `;
+    this.appContainer.innerHTML = spinnerHtml;
   }
 }

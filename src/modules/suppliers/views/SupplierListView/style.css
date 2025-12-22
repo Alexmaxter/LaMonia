@@ -1,0 +1,91 @@
+/* --- LAYOUT DE LA VISTA --- */
+.view-container {
+  /* Padding inferior extra para que el botón flotante no tape el final de la lista */
+  padding-bottom: 90px;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  min-height: 100%;
+}
+
+.view-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.view-header h1 {
+  font-size: 1.8rem;
+  color: var(--text-main);
+  margin: 0;
+  font-weight: 700;
+}
+
+/* --- BOTONES FLOTANTES (FAB) --- */
+.fab-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 500; /* Encima del contenido, debajo de modales (9999) */
+}
+
+/* Botón Principal (Grande - Nuevo Movimiento) */
+.fab-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.fab-btn:hover {
+  transform: scale(1.1);
+  background-color: var(--primary-hover);
+}
+
+.fab-btn svg {
+  width: 24px;
+  height: 24px;
+  stroke: white; /* Aseguramos contraste */
+}
+
+/* Botón Secundario (Pequeño - Nuevo Proveedor) */
+.fab-mini {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background-color: #2a2a2a; /* Gris oscuro para diferenciar */
+  color: #a0a0a0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border: 1px solid #444;
+}
+
+.fab-mini:hover {
+  transform: scale(1.1);
+  background-color: #444;
+  color: white;
+  border-color: #666;
+}
+
+.fab-mini svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}

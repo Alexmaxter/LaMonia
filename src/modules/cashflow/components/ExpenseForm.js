@@ -1,4 +1,4 @@
-import { EXPENSE_SOURCE } from "../../../shared/constants/PaymentMethode.js";
+import { EXPENSE_SOURCE } from "../../../shared/constants/PaymentMethods.js";
 import { Button } from "../../../shared/ui/Button.js";
 
 export function ExpenseForm() {
@@ -9,8 +9,7 @@ export function ExpenseForm() {
   inputRow.style =
     "display: flex; gap: 10px; margin-bottom: 15px; align-items: center;";
 
-  // Insertamos los inputs como HTML string (más rápido por ahora)
-  // NOTA: No incluimos el botón aquí, lo agregaremos como Componente después
+  // Insertamos los inputs como HTML string
   inputRow.innerHTML = `
     <input type="text" id="exp-desc" placeholder="Descripción (ej. Hielo)" 
       style="flex: 2; padding: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 6px;">
@@ -28,11 +27,10 @@ export function ExpenseForm() {
   // 2. Creamos el Botón de Agregar usando tu componente UI
   const btnAdd = Button({
     text: "Agregar",
-    variant: "primary", // Color principal (#646cff)
-    onClick: handleAddExpense, // Llamamos a la función definida abajo
+    variant: "primary",
+    onClick: handleAddExpense,
   });
 
-  // Agregamos el botón al final de la fila
   inputRow.appendChild(btnAdd);
 
   // 3. Contenedor de la Lista
@@ -60,20 +58,17 @@ export function ExpenseForm() {
       return;
     }
 
-    // Guardar en memoria
     expensesList.push({ description, amount, source });
 
-    // Limpiar inputs
     descInput.value = "";
     amountInput.value = "";
-    descInput.focus(); // Volver el foco al inicio
+    descInput.focus();
 
-    // Actualizar vista
     renderList();
   }
 
   function renderList() {
-    listContainer.innerHTML = ""; // Limpiar lista visual
+    listContainer.innerHTML = "";
 
     expensesList.forEach((exp, index) => {
       const li = document.createElement("li");
@@ -84,11 +79,9 @@ export function ExpenseForm() {
       const color = isRegister ? "#ff6b6b" : "#74c0fc";
       const label = isRegister ? "CAJA" : "DUEÑO";
 
-      // Texto del item
       const infoSpan = document.createElement("span");
       infoSpan.innerHTML = `${exp.description} <small style="color:${color}; margin-left:5px;">(${label})</small>`;
 
-      // Monto y Botón Borrar
       const rightDiv = document.createElement("div");
       rightDiv.style = "display: flex; align-items: center; gap: 10px;";
 
@@ -96,16 +89,14 @@ export function ExpenseForm() {
       amountSpan.style.fontWeight = "bold";
       amountSpan.textContent = `$ ${exp.amount}`;
 
-      // Botón Borrar (Componente UI variante 'icon')
       const btnDelete = Button({
-        text: "×", // Carácter de multiplicación como cruz
+        text: "×",
         variant: "icon",
         onClick: () => {
-          expensesList.splice(index, 1); // Borrar del array
-          renderList(); // Redibujar
+          expensesList.splice(index, 1);
+          renderList();
         },
       });
-      // Ajuste visual para el botón de borrar
       btnDelete.style.color = "#ff6b6b";
       btnDelete.style.fontSize = "1.5rem";
       btnDelete.title = "Eliminar gasto";
@@ -119,7 +110,6 @@ export function ExpenseForm() {
     });
   }
 
-  // --- EXPOSE DATA ---
   container.getExpenses = () => expensesList;
 
   return container;

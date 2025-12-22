@@ -1,60 +1,95 @@
-/* src/app/layout/Sidebar/style.css */
-.app-nav {
-  width: 240px;
-  background: #111111; /* Un poco más oscuro para contraste */
-  border-right: 1px solid var(--border);
-  padding: 1.5rem 1rem;
+.app-sidebar {
+  --sb-width: 250px;
+  --sb-bg: #1e1e1e;
+  --sb-header-height: 70px;
+
+  width: var(--sb-width);
+  height: 100vh;
+  background-color: var(--sb-bg);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  height: 100vh;
+  border-right: 1px solid #333;
+  flex-shrink: 0;
+
+  /* Desktop: Sticky para que baje con el scroll si fuera necesario */
+  position: sticky;
+  top: 0;
+  z-index: 100; /* Alto, pero menor que el Overlay móvil */
+  transition: transform 0.3s ease;
 }
 
-.nav-header {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 2rem;
-  padding-left: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.nav-link {
+/* --- CLASES INTERNAS (Header, Links...) IGUAL QUE ANTES --- */
+.app-sidebar__header {
+  height: var(--sb-header-height);
   display: flex;
   align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: #a0a0a0;
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #333;
 }
-
-/* Estilo para el SVG del icono dentro del link */
-.nav-link svg {
+.app-sidebar__title {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.app-sidebar__nav {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.app-sidebar__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.app-sidebar__link {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  color: #a0a0a0;
+  text-decoration: none;
+  align-items: center;
+  transition: all 0.2s;
+}
+.app-sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+.app-sidebar__link.active {
+  background: #2563eb;
+  color: #fff;
+}
+.app-sidebar__link svg {
   width: 20px;
   height: 20px;
-  stroke-width: 2;
+  stroke: currentColor;
+}
+.app-sidebar__footer {
+  padding: 1rem;
+  text-align: center;
+  color: #555;
+  font-size: 0.8rem;
+  border-top: 1px solid #333;
 }
 
-.nav-link:hover {
-  background: #222;
-  color: white;
-}
-
-.nav-link.active {
-  background: var(--primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Móvil: Solo iconos */
+/* --- MÓVIL (La Magia) --- */
 @media (max-width: 768px) {
-  .app-nav {
-    width: 80px;
-    align-items: center;
+  .app-sidebar {
+    position: fixed; /* Flota sobre el contenido */
+    left: 0;
+    top: 0;
+    height: 100%;
+    transform: translateX(-100%); /* ESCONDIDO a la izquierda por defecto */
+    z-index: 1000; /* Encima de todo */
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
   }
-  .nav-link span,
-  .nav-header {
-    display: none;
+
+  /* Clase para ABRIR el menú */
+  .app-sidebar.open {
+    transform: translateX(0); /* Vuelve a su lugar (visible) */
   }
 }

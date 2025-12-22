@@ -1,12 +1,15 @@
-import { el } from "../../../core/dom.js";
-import { Icon } from "../../../shared/ui/Icon.js";
-import { Modal } from "../../../shared/ui/Modal/index.js";
-import { Button } from "../../../shared/ui/Button/index.js";
-import { SearchBox } from "../../../shared/ui/SearchBox/index.js";
-import { supplierService } from "../services/SupplierService.js";
-import { SupplierTable } from "../components/SupplierTable/index.js";
-import { MovementForm } from "../components/MovementForm/index.js";
-import { SuppliersSummary } from "../components/SuppliersSummary/index.js";
+import { el } from "../../../../core/dom.js";
+import { Icon } from "../../../../shared/ui/Icon.js";
+import { Modal } from "../../../../shared/ui/Modal/index.js";
+import { Button } from "../../../../shared/ui/Button/index.js";
+import { SearchBox } from "../../../../shared/ui/SearchBox/index.js";
+import { supplierService } from "../../services/SupplierService.js";
+import { SupplierTable } from "../../components/SupplierTable/index.js";
+import { MovementForm } from "../../components/MovementForm/index.js";
+import { SuppliersSummary } from "../../components/SuppliersSummary/index.js";
+
+// Importamos el CSS local que acabamos de crear
+import "./style.css";
 
 export function SuppliersListView({ navigateTo }) {
   const container = el("div", { className: "view-container fade-in" });
@@ -39,8 +42,7 @@ export function SuppliersListView({ navigateTo }) {
     tableWrapper.appendChild(
       SupplierTable({
         suppliers: filtered,
-        onViewDetails: (s) => navigateTo("supplier-detail", { supplier: s }),
-        // Al hacer click en "+" desde la tabla, ya tenemos el proveedor
+        onViewDetails: (s) => navigateTo("supplier-detail", { id: s.id }),
         onAddMovement: (s) => handleOpenMovementModal(s),
       })
     );
@@ -60,7 +62,6 @@ export function SuppliersListView({ navigateTo }) {
       style: { width: "100%", padding: "10px", marginTop: "10px" },
     });
 
-    // Referencia mutable para el modal
     let modalRef = null;
 
     const content = el(
@@ -97,7 +98,6 @@ export function SuppliersListView({ navigateTo }) {
     });
 
     modalRef.open();
-    // Foco automático después de abrir
     setTimeout(() => nameInput.focus(), 100);
   };
 
@@ -105,7 +105,7 @@ export function SuppliersListView({ navigateTo }) {
     let modalRef = null;
 
     const form = MovementForm({
-      suppliers: allSuppliers, // IMPORTANTE: Pasamos la lista para el dropdown
+      suppliers: allSuppliers,
       preSelectedSupplier: preSelectedSupplier,
       onSubmit: async (data) => {
         try {
@@ -136,7 +136,7 @@ export function SuppliersListView({ navigateTo }) {
     if (unsubscribe) unsubscribe();
   };
 
-  // --- FAB BUTTONS (Solución de estilos inline para asegurar click) ---
+  // --- FAB BUTTONS ---
   const fabContainer = el("div", { className: "fab-container" });
 
   const btnNewSupplier = el(
@@ -149,9 +149,8 @@ export function SuppliersListView({ navigateTo }) {
     Icon("truckPlus")
   );
 
-  // Asignamos el evento directamente
   btnNewSupplier.onclick = (e) => {
-    e.stopPropagation(); // Evitar burbujeo
+    e.stopPropagation();
     handleCreateSupplier();
   };
 
@@ -167,7 +166,7 @@ export function SuppliersListView({ navigateTo }) {
 
   btnNewMovement.onclick = (e) => {
     e.stopPropagation();
-    handleOpenMovementModal(null); // Llamada explícita con null
+    handleOpenMovementModal(null);
   };
 
   fabContainer.append(btnNewSupplier, btnNewMovement);

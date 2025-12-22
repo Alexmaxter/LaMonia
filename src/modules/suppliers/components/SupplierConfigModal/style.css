@@ -1,0 +1,107 @@
+/* Contenedor principal */
+.form-dark {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+  color: #e0e0e0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label-dark {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Inputs y Selects */
+.input-dark {
+  background-color: #252525;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input-dark:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Sección de Catálogo */
+.catalog-section-dark {
+  background: #1a1a1a;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #2a2a2a;
+  margin-top: 10px;
+}
+
+.catalog-input-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.catalog-input-group .input-dark {
+  flex: 1;
+}
+
+/* Grilla de ítems agregados */
+.items-grid-dark {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item-tag-dark {
+  background: #2d2d2d;
+  color: #eee;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #444;
+}
+
+.btn-remove-item {
+  background: transparent;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.btn-remove-item:hover {
+  transform: scale(1.2);
+}
+
+.btn-remove-item svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Acciones finales */
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  border-top: 1px solid #333;
+  padding-top: 20px;
+}

@@ -1,78 +1,35 @@
+// src/modules/suppliers/services/PDFService.js
 import jsPDF from "https://esm.sh/jspdf";
 import autoTable from "https://esm.sh/jspdf-autotable";
+import { TransactionCalculator } from "../utils/TransactionCalculator.js";
+import { formatCurrency } from "../../../core/utils/currency.js";
 
 export const PDFService = {
-  generateAccountStatement(supplier, transactions, dateFrom, dateTo) {
+  /**
+   * Genera el documento PDF y devuelve el objeto junto con un nombre de archivo dinámico.
+   * @param {Object} supplier - Datos del proveedor.
+   * @param {Array} transactions - Listado de movimientos.
+   * @param {string|null} dateFrom - Fecha de inicio del filtro.
+   * @param {string|null} dateTo - Fecha de fin del filtro.
+   * @returns {Object} { doc, fileName }
+   */
+  generateDoc(supplier, transactions, dateFrom = null, dateTo = null) {
     const doc = new jsPDF();
-    const isStock = supplier.providerType === "stock";
-    const today = new Date().toLocaleDateString("es-AR");
+    const now = new Date();
 
-    // Helper para fechas seguras
-    const parseDate = (d) => {
-      if (!d) return new Date();
-      if (d.seconds) return new Date(d.seconds * 1000);
-      return new Date(d);
-    };
+    // Formateo de fechas para el documento y el nombre del archivo
+    const dateStr = now.toLocaleDateString("es-AR").replace(/\//g, "-");
+    const todayFull = now.toLocaleString("es-AR");
 
-    // Convertir fechas de filtro
-    const from = dateFrom ? new Date(dateFrom + "T00:00:00") : null;
-    const to = dateTo ? new Date(dateTo + "T23:59:59") : null;
+    // 1. Procesar datos usando el calculador de transacciones
+    const data = TransactionCalculator.processHistory(
+      supplier,
+      transactions,
+      dateFrom,
+      dateTo
+    );
 
-    // 1. ORDENAR CRONOLÓGICAMENTE (Viejo -> Nuevo)
-    const allSorted = [...transactions].sort((a, b) => {
-      return parseDate(a.date).getTime() - parseDate(b.date).getTime();
-    });
-
-    // 2. CALCULAR EL "SALDO INICIAL REAL"
-    // Para garantizar consistencia, el saldo inicial no es 0, es:
-    // (Saldo Actual Real) - (Suma de todas las transacciones históricas)
-    // Esto corrige automáticamente cualquier desfase, saldo migrado o error histórico.
-    let startBalance = 0;
-
-    if (!isStock) {
-      const currentRealBalance = parseFloat(supplier.balance || 0);
-
-      const totalHistorySum = allSorted.reduce((sum, t) => {
-        const amount = parseFloat(t.amount || 0);
-        return t.type === "invoice" ? sum + amount : sum - amount;
-      }, 0);
-
-      // Si la historia suma 90 pero el saldo es 100, empezamos en 10.
-      startBalance = currentRealBalance - totalHistorySum;
-
-      // Ajuste de precisión por decimales flotantes
-      startBalance = Math.round(startBalance * 100) / 100;
-    }
-
-    // 3. SEPARAR MOVIMIENTOS Y EVOLUCIONAR EL SALDO
-    let runningBalance = startBalance;
-    let balanceAtStartOfRange = startBalance; // Saldo justo antes de la fecha 'from'
-    const transactionsInRange = [];
-
-    allSorted.forEach((t) => {
-      const tDate = parseDate(t.date);
-
-      // Calcular impacto
-      let impact = 0;
-      if (!isStock) {
-        const amount = parseFloat(t.amount || 0);
-        impact = t.type === "invoice" ? amount : -amount;
-      }
-
-      // Lógica de corte
-      if (from && tDate < from) {
-        // Fuera de rango (pasado): solo acumulamos al saldo previo
-        balanceAtStartOfRange += impact;
-      } else if (!to || tDate <= to) {
-        // Dentro del rango: lo guardamos
-        transactionsInRange.push(t);
-      }
-
-      // Siempre actualizamos el runningBalance global para validación (opcional)
-      runningBalance += impact;
-    });
-
-    // --- ENCABEZADO ---
+    // --- ENCABEZADO DEL DOCUMENTO ---
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text(supplier.name.toUpperCase(), 14, 15);
@@ -80,182 +37,115 @@ export const PDFService = {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100);
+    doc.text(`Fecha de emisión: ${todayFull}`, 14, 22); // Fecha y hora actual
 
-    let rangeText = `Historial completo al ${today}`;
-    if (from && to) {
-      rangeText = `Período: ${from.toLocaleDateString(
-        "es-AR"
-      )} al ${to.toLocaleDateString("es-AR")}`;
-    }
-    doc.text(rangeText, 14, 20);
-
-    // Saldo Actual (Debe coincidir con el final de la tabla)
-    if (!isStock) {
+    if (!data.isStock) {
       doc.setFontSize(12);
       doc.setTextColor(0);
-      const saldoFinal = new Intl.NumberFormat("es-AR", {
-        style: "currency",
-        currency: "ARS",
-      }).format(supplier.balance || 0);
-      doc.text(`SALDO ACTUAL: ${saldoFinal}`, 196, 15, { align: "right" });
+      const saldoFinal = formatCurrency(supplier.balance || 0);
+      doc.text(`SALDO TOTAL: ${saldoFinal}`, 196, 15, { align: "right" });
     }
 
-    // --- CUERPO DE LA TABLA ---
-
-    // Inicializamos el contador visual con el saldo acumulado antes del rango
-    let visualRunningBalance = balanceAtStartOfRange;
+    // --- PREPARACIÓN DE LA TABLA ---
     const tableBody = [];
 
-    // Fila 1: Saldo Anterior (si hay filtro o si hay un arrastre inicial significativo)
-    // Mostramos fila inicial si: Hay filtro de fecha, O si hay un "Saldo Inicial" (drift) sin transacciones previas.
-    const showInitialRow = !isStock && (from || Math.abs(startBalance) > 1);
-
-    if (showInitialRow) {
+    // Fila de saldo anterior si existe filtro de fechas
+    if (data.showInitialRow) {
       tableBody.push([
-        from ? from.toLocaleDateString("es-AR") : "-", // Fecha
-        "SALDO ANTERIOR / INICIAL", // Detalle
-        "", // Monto (vacío)
-        new Intl.NumberFormat("es-AR", {
-          // Saldo
-          style: "currency",
-          currency: "ARS",
-        }).format(visualRunningBalance),
+        dateFrom ? dateFrom.split("-").reverse().join("/") : "-",
+        "SALDO ANTERIOR / INICIAL",
+        "",
+        formatCurrency(data.balanceBeforeRange),
       ]);
     }
 
-    transactionsInRange.forEach((t) => {
-      const dateObj = parseDate(t.date);
-      const fecha = dateObj.toLocaleDateString("es-AR", {
+    // Mapeo de movimientos registrados
+    data.records.forEach((row) => {
+      const t = row.original;
+      const fecha = row.dateObj.toLocaleDateString("es-AR", {
         day: "2-digit",
         month: "2-digit",
         year: "2-digit",
       });
 
       let desc = t.description || "";
-      let monto = "";
-      let saldoStr = "";
-
       if (!desc) {
-        if (t.type === "invoice") desc = "Boleta / Compra";
-        else if (t.type === "payment") desc = "Pago";
+        if (t.type === "invoice") desc = "Factura / Compra";
+        else if (t.type === "payment") desc = "Pago Realizado";
         else desc = "Nota de Crédito";
       }
+      if (t.invoiceNumber) desc += ` (#${t.invoiceNumber})`;
 
-      if (isStock) {
+      let montoStr = "";
+      let saldoStr = "";
+
+      if (data.isStock) {
         const itemsStr = (t.items || [])
           .map((i) => `${i.quantity} ${i.name}`)
           .join(", ");
-        monto = t.type === "invoice" ? `+ ${itemsStr}` : `- ${itemsStr}`;
+        montoStr = t.type === "invoice" ? `+ ${itemsStr}` : `- ${itemsStr}`;
         saldoStr = "-";
       } else {
-        const val = parseFloat(t.amount || 0);
-
-        // Actualizamos el saldo visual
-        if (t.type === "invoice") {
-          visualRunningBalance += val;
-          monto = new Intl.NumberFormat("es-AR", {
-            style: "currency",
-            currency: "ARS",
-          }).format(val);
-        } else {
-          visualRunningBalance -= val;
-          monto =
-            "- " +
-            new Intl.NumberFormat("es-AR", {
-              style: "currency",
-              currency: "ARS",
-            }).format(val);
-        }
-
-        saldoStr = new Intl.NumberFormat("es-AR", {
-          style: "currency",
-          currency: "ARS",
-        }).format(visualRunningBalance);
+        const absAmount = Math.abs(row.impact);
+        montoStr = formatCurrency(absAmount);
+        if (row.impact < 0) montoStr = `- ${montoStr}`; // Signo para pagos/notas
+        saldoStr = formatCurrency(row.runningBalance);
       }
 
-      tableBody.push([fecha, desc, monto, saldoStr]);
+      tableBody.push([fecha, desc, montoStr, saldoStr]);
     });
 
-    // --- GENERACIÓN AUTO TABLE ---
+    // --- RENDERIZADO DE TABLA ---
     autoTable(doc, {
-      startY: 25,
+      startY: 28,
       head: [["FECHA", "DETALLE", "MONTO", "SALDO"]],
       body: tableBody,
       theme: "grid",
       styles: {
-        fontSize: 9,
+        fontSize: 8,
         cellPadding: 2,
         valign: "middle",
-        lineWidth: 0.1,
-        lineColor: [200, 200, 200],
       },
       headStyles: {
-        fillColor: [50, 50, 50],
+        fillColor: [40, 40, 40],
         textColor: 255,
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 20 },
+        0: { cellWidth: 22 },
         1: { cellWidth: "auto" },
         2: { halign: "right", fontStyle: "bold", cellWidth: 35 },
         3: { halign: "right", cellWidth: 35 },
       },
-      didParseCell: function (data) {
-        if (data.section === "body") {
-          let dataIndex = data.row.index;
-
-          // Si agregamos la fila manual de saldo anterior, la fila 0 tiene estilo especial
-          if (showInitialRow) {
-            if (dataIndex === 0) {
-              data.cell.styles.fontStyle = "bold";
-              data.cell.styles.fillColor = [240, 240, 240];
-              return;
-            }
-            // Ajustamos el índice para buscar en el array de transacciones
-            dataIndex = dataIndex - 1;
+      // Colores semánticos para las celdas
+      didParseCell: function (dataCell) {
+        if (dataCell.section === "body") {
+          let rowIndex = dataCell.row.index;
+          if (data.showInitialRow) {
+            if (rowIndex === 0) return; // Saltar fila de saldo inicial
+            rowIndex--;
           }
 
-          const originalTrans = transactionsInRange[dataIndex];
-          if (!originalTrans) return;
+          const record = data.records[rowIndex];
+          if (!record) return;
 
-          // Colores de fila
-          if (originalTrans.type === "invoice") {
-            data.cell.styles.fillColor = [255, 245, 245]; // Rojo suave
-          } else if (originalTrans.type === "payment") {
-            data.cell.styles.fillColor = [240, 253, 244]; // Verde suave
-          } else if (originalTrans.type === "credit_note") {
-            data.cell.styles.fillColor = [240, 255, 230]; // Lima suave
-          }
-
-          // Colores de texto (Columna Monto)
-          if (data.column.index === 2) {
-            if (originalTrans.type === "invoice") {
-              data.cell.styles.textColor = [220, 38, 38];
+          if (dataCell.column.index === 2) {
+            if (record.original.type === "invoice") {
+              dataCell.cell.styles.textColor = [200, 0, 0]; // Rojo para deuda
             } else {
-              data.cell.styles.textColor = [22, 163, 74];
+              dataCell.cell.styles.textColor = [0, 150, 0]; // Verde para pagos
             }
           }
         }
       },
     });
 
-    // --- PIE DE PÁGINA STOCK ---
-    if (isStock) {
-      const finalY = doc.lastAutoTable.finalY + 8;
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "bold");
-      doc.text("STOCK PENDIENTE:", 14, finalY);
+    // Nombre del archivo con la fecha actual
+    const fileName = `Resumen_${supplier.name.replace(
+      /\s+/g,
+      "_"
+    )}_${dateStr}.pdf`;
 
-      const debts = supplier.stockDebt || {};
-      const itemsPending = Object.keys(debts)
-        .filter((k) => debts[k] > 0)
-        .map((k) => `${debts[k]}x ${k}`)
-        .join("  |  ");
-      doc.setFont("helvetica", "normal");
-      doc.text(itemsPending || "Sin deuda", 14, finalY + 5);
-    }
-
-    const pdfBlob = doc.output("bloburl");
-    window.open(pdfBlob, "_blank");
+    return { doc, fileName };
   },
 };

@@ -6,104 +6,110 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  /* Fondo oscuro con blur para enfocar la atención */
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Z-INDEX ALTO PARA TAPAR SIDEBAR */
-  z-index: 9999;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
 
-.modal-overlay.open {
-  opacity: 1;
+  /* Z-INDEX ALTO (Debe ser menor que el Toast que pusimos en 10000) */
+  z-index: 9999;
 }
 
 .modal-container {
-  background: white;
+  /* Uso de variables del sistema */
+  background-color: var(--bg-panel, #1e1e1e);
+  color: var(--text-main, #ffffff);
+  border: 1px solid var(--border-color, #333);
+
   width: 90%;
   max-width: 500px;
-  border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  border-radius: 12px; /* Coincide con tus Cards */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+
   display: flex;
   flex-direction: column;
   max-height: 90vh;
-  transform: scale(0.95);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* SIN ANIMACIONES (Ni transform, ni transition) */
   overflow: hidden;
 }
 
-.modal-container.open {
-  transform: scale(1);
-}
-
+/* --- HEADER --- */
 .modal-header {
-  padding: 20px 24px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-color, #333);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #111;
+  color: var(--text-main, #fff);
   letter-spacing: -0.5px;
 }
 
+/* Botón de cerrar (X) */
 .modal-close-btn {
-  background: #f3f4f6;
+  background: transparent;
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #6b7280;
-  transition: all 0.2s ease;
+  color: var(--text-secondary, #a0a0a0);
+
+  /* Sin animación de rotación, solo cambio de color instantáneo */
 }
 
 .modal-close-btn:hover {
-  background: #e5e7eb;
-  color: #111;
-  transform: rotate(90deg);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .modal-close-btn svg {
   width: 20px;
   height: 20px;
   stroke-width: 2.5;
+  stroke: currentColor;
 }
 
+/* --- BODY --- */
 .modal-body {
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
   font-size: 0.95rem;
-  color: #374151;
+  color: var(--text-main, #ddd);
 }
 
+/* --- FOOTER --- */
 .modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #f3f4f6;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color, #333);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  background-color: #fff;
+  background-color: var(--bg-panel, #1e1e1e);
 }
 
+/* --- RESPONSIVE --- */
 @media (max-width: 480px) {
   .modal-container {
-    width: 100%;
-    height: auto;
-    border-radius: 24px 24px 0 0;
-    position: absolute;
-    bottom: 0;
+    /* Mantenemos el estilo "tarjeta central" en móvil */
+    width: 95%;
     max-height: 85vh;
+    border-radius: 12px; /* NO bordes rectos abajo */
+
+    /* Aseguramos que no se pegue al fondo como un bottom-sheet */
+    position: relative;
+    bottom: auto;
   }
 }
