@@ -1,7 +1,7 @@
 // src_v2/main.js
 import "./style.css";
 import { mount, el } from "./core/dom.js";
-import { MainLayout } from "./app/Layout/MainLayout/index.js";
+import { MainLayout } from "./app/layout/MainLayout/index.js";
 import { Router } from "./core/router.js";
 
 // ESTA ES LA LÍNEA QUE FALTABA:
