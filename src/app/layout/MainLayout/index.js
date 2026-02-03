@@ -1,25 +1,16 @@
 import { el } from "../../../core/dom.js";
-import { Sidebar } from "../Sidebar/index.js";
 import "./style.css";
 
-export function MainLayout(currentRouteId) {
-  // 1. Inicializamos el Sidebar
-  const sidebar = Sidebar(currentRouteId);
-
-  // 2. Creamos el área donde se mostrarán las pantallas (Dashboard, Proveedores, etc.)
+export function MainLayout() {
+  // 1. Creamos el área de contenido directamente
   const contentArea = el("main", { className: "main-content" });
 
-  // 3. Estructura flex: Sidebar | Contenido
-  const layoutElement = el(
-    "div",
-    { className: "main-layout" },
-    sidebar.element,
-    contentArea
-  );
+  // 2. Contenedor principal (ahora solo envuelve, no divide)
+  const layoutElement = el("div", { className: "main-layout" }, contentArea);
 
   return {
-    element: layoutElement, // El HTML completo para montar en body
-    contentContainer: contentArea, // Referencia para inyectar vistas
-    sidebarAPI: sidebar, // Para controlar el sidebar desde fuera
+    element: layoutElement,
+    contentContainer: contentArea,
+    // Ya no devolvemos sidebarAPI
   };
 }

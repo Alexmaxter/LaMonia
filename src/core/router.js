@@ -24,7 +24,7 @@ export class Router {
   }
 
   loadRoute() {
-    const hash = window.location.hash || "#cashflow";
+    const hash = window.location.hash || "#suppliers";
     // Limpiamos el hash para buscarlo en el objeto routes (ej: #suppliers/123 -> #suppliers)
     const baseRoute = hash.split("/")[0];
 

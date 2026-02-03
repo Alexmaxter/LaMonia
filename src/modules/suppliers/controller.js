@@ -18,19 +18,13 @@ import { SupplierSettingsModal } from "./Components/SupplierSettingModal/index.j
 export const SupplierController = () => {
   let isVisible = SupplierModel.getVisibility();
 
-  // Función para refrescar la vista actual sin recargar la página
   const refresh = (container) => {
     const ctrl = SupplierController();
     ctrl(container);
   };
 
-  /**
-   * Actualiza solo la visibilidad de los montos sin re-renderizar toda la vista
-   */
   const toggleAmountsVisibility = (visible) => {
-    // Buscar todos los elementos con data-amount
     const amountElements = document.querySelectorAll("[data-amount]");
-
     amountElements.forEach((el) => {
       const amount = parseFloat(el.getAttribute("data-amount"));
       if (!isNaN(amount)) {
@@ -38,14 +32,12 @@ export const SupplierController = () => {
       }
     });
 
-    // Actualizar el ícono del botón toggle
     const toggleBtn = document.querySelector(
-      ".btn-visibility-list, .btn-toggle-visibility"
+      ".btn-visibility-list, .btn-toggle-visibility",
     );
     if (toggleBtn) {
       const eyeSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
       const eyeOffSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-
       toggleBtn.innerHTML = visible ? eyeSVG : eyeOffSVG;
     }
   };
@@ -67,18 +59,15 @@ export const SupplierController = () => {
           return;
         }
 
-        // 1. Traemos en DESC
         const rawMovements = await FirebaseDB.getByFilter(
           "supplier_transactions",
           "supplierId",
           id,
           "date",
-          "desc"
+          "desc",
         );
 
-        // 2. Invertimos para calcular el saldo acumulado cronológicamente
         const chronological = [...rawMovements].reverse();
-
         let cumulative = 0;
         const history = chronological.map((m) => {
           const amount = parseFloat(m.amount) || 0;
@@ -93,7 +82,6 @@ export const SupplierController = () => {
           };
         });
 
-        // 3. Volvemos a invertir para la vista (Más nuevo arriba)
         const movementsWithBalance = [...history].reverse();
 
         container.innerHTML = "";
@@ -108,7 +96,6 @@ export const SupplierController = () => {
             onBack: () => (window.location.hash = "#suppliers"),
             onToggleVisibility: () => {
               isVisible = SupplierModel.toggleVisibility();
-              // ✅ Solo actualizamos los montos, no toda la vista
               toggleAmountsVisibility(isVisible);
               return isVisible;
             },
@@ -117,18 +104,18 @@ export const SupplierController = () => {
                 supplier,
                 null,
                 movementsWithBalance,
-                container
+                container,
               ),
             onEditMovement: (m) =>
               showTransactionModal(
                 supplier,
                 m,
                 movementsWithBalance,
-                container
+                container,
               ),
             onDeleteMovement: (m) => handleDelete(m, supplier, container),
             onOpenSettings: () => handleOpenSettings(supplier, container),
-          })
+          }),
         );
       } else {
         /** ==========================================
@@ -136,12 +123,12 @@ export const SupplierController = () => {
          * ========================================== */
         const rawSuppliers = await FirebaseDB.getAll("suppliers");
         const suppliersData = rawSuppliers.map((s) =>
-          SupplierModel.mapSupplier(s)
+          SupplierModel.mapSupplier(s),
         );
 
         const totalDebt = suppliersData.reduce(
           (acc, s) => acc + (parseFloat(s.balance) || 0),
-          0
+          0,
         );
 
         container.innerHTML = "";
@@ -158,18 +145,30 @@ export const SupplierController = () => {
               handleGlobalTransaction(suppliersData, container),
             onToggleVisibility: () => {
               isVisible = SupplierModel.toggleVisibility();
-              // ✅ Solo actualizamos los montos, no toda la vista
               toggleAmountsVisibility(isVisible);
               return isVisible;
             },
-          })
+            // NUEVO: Editar desde la lista de actividad
+            onEditTransaction: (transaction) => {
+              const s = suppliersData.find(
+                (sup) => sup.id === transaction.supplierId,
+              );
+              if (s) showTransactionModal(s, transaction, [], container);
+            },
+            // NUEVO: Eliminar desde la lista de actividad
+            onDeleteTransaction: (transaction) => {
+              const s = suppliersData.find(
+                (sup) => sup.id === transaction.supplierId,
+              );
+              if (s) handleDelete(transaction, s, container);
+            },
+          }),
         );
       }
     } catch (err) {
       console.error(err);
       container.innerHTML = `<div class="error-v1">Error: ${err.message}</div>`;
     } finally {
-      // 2. Lo ocultamos siempre al finalizar (éxito o error)
       hideLoader();
     }
 
@@ -181,7 +180,7 @@ export const SupplierController = () => {
       supplier,
       initialData,
       movements,
-      cont
+      cont,
     ) {
       // Si el modal se abre desde la lista (sin movimientos cargados), los buscamos
       let activeMovements = movements;
@@ -191,7 +190,7 @@ export const SupplierController = () => {
           "supplierId",
           supplier.id,
           "date",
-          "desc"
+          "desc",
         );
       }
 
@@ -220,7 +219,6 @@ export const SupplierController = () => {
 
             const operations = [];
 
-            // 1. Operación de Transacción
             if (initialData && initialData.id) {
               operations.push({
                 type: "update",
@@ -236,7 +234,6 @@ export const SupplierController = () => {
               });
             }
 
-            // 2. Operación de Actualización de Proveedor
             operations.push({
               type: "update",
               collection: "suppliers",
@@ -248,7 +245,6 @@ export const SupplierController = () => {
             });
 
             await FirebaseDB.executeBatch(operations);
-
             modal.remove();
             refresh(cont);
           } catch (err) {
@@ -264,7 +260,6 @@ export const SupplierController = () => {
         title: "¿Eliminar registro?",
         onConfirm: async () => {
           try {
-            // Revertimos el efecto de la transacción antes de borrarla
             const newBalance = TransactionCalculator.calculateBalance({
               currentBalance: supplier.balance,
               initialAmount: m.amount,

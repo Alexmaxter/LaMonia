@@ -7,52 +7,54 @@ import "./style.css";
 export function SupplierListView({
   suppliers,
   totalDebt,
-  isVisible: initialIsVisible, // Renombramos para usar estado interno
+  isVisible: initialIsVisible,
   onSelect,
   onAddQuickTransaction,
   onNewSupplier,
   onGlobalTransaction,
   onToggleVisibility,
+  onEditTransaction, // NUEVO CALLBACK
+  onDeleteTransaction, // NUEVO CALLBACK
 }) {
   // --- ESTADO LOCAL ---
-  let isVisible = initialIsVisible; // Estado local de visibilidad
+  let isVisible = initialIsVisible;
   let currentSort = "name_asc";
   let currentFilteredList = [...suppliers];
-  let activeTab = "directory"; // 'directory' | 'activity'
+  let activeTab = "directory";
   let recentTransactions = [];
+  let currentActivityFilter = "all";
   let isLoadingActivity = false;
 
   // --- ICONOS ---
-  const iconPlus = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+  const iconPlus = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
   const iconSupplier = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>`;
   const iconInvoice = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
   const iconCopy = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
   const iconEye = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   const iconEyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-  const iconSortAZ = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6v12h-5"/><path d="M21 9v10a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2v-10"/><path d="M3 5v10a2 2 0 0 0 2 2h10"/></svg>`;
-  const iconSortDown = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>`;
-  const iconSortUp = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>`;
   const iconGrid = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
   const iconList = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
+  const iconTrash = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-  // --- REFERENCIAS A ELEMENTOS UI (Para control manual) ---
-  const contentWrapper = el("div", { className: "content-wrapper fade-in" });
+  const iconSortAZ = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l5 5 5-5"/><path d="M4 6h7m-7 6h7m-7 6h7"/></svg>`;
+  const iconSortDown = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>`;
+  const iconSortUp = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6"/><path d="M6 20V10"/><path d="M18 20v-4"/></svg>`;
+
+  const iconsType = {
+    invoice: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+    payment: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>`,
+  };
+
+  const contentWrapper = el("div", { className: "content-wrapper" });
+  const controlsGroupRight = el("div", { className: "controls-group" });
   let btnTabDirectory = null;
   let btnTabActivity = null;
 
-  // --- CARGA DE ACTIVIDAD ---
+  // --- DATA FETCHING ---
   const fetchActivity = async () => {
-    // Si ya tenemos datos, no recargamos para evitar parpadeos
-    if (recentTransactions.length > 0 && !isLoadingActivity) {
-      renderContent();
-      return;
-    }
-
+    if (recentTransactions.length > 0 && !isLoadingActivity) return;
     isLoadingActivity = true;
-    renderContent(); // Muestra loader
-
     try {
-      // Usamos el filtro de fecha descendente que arreglamos en db.js
       const data = await FirebaseDB.getByFilter(
         "supplier_transactions",
         null,
@@ -60,29 +62,19 @@ export function SupplierListView({
         "date",
         "desc",
       );
-      if (data && Array.isArray(data)) {
-        recentTransactions = data.slice(0, 50);
-      } else {
-        recentTransactions = [];
-      }
+      recentTransactions =
+        data && Array.isArray(data) ? data.slice(0, 500) : [];
+      if (activeTab === "directory") renderContent();
     } catch (e) {
-      console.error("Error al cargar actividad:", e);
-      recentTransactions = [];
+      console.error("Error cargando actividad:", e);
     } finally {
       isLoadingActivity = false;
-      // Solo renderizamos si seguimos en la pestaña de actividad
-      if (activeTab === "activity") {
-        renderContent();
-      }
+      if (activeTab === "activity") renderContent();
     }
   };
 
-  // --- HANDLERS Y UTILIDADES ---
-
   const switchTab = (tab) => {
     activeTab = tab;
-
-    // Actualización visual de botones usando referencias directas
     if (tab === "directory") {
       btnTabDirectory.classList.add("active");
       btnTabActivity.classList.remove("active");
@@ -90,7 +82,8 @@ export function SupplierListView({
     } else {
       btnTabDirectory.classList.remove("active");
       btnTabActivity.classList.add("active");
-      fetchActivity();
+      renderContent();
+      if (recentTransactions.length === 0) fetchActivity();
     }
   };
 
@@ -100,7 +93,6 @@ export function SupplierListView({
       const balB = parseFloat(b.balance) || 0;
       const nameA = (a.name || "").toLowerCase();
       const nameB = (b.name || "").toLowerCase();
-
       switch (currentSort) {
         case "name_asc":
           return nameA.localeCompare(nameB);
@@ -114,21 +106,53 @@ export function SupplierListView({
     });
   };
 
+  const getFilteredActivity = () => {
+    if (currentActivityFilter === "all") return recentTransactions;
+    return recentTransactions.filter((tx) => tx.type === currentActivityFilter);
+  };
+
+  const setActivityFilter = (type) => {
+    currentActivityFilter = type;
+    renderContent();
+  };
+
+  const getDateKey = (dateObj) => {
+    if (!dateObj || isNaN(dateObj)) return "unknown";
+    return dateObj.toDateString();
+  };
+
+  const getFriendlyDate = (dateObj) => {
+    if (!dateObj || isNaN(dateObj)) return "Fecha Desconocida";
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const compare = new Date(
+      dateObj.getFullYear(),
+      dateObj.getMonth(),
+      dateObj.getDate(),
+    );
+    const diffTime = today - compare;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Hoy";
+    if (diffDays === 1) return "Ayer";
+
+    const options = { weekday: "long", day: "numeric", month: "long" };
+    const dateStr = dateObj.toLocaleDateString("es-AR", options);
+    return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  };
+
   const handleToggle = (e) => {
     const newState = onToggleVisibility();
-    isVisible = newState; // ✅ Actualizamos estado local para futuros renders
+    isVisible = newState;
     e.currentTarget.innerHTML = newState ? iconEye : iconEyeOff;
 
-    // Actualizamos el DOM actual (Directorio y Actividad)
-    // El Controller se encarga de [data-amount], pero aseguramos la actualización visual inmediata
     const allBalances = document.querySelectorAll(
-      ".balance-value, .total-debt-value, .act-amount",
+      ".balance-value, .total-debt-value, .mov-amount-main, .mini-pill-amount, .separator-amount",
     );
     allBalances.forEach((elAmount) => {
       const amount = parseFloat(elAmount.getAttribute("data-amount"));
-      if (!isNaN(amount)) {
+      if (!isNaN(amount))
         elAmount.textContent = SupplierModel.formatAmount(amount, newState);
-      }
     });
   };
 
@@ -140,9 +164,6 @@ export function SupplierListView({
     if (activeTab === "directory") renderContent();
   };
 
-  // --- RENDERIZADORES AUXILIARES ---
-
-  // Botón de Ordenamiento (Helper)
   const createSortBtn = (type, label, icon) => {
     return el(
       "button",
@@ -151,34 +172,68 @@ export function SupplierListView({
         title: label,
         onclick: () => {
           currentSort = type;
-          renderContent(); // Re-renderizará la vista de directorio con el nuevo orden
+          renderContent();
         },
       },
-      [
-        el("span", { innerHTML: icon }),
-        el("span", { className: "btn-sort-label" }, label),
-      ],
+      [el("span", { innerHTML: icon }), el("span", {}, label)],
     );
   };
 
-  // --- RENDER PRINCIPAL (Content Switcher) ---
+  const renderToolbarControls = () => {
+    controlsGroupRight.innerHTML = "";
+    if (activeTab === "directory") {
+      controlsGroupRight.appendChild(
+        createSortBtn("name_asc", "Nombre", iconSortAZ),
+      );
+      controlsGroupRight.appendChild(
+        createSortBtn("debt_desc", "Mayor Deuda", iconSortDown),
+      );
+      controlsGroupRight.appendChild(
+        createSortBtn("debt_asc", "Menor Deuda", iconSortUp),
+      );
+    } else {
+      if (recentTransactions.length > 0) {
+        controlsGroupRight.appendChild(
+          el(
+            "button",
+            {
+              className: `filter-chip ${currentActivityFilter === "all" ? "active" : ""}`,
+              onclick: () => setActivityFilter("all"),
+            },
+            "Todos",
+          ),
+        );
+        controlsGroupRight.appendChild(
+          el(
+            "button",
+            {
+              className: `filter-chip ${currentActivityFilter === "invoice" ? "active" : ""}`,
+              "data-type": "invoice",
+              onclick: () => setActivityFilter("invoice"),
+            },
+            "Deuda",
+          ),
+        );
+        controlsGroupRight.appendChild(
+          el(
+            "button",
+            {
+              className: `filter-chip ${currentActivityFilter === "payment" ? "active" : ""}`,
+              "data-type": "payment",
+              onclick: () => setActivityFilter("payment"),
+            },
+            "Pagos",
+          ),
+        );
+      }
+    }
+  };
+
   const renderContent = () => {
     contentWrapper.innerHTML = "";
+    renderToolbarControls();
 
-    // ==========================================
-    // VISTA 1: DIRECTORIO
-    // ==========================================
     if (activeTab === "directory") {
-      const filtersContainer = el("div", { className: "filters-container" }, [
-        el("span", { className: "filters-label" }, "Ordenar por:"),
-        el("div", { className: "sort-buttons-group" }, [
-          createSortBtn("name_asc", "A-Z", iconSortAZ),
-          createSortBtn("debt_desc", "Mayor Deuda", iconSortDown),
-          createSortBtn("debt_asc", "Menor Deuda", iconSortUp),
-        ]),
-      ]);
-      contentWrapper.appendChild(filtersContainer);
-
       const gridContainer = el("div", { className: "suppliers-grid" });
       const sortedList = getSortedData(currentFilteredList);
 
@@ -194,42 +249,93 @@ export function SupplierListView({
         const fragment = document.createDocumentFragment();
         sortedList.forEach((s) => {
           const balance = parseFloat(s.balance) || 0;
+          const myRecentMoves = recentTransactions
+            .filter((tx) => tx.supplierId === s.id)
+            .slice(0, 3);
+
           const card = el(
             "div",
             { className: "supplier-card", dataset: { id: s.id } },
             [
-              el("div", { className: "card-info" }, [
-                el("h3", { className: "card-name" }, s.name),
-                s.alias
-                  ? el("div", { className: "alias-pill" }, [
-                      el("span", { innerHTML: iconCopy }),
-                      el("span", {}, s.alias),
-                    ])
-                  : el("span", { className: "card-alias-empty" }, "Sin alias"),
+              el("div", { className: "card-header-top" }, [
+                el("div", { className: "card-info" }, [
+                  el("h3", { className: "card-name" }, s.name),
+                  s.alias
+                    ? el("div", { className: "alias-pill" }, [
+                        el("span", { innerHTML: iconCopy }),
+                        el("span", {}, s.alias),
+                      ])
+                    : el(
+                        "span",
+                        { className: "card-alias-empty" },
+                        "Sin alias",
+                      ),
+                ]),
+                el("div", { className: "card-actions-right" }, [
+                  el("div", { className: "card-balance-block" }, [
+                    el("span", { className: "balance-label" }, "DEUDA TOTAL"),
+                    el(
+                      "span",
+                      {
+                        className: `balance-value ${balance > 0 ? "text-danger" : "text-success"}`,
+                        dataset: { amount: balance },
+                      },
+                      SupplierModel.formatAmount(balance, isVisible),
+                    ),
+                  ]),
+                  el("button", {
+                    className: "btn-big-add",
+                    innerHTML: iconPlus,
+                  }),
+                ]),
               ]),
-              el("div", { className: "card-balance" }, [
-                el("span", { className: "balance-label" }, "DEUDA TOTAL"),
-                el(
-                  "span",
-                  {
-                    className: `balance-value ${balance > 0 ? "text-danger" : "text-success"}`,
-                    "data-amount": balance,
-                    dataset: { amount: balance }, // ✅ Importante para el toggle
-                  },
-                  SupplierModel.formatAmount(balance, isVisible),
-                ),
-              ]),
-              el("button", {
-                className: "btn-quick-add-v1",
-                innerHTML: iconPlus,
-              }),
+              myRecentMoves.length > 0
+                ? el("div", { className: "card-mini-footer" }, [
+                    el(
+                      "span",
+                      { className: "footer-label" },
+                      "Últimos Movimientos",
+                    ),
+                    el(
+                      "div",
+                      { className: "pills-container" },
+                      myRecentMoves.map((tx) => {
+                        const dateObj =
+                          tx.date && tx.date.toDate
+                            ? tx.date.toDate()
+                            : new Date(tx.date);
+                        const dateStr = dateObj.toLocaleDateString("es-AR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                        });
+                        const isDebt = tx.type === "invoice";
+                        return el(
+                          "div",
+                          {
+                            className: `mini-pill ${isDebt ? "invoice" : "payment"}`,
+                          },
+                          [
+                            el("span", { className: "pill-date" }, dateStr),
+                            el(
+                              "span",
+                              {
+                                className: "mini-pill-amount",
+                                dataset: { amount: tx.amount },
+                              },
+                              SupplierModel.formatAmount(tx.amount, isVisible),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ])
+                : null,
             ],
           );
           fragment.appendChild(card);
         });
         gridContainer.appendChild(fragment);
 
-        // Event Delegation para clicks
         gridContainer.onclick = (e) => {
           const card = e.target.closest(".supplier-card");
           if (!card) return;
@@ -238,7 +344,7 @@ export function SupplierListView({
             if (s?.alias) navigator.clipboard.writeText(s.alias);
             return;
           }
-          if (e.target.closest(".btn-quick-add-v1")) {
+          if (e.target.closest(".btn-big-add")) {
             const s = suppliers.find((su) => su.id === card.dataset.id);
             onAddQuickTransaction(s);
             return;
@@ -247,99 +353,167 @@ export function SupplierListView({
         };
       }
       contentWrapper.appendChild(gridContainer);
-    }
-
-    // ==========================================
-    // VISTA 2: ACTIVIDAD
-    // ==========================================
-    else {
+    } else {
+      // --- VISTA ACTIVIDAD (Modo Tarjeta Editable) ---
       if (isLoadingActivity) {
-        contentWrapper.innerHTML = `
-            <div class="loader-container" style="padding:40px; text-align:center;">
-                <div class="spinner"></div>
-                <p style="margin-top:10px; color:var(--text-muted)">Buscando movimientos...</p>
-            </div>`;
+        contentWrapper.innerHTML = `<div class="empty-state">Buscando movimientos...</div>`;
         return;
       }
-
-      if (recentTransactions.length === 0) {
-        contentWrapper.innerHTML = `
-            <div class="activity-empty">
-                <div style="font-size:2rem; margin-bottom:10px;">📭</div>
-                <p>No se encontraron movimientos recientes.</p>
-                <small>Asegúrate de haber registrado operaciones.</small>
-            </div>`;
+      const visibleTransactions = getFilteredActivity();
+      if (visibleTransactions.length === 0) {
+        contentWrapper.appendChild(
+          el(
+            "div",
+            { className: "empty-state" },
+            "No se encontraron movimientos.",
+          ),
+        );
         return;
       }
+      const listContainer = el("div", { className: "activity-list-container" });
+      let lastDateKey = null;
 
-      const table = el("div", { className: "activity-list" });
+      visibleTransactions.forEach((m) => {
+        const date =
+          m.date && m.date.toDate ? m.date.toDate() : new Date(m.date);
+        const currentDateKey = getDateKey(date);
 
-      table.appendChild(
-        el("div", { className: "activity-header" }, [
-          el("span", {}, "Fecha"),
-          el("span", {}, "Proveedor"),
-          el("span", { style: "flex:1" }, "Detalle"),
-          el("span", { className: "text-right" }, "Monto"),
-        ]),
-      );
+        if (currentDateKey !== lastDateKey) {
+          const movesForDay = visibleTransactions.filter((t) => {
+            const tDate =
+              t.date && t.date.toDate ? t.date.toDate() : new Date(t.date);
+            return getDateKey(tDate) === currentDateKey;
+          });
 
-      recentTransactions.forEach((tx) => {
-        // --- ARREGLO 2: FECHA CLARA ---
-        const dateObj =
-          tx.date && tx.date.toDate ? tx.date.toDate() : new Date(tx.date);
-        const dateStr = isNaN(dateObj)
-          ? "-"
-          : dateObj.toLocaleDateString("es-AR", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric", // 02/05/2026
-            });
+          const dayDebt = movesForDay
+            .filter((t) => t.type === "invoice")
+            .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+          const dayPayment = movesForDay
+            .filter((t) => t.type === "payment")
+            .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-        // --- ARREGLO 3: NOMBRE REAL DEL PROVEEDOR ---
-        const supplierFound = suppliers.find((s) => s.id === tx.supplierId);
+          listContainer.appendChild(
+            el("div", { className: "group-separator-modern" }, [
+              el(
+                "span",
+                { className: "separator-date" },
+                getFriendlyDate(date),
+              ),
+              el("span", { className: "separator-line" }),
+              el("div", { className: "separator-totals" }, [
+                el("div", { className: "total-tag debt" }, [
+                  el("span", { className: "tag-label" }, "Deuda:"),
+                  el(
+                    "span",
+                    {
+                      className: "separator-amount",
+                      dataset: { amount: dayDebt },
+                    },
+                    SupplierModel.formatAmount(dayDebt, isVisible),
+                  ),
+                ]),
+                el("span", { className: "separator-divider" }, "|"),
+                el("div", { className: "total-tag payment" }, [
+                  el("span", { className: "tag-label" }, "Pagos:"),
+                  el(
+                    "span",
+                    {
+                      className: "separator-amount",
+                      dataset: { amount: dayPayment },
+                    },
+                    SupplierModel.formatAmount(dayPayment, isVisible),
+                  ),
+                ]),
+              ]),
+            ]),
+          );
+          lastDateKey = currentDateKey;
+        }
+
+        const isDebt = m.type === "invoice";
+        const day = date.getDate();
+        const month = date
+          .toLocaleString("es-AR", { month: "short" })
+          .toUpperCase()
+          .replace(".", "");
+        const yearShort = date.getFullYear().toString().slice(-2);
+
+        // Buscamos nombre del proveedor
+        const supplierFound = suppliers.find((s) => s.id === m.supplierId);
         const supplierName = supplierFound
           ? supplierFound.name
-          : tx.supplierName || "Proveedor";
+          : m.supplierName || "Proveedor Desconocido";
 
-        const row = el("div", { className: "activity-row" }, [
-          el("div", { className: "act-date" }, dateStr),
-          el("div", { className: "act-supplier" }, [
-            el(
-              "span",
-              {
-                className: "supplier-pill-sm",
-                onclick: () => onSelect(tx.supplierId),
-              },
-              supplierName,
-            ),
-          ]),
-          el("div", { className: "act-desc" }, [
-            el(
-              "span",
-              { className: "act-type" },
-              tx.type === "invoice" ? "Boleta" : "Pago",
-            ),
-            el(
-              "span",
-              { className: "act-concept" },
-              tx.description || tx.concept || "-",
-            ),
-          ]),
-          // --- ARREGLO 1: DATASET PARA VISIBILIDAD ---
-          el("div", {
-            className: `act-amount ${tx.type === "invoice" ? "text-danger" : "text-success"}`,
-            "data-amount": tx.amount, // Propiedad data-amount (backup)
-            dataset: { amount: tx.amount }, // ✅ Atributo data-amount real (CRÍTICO para toggle)
-            innerHTML: SupplierModel.formatAmount(tx.amount, isVisible),
-          }),
-        ]);
-        table.appendChild(row);
+        // Tarjeta con click para editar
+        const card = el(
+          "div",
+          {
+            className: "movement-card",
+            onclick: () => onEditTransaction && onEditTransaction(m),
+          },
+          [
+            // Izq: Fecha e Icono
+            el("div", { className: "mov-left-group" }, [
+              el("div", {
+                className: `mov-circle-icon ${isDebt ? "bg-danger-soft" : "bg-success-soft"}`,
+                innerHTML: iconsType[m.type] || iconsType.invoice,
+              }),
+              el("div", { className: "mov-calendar-square" }, [
+                el("span", { className: "cal-day" }, day),
+                el(
+                  "span",
+                  { className: "cal-month-year" },
+                  `${month} ${yearShort}`,
+                ),
+              ]),
+            ]),
+
+            // Centro: Info (Proveedor y Tipo en misma linea)
+            el("div", { className: "mov-info-col" }, [
+              el("div", { className: "mov-header-row" }, [
+                el("span", { className: "supplier-name-large" }, supplierName),
+                el(
+                  "span",
+                  { className: "mov-type-badge" },
+                  isDebt ? "BOLETA" : "PAGO",
+                ),
+              ]),
+              el(
+                "span",
+                { className: "mov-secondary-concept" },
+                m.description || m.concept || "-",
+              ),
+            ]),
+
+            // Derecha: Montos y Botón Eliminar
+            el("div", { className: "mov-right-amounts" }, [
+              el(
+                "span",
+                {
+                  className: `mov-amount-main ${isDebt ? "text-danger" : "text-success"}`,
+                  dataset: { amount: m.amount },
+                },
+                SupplierModel.formatAmount(m.amount, isVisible),
+              ),
+
+              // Botón Eliminar (stopPropagation para no disparar el edit)
+              el("button", {
+                className: "btn-delete-mov",
+                title: "Eliminar registro",
+                onclick: (e) => {
+                  e.stopPropagation();
+                  if (onDeleteTransaction) onDeleteTransaction(m);
+                },
+                innerHTML: iconTrash,
+              }),
+            ]),
+          ],
+        );
+        listContainer.appendChild(card);
       });
-      contentWrapper.appendChild(table);
+      contentWrapper.appendChild(listContainer);
     }
   };
-
-  // --- CREACIÓN DE ELEMENTOS FIJOS ---
 
   const searchComponent = SearchBox({
     placeholder: "Buscar proveedor, alias...",
@@ -347,31 +521,20 @@ export function SupplierListView({
     delay: 300,
   });
 
-  // Botones de Pestañas
   btnTabDirectory = el(
     "button",
-    {
-      className: "tab-btn active",
-      onclick: () => switchTab("directory"),
-    },
+    { className: "tab-btn active", onclick: () => switchTab("directory") },
     [el("span", { innerHTML: iconGrid }), "Directorio"],
   );
-
   btnTabActivity = el(
     "button",
-    {
-      className: "tab-btn",
-      onclick: () => switchTab("activity"),
-    },
-    [el("span", { innerHTML: iconList }), "Actividad Reciente"],
+    { className: "tab-btn", onclick: () => switchTab("activity") },
+    [el("span", { innerHTML: iconList }), "Actividad"],
   );
 
-  // --- INICIALIZACIÓN ---
-  renderContent();
+  fetchActivity();
 
-  // --- RETURN FINAL ---
-  return el("div", { className: "supplier-list-view fade-in" }, [
-    // CABECERA
+  return el("div", { className: "supplier-list-view" }, [
     el("div", { className: "list-actions-bar" }, [
       el("div", { className: "header-top-row" }, [
         el("div", { className: "title-main" }, [
@@ -384,7 +547,6 @@ export function SupplierListView({
             "span",
             {
               className: `total-debt-value ${totalDebt > 0 ? "text-danger" : "text-success"}`,
-              "data-amount": totalDebt,
               dataset: { amount: totalDebt },
             },
             SupplierModel.formatAmount(totalDebt, isVisible),
@@ -412,11 +574,10 @@ export function SupplierListView({
         ]),
       ]),
     ]),
-
-    // PESTAÑAS
-    el("div", { className: "tabs-bar" }, [btnTabDirectory, btnTabActivity]),
-
-    // CONTENIDO
+    el("div", { className: "toolbar-container" }, [
+      el("div", { className: "tabs-group" }, [btnTabDirectory, btnTabActivity]),
+      controlsGroupRight,
+    ]),
     contentWrapper,
   ]);
 }

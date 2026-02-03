@@ -1,39 +1,34 @@
 /* src/modules/suppliers/views/SupplierListView/style.css */
 
-/* --- CONTENEDOR PRINCIPAL --- */
+/* --- RESET & LAYOUT --- */
 .supplier-list-view {
   padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
 }
 
 /* --- CABECERA PRINCIPAL --- */
 .list-actions-bar {
   display: flex;
-  flex-direction: column; /* Apila las filas verticalmente */
+  flex-direction: column;
   gap: 20px;
   margin-bottom: 20px;
   background: var(--bg-panel);
   padding: 24px;
-  border-radius: 20px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
 }
-
-/* FILA 1: Título y Totales */
 .header-top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
-
 .title-main {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .page-title {
   font-size: 1.8rem;
   font-weight: 900;
@@ -41,24 +36,20 @@
   color: var(--text-main);
   line-height: 1;
 }
-
 .badge-count {
   background: #eff6ff;
   color: var(--primary);
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 800;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  border: 1px solid var(--border-color);
 }
-
-/* Totales */
 .total-debt-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* Alinear a la derecha */
+  align-items: flex-end;
 }
-
 .total-debt-label {
   font-size: 0.7rem;
   font-weight: 800;
@@ -66,551 +57,605 @@
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-
 .total-debt-value {
   font-size: 1.8rem;
   font-weight: 950;
   color: var(--text-main);
   line-height: 1;
 }
-
-/* FILA 2: Controles (Buscador + Botones) */
 .header-controls-row {
   display: flex;
   align-items: center;
   gap: 20px;
   width: 100%;
 }
-
-/* Buscador: Crece para ocupar espacio disponible */
 .search-wrapper {
   flex: 1;
   min-width: 200px;
 }
-
-/* Grupo de Botones */
 .button-group {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex-shrink: 0; /* No encogerse */
+  flex-shrink: 0;
 }
 
-/* ESTILOS DE BOTONES */
+/* Botones */
 .btn-primary-v1,
 .btn-secondary-v1 {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 20px;
-  border-radius: 14px;
+  border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
   border: none;
   font-size: 0.95rem;
-  height: 48px; /* Altura fija para alineación perfecta */
+  height: 44px;
 }
-
 .btn-primary-v1 {
   background: var(--primary);
   color: var(--text-inverse);
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
 }
 .btn-primary-v1:hover {
   background: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
 }
-
 .btn-secondary-v1 {
   background: #ffffff;
   border: 1px solid var(--border-strong);
   color: var(--text-secondary);
-  box-shadow: var(--shadow-sm);
 }
 .btn-secondary-v1:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background: #eff6ff;
+  background: #f8fafc;
 }
-
-/* Botón Ojo */
 .btn-visibility-list {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  height: 48px; /* Misma altura fija */
-  min-width: 48px;
+  height: 44px;
+  min-width: 44px;
   background: #ffffff;
   color: var(--text-muted);
   border: 1px solid var(--border-strong);
-  border-radius: 14px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
 }
-
 .btn-visibility-list:hover {
   color: var(--primary);
   border-color: var(--primary);
-  background: #eff6ff;
+  background: #f8fafc;
 }
 
-/* --- FILTROS (Barra intermedia) --- */
-.filters-container {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 0 4px;
-  flex-wrap: wrap;
-}
-
-.filters-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.sort-buttons-group {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-sort {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 8px 14px;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-.btn-sort:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-1px);
-}
-
-.btn-sort.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-}
-
-/* --- GRILLA --- */
-.suppliers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 20px;
-}
-
-.supplier-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 24px;
+/* --- TOOLBAR UNIFICADA --- */
+.toolbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  padding-right: 70px;
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
 }
-
-.supplier-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-}
-
-.card-info {
+.tabs-group {
   display: flex;
-  flex-direction: column;
   gap: 8px;
 }
-
-.card-name {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 850;
-  color: var(--text-main);
-}
-
-.alias-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #eff6ff;
-  color: var(--primary);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  transition: all 0.2s;
-  width: fit-content;
-  border: 1px solid transparent;
-}
-
-.alias-pill:hover {
-  background: var(--primary);
-  color: white;
-  transform: scale(1.05);
-}
-
-.card-alias-empty {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.card-balance {
-  text-align: right;
-}
-
-.balance-label {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-}
-
-.balance-value {
-  font-size: 1.2rem;
-  font-weight: 950;
-  color: var(--text-main);
-}
-
-.text-danger {
-  color: var(--danger);
-}
-.text-success {
-  color: var(--success);
-}
-
-.btn-quick-add-v1 {
-  position: absolute;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: #f3f4f6;
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background 0.3s,
-    color 0.3s;
-}
-
-.btn-quick-add-v1 svg {
-  transition: transform 0.3s ease;
-}
-
-.supplier-card:hover .btn-quick-add-v1 {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.supplier-card:hover .btn-quick-add-v1 svg {
-  transform: rotate(90deg);
-}
-
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px;
-  color: var(--text-muted);
-  font-style: italic;
-  background: var(--bg-panel);
-  border-radius: 20px;
-  border: 1px dashed var(--border-color);
-}
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  /* En tablets/móviles grandes, quizás queramos que la búsqueda baje 
-     si no hay espacio para búsqueda + botones en una línea.
-     De momento, flex-wrap en controls-row lo maneja, pero forzaremos columna si es muy chico. */
-}
-
-@media (max-width: 768px) {
-  .supplier-list-view {
-    padding: 16px;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .header-controls-row {
-    flex-direction: column; /* Apilar búsqueda arriba, botones abajo */
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  .button-group {
-    justify-content: space-between; /* Botones ocupan todo el ancho distribuidos */
-  }
-
-  /* Los botones en móvil full width para fácil acceso */
-  .btn-primary-v1,
-  .btn-secondary-v1,
-  .btn-visibility-list {
-    flex: 1;
-    justify-content: center;
-  }
-  .btn-visibility-list {
-    flex: 0; /* El ojo no se estira tanto */
-    min-width: 48px;
-  }
-
-  .header-top-row {
-    align-items: flex-start;
-  }
-
-  .total-debt-container {
-    align-items: flex-end; /* Mantener derecha */
-  }
-}
-/* src/modules/suppliers/views/SupplierListView/style.css */
-
-/* ... (MANTENER TODO EL CSS ANTERIOR DE LIST-ACTIONS-BAR, HEADER, ETC.) ... */
-/* ... Solo reemplaza o actualiza desde donde empiezan las TABS hacia abajo ... */
-
-/* --- TABS BAR (ESTILO PÍLDORA) --- */
-.tabs-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding: 4px;
-  /* Eliminamos borde inferior duro para dar look más "app" */
-  border-bottom: none;
-}
-
 .tab-btn {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  /* Píldora completa */
-  border-radius: 30px;
-  padding: 10px 20px;
-  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: var(--text-muted);
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
-
 .tab-btn:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-1px);
+  background: var(--bg-input);
+  color: var(--text-main);
 }
-
 .tab-btn.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); /* Sombra azul suave (Glow) */
+  background: #ffffff;
+  color: var(--primary);
+  border-color: var(--border-color);
+  border-bottom: 2px solid var(--primary);
 }
-
-/* Ajuste de iconos dentro de tabs */
 .tab-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   stroke-width: 2.5;
 }
+.controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-sort:hover {
+  background: var(--bg-input);
+  color: var(--text-main);
+}
+.btn-sort.active {
+  background: #eff6ff;
+  color: var(--primary);
+  border-color: rgba(37, 99, 235, 0.2);
+  font-weight: 700;
+}
+.btn-sort svg {
+  width: 14px;
+  height: 14px;
+}
 
-/* --- ACTIVITY LIST (ESTILO TARJETA LIMPIA) --- */
-.activity-list {
+/* --- GRILLA DIRECTORIO --- */
+.suppliers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+.supplier-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  /* Bordes redondeados consistentes con el resto del proyecto */
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
-  overflow: hidden; /* Para que el header respete el borde */
-  box-shadow: var(--shadow-sm);
+  justify-content: space-between;
+  cursor: pointer;
 }
-
-.activity-header {
+.supplier-card:hover {
+  border-color: var(--primary);
+  background: #fdfdfd;
+}
+.card-header-top {
   display: flex;
-  align-items: center;
-  padding: 16px 24px;
-  background: var(--bg-input); /* Gris muy suave */
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border-color);
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 16px;
 }
-
-.activity-header span:nth-child(1) {
-  width: 100px;
-} /* Fecha */
-.activity-header span:nth-child(2) {
-  width: 180px;
-} /* Proveedor */
-.activity-header span:nth-child(3) {
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex: 1;
-} /* Detalle */
-.activity-header span:nth-child(4) {
-  width: 120px;
-  text-align: right;
-} /* Monto */
-
-.activity-row {
-  display: flex;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border-color);
-  transition: background 0.1s ease;
-  cursor: default;
 }
-
-.activity-row:last-child {
-  border-bottom: none;
+.card-name {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
 }
-
-.activity-row:hover {
-  background: #f9fafb; /* Hover muy sutil */
-}
-
-.act-date {
-  width: 100px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.act-supplier {
-  width: 180px;
-  padding-right: 16px;
-}
-
-/* PILDORA DE PROVEEDOR (MEJORADA) */
-.supplier-pill-sm {
+.alias-pill {
   display: inline-flex;
   align-items: center;
-  background: #eff6ff; /* Azul muy pálido */
-  color: var(--primary);
-  border: 1px solid rgba(37, 99, 235, 0.2);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  gap: 4px;
+  background: #f3f4f6;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  transition: all 0.2s;
+  border: 1px solid transparent;
+  width: fit-content;
 }
-
-.supplier-pill-sm:hover {
-  background: var(--primary);
-  color: #ffffff;
-  transform: scale(1.02);
+.alias-pill:hover {
+  background: var(--bg-input);
+  color: var(--text-main);
+  border-color: var(--border-color);
 }
-
-.act-desc {
-  flex: 1;
+.card-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-balance-block {
+  text-align: right;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
 }
-
-.act-type {
+.balance-label {
+  display: block;
   font-size: 0.65rem;
-  text-transform: uppercase;
   font-weight: 800;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.balance-value {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1;
+}
+.text-danger {
+  color: var(--danger);
+}
+.text-success {
+  color: var(--success);
+}
+.btn-big-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: none;
+}
+.btn-big-add:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.btn-big-add svg {
+  width: 24px;
+  height: 24px;
+}
+.card-mini-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.footer-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.pills-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.mini-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+.mini-pill.invoice {
+  background: #fef2f2;
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.1);
+}
+.mini-pill.payment {
+  background: #ecfdf5;
+  color: var(--success);
+  border-color: rgba(16, 185, 129, 0.1);
+}
+.pill-date {
+  opacity: 0.8;
+  font-weight: 500;
+  font-size: 0.7rem;
+}
+.mini-pill-amount {
+  font-weight: 800;
+  letter-spacing: -0.3px;
 }
 
-.act-concept {
-  font-size: 0.95rem;
+/* --- LISTA ACTIVIDAD --- */
+.activity-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* SEPARADOR DE FECHA */
+.group-separator-modern {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 8px 0; /* Un poco más de aire arriba */
+  width: 100%;
+}
+
+.separator-date {
   color: var(--text-main);
+  /* CAMBIO: Texto más grande */
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.separator-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.separator-totals {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.total-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.total-tag.debt {
+  color: var(--danger);
+}
+.total-tag.payment {
+  color: var(--success);
+}
+.tag-label {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+.separator-divider {
+  color: var(--border-strong);
+  font-weight: 300;
+  font-size: 1rem;
+}
+
+/* TARJETA DE MOVIMIENTO */
+.movement-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px; /* Más padding para que respire */
+  display: flex;
+  align-items: center;
+  /* CAMBIO: Cursor pointer para indicar edición */
+  cursor: pointer;
+  position: relative;
+}
+.movement-card:hover {
+  border-color: var(--primary);
+  background: #fdfdfd;
+}
+
+.mov-left-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 16px;
+  border-right: 1px solid var(--border-light);
+  min-width: 120px;
+}
+.mov-circle-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.bg-danger-soft {
+  background: #fee2e2;
+  color: var(--danger);
+}
+.bg-success-soft {
+  background: #d1fae5;
+  color: var(--success);
+}
+.mov-calendar-square {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  background: #f9fafb;
+}
+.cal-day {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1;
+}
+.cal-month-year {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mov-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-left: 16px;
+  gap: 4px; /* Un poco más de espacio */
+}
+
+/* NUEVA ESTRUCTURA DE INFO */
+.mov-header-row {
+  display: flex;
+  align-items: baseline; /* Alinear texto base */
+  gap: 8px;
+}
+
+.supplier-name-large {
+  font-size: 1.05rem; /* Proveedor grande */
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.mov-type-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.mov-secondary-concept {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
-.act-amount {
-  width: 120px;
+.mov-right-amounts {
+  margin-left: auto;
   text-align: right;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mov-amount-main {
+  font-size: 1.2rem;
   font-weight: 800;
-  font-size: 1rem;
-  font-family: monospace; /* Para alinear números mejor */
 }
 
-/* Empty State para Actividad */
-.activity-empty {
-  padding: 60px;
-  text-align: center;
-  background: #ffffff;
-  border-radius: 24px;
-  border: 1px dashed var(--border-color);
+/* Botón Eliminar en Actividad */
+.btn-delete-mov {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+.btn-delete-mov:hover {
+  background: #fee2e2;
+  color: var(--danger);
+}
+.btn-delete-mov svg {
+  width: 16px;
+  height: 16px;
 }
 
-/* RESPONSIVE PARA TABLA DE ACTIVIDAD */
-@media (max-width: 768px) {
-  .activity-header {
-    display: none;
-  }
+.filter-chip {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filter-chip:hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+.filter-chip.active {
+  background: var(--text-main);
+  color: #ffffff;
+  border-color: var(--text-main);
+}
+.filter-chip.active[data-type="invoice"] {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.filter-chip.active[data-type="payment"] {
+  background: var(--success);
+  border-color: var(--success);
+}
 
-  .activity-row {
-    flex-wrap: wrap;
+@media (max-width: 768px) {
+  .toolbar-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .controls-group {
+    justify-content: space-between;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .movement-card {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
     padding: 16px;
-    align-items: flex-start;
   }
-
-  .act-date {
+  .mov-left-group {
     width: 100%;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .act-supplier {
-    width: auto;
-    order: 2;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 12px;
     padding-right: 0;
+    justify-content: flex-start;
   }
-
-  .act-desc {
+  .mov-info-col {
+    padding-left: 0;
     width: 100%;
-    order: 3;
-    margin-top: 4px;
   }
-
-  .act-amount {
-    width: auto;
-    order: 1;
-    margin-left: auto;
-    font-size: 1.1rem;
+  .mov-right-amounts {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border-light);
+    padding-top: 10px;
+  }
+  .card-header-top {
+    flex-direction: column;
+  }
+  .card-actions-right {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .btn-big-add {
+    flex: 0 0 48px;
+    margin-left: 12px;
+  }
+  .group-separator-modern {
+    flex-wrap: wrap;
+  }
+  .separator-totals {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border-light);
+    padding-top: 4px;
+  }
+  .separator-line {
+    display: none;
   }
 }

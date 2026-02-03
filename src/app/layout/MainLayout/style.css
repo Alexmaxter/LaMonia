@@ -3,7 +3,6 @@
 /* Contenedor principal: Ocupa toda la pantalla */
 .main-layout {
   display: flex;
-  flex-direction: row; /* Sidebar a la izquierda, Contenido a la derecha */
   height: 100vh;
   width: 100vw;
   overflow: hidden; /* Evita doble scrollbar en el body */
