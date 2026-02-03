@@ -1,0 +1,58 @@
+/* src/app/layout/MainLayout/style.css */
+
+:root {
+  --sidebar-width: 260px;
+}
+
+/* El contenedor principal DEBE ser flex row */
+.main-layout {
+  display: flex;
+  flex-direction: row; /* Lado a lado en Desktop */
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-app); /* Fondo #121212 */
+  color: var(--text-main);
+}
+
+/* El área de contenido toma el espacio restante */
+.main-content {
+  flex: 1;
+  overflow-y: auto; /* Scroll interno solo aquí */
+  padding: 2rem;
+  position: relative;
+  height: 100%;
+}
+
+/* --- ADAPTACIÓN MÓVIL --- */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column; /* Cambia a vertical: Sidebar arriba, Contenido abajo */
+  }
+
+  .main-content {
+    width: 100%;
+    padding: 1rem; /* Reducción de espaciado lateral para pantallas pequeñas */
+    /* Mantiene flex: 1 para ocupar la altura restante correctamente */
+  }
+}
+/* Asegura que el body no limite el flex */
+body,
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.main-layout {
+  display: flex;
+  flex-direction: row; /* Coloca Sidebar y Contenido lado a lado */
+  width: 100vw;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1; /* Esto obliga al contenido a ocupar TODO el espacio restante a la derecha */
+  overflow-y: auto;
+  background-color: var(--bg-app);
+}

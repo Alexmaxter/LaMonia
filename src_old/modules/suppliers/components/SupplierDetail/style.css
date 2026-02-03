@@ -1,0 +1,205 @@
+.supplier-detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* --- HERO CARD --- */
+.detail-top-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hero-amount-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Separación entre precio y ojo */
+}
+
+.hero-amount {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Contenedor del ojo para centrarlo verticalmente */
+.eye-btn-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 6px; /* Ajuste fino visual */
+}
+.eye-btn-wrapper button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.eye-btn-wrapper button:hover {
+  color: var(--text-main);
+}
+
+/* Colores */
+.text-debt {
+  color: #ef4444;
+}
+.text-favor {
+  color: #10b981;
+}
+
+/* --- LISTA DE TRANSACCIONES --- */
+.tx-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tx-card-row {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.tx-card-row:hover {
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Bordes de color a la izquierda */
+.border-red {
+  border-left: 4px solid #ef4444;
+}
+.border-green {
+  border-left: 4px solid #10b981;
+}
+
+/* COLUMNA IZQUIERDA: Icono + Fecha */
+.tx-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 60px;
+  padding-right: 1rem;
+  border-right: 1px solid var(--border-color);
+}
+
+/* Icono redondo */
+.tx-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bg-red-soft {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.bg-green-soft {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.tx-icon-box svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* FECHA RECTANGULAR (BADGE) */
+.date-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-input, #f3f4f6);
+  border-radius: 6px;
+  padding: 2px 6px;
+  min-width: 44px;
+}
+
+.day-number {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.month-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* COLUMNA CENTRO */
+.tx-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.tx-type-label {
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+.tx-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* COLUMNA DERECHA */
+.tx-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.amount-red {
+  color: #ef4444;
+  font-weight: bold;
+}
+.amount-green {
+  color: #10b981;
+  font-weight: bold;
+}
+.tx-running-balance {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Filtros en la vista principal */
+.sd-filters-bar {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-panel);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.filter-group label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

@@ -1,0 +1,115 @@
+/* src/shared/ui/Modal/style.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* Fondo oscuro con blur */
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 1rem; /* Padding externo para que el modal no toque bordes */
+}
+
+.modal-container {
+  background-color: var(--bg-panel, #1e1e1e);
+  color: var(--text-main, #ffffff);
+  border: 1px solid var(--border-color, #333);
+
+  width: 100%;
+  max-width: 500px; /* Ancho máximo desktop */
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Límite de altura */
+  overflow: hidden;
+}
+
+/* --- HEADER --- */
+.modal-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color, #333);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main, #fff);
+  letter-spacing: -0.5px;
+}
+
+/* Botón de cerrar (X) */
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary, #a0a0a0);
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.modal-close-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+  stroke: currentColor;
+}
+
+/* --- BODY --- */
+.modal-body {
+  padding: 20px;
+  overflow-y: auto; /* Scroll interno */
+  font-size: 0.95rem;
+  color: var(--text-main, #ddd);
+}
+
+/* --- FOOTER --- */
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color, #333);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background-color: var(--bg-panel, #1e1e1e);
+  flex-shrink: 0;
+}
+
+/* --- ADAPTACIÓN MÓVIL --- */
+@media (max-width: 480px) {
+  .modal-container {
+    width: 100%; /* Ocupa el ancho disponible (menos el padding del overlay) */
+    max-height: 85vh;
+  }
+
+  /* En móvil, los botones pueden necesitar ser full width para mejor toque */
+  .modal-footer {
+    justify-content: stretch;
+  }
+
+  .modal-footer > * {
+    flex: 1; /* Botones se reparten el espacio */
+  }
+}

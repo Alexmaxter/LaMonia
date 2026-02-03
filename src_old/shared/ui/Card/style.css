@@ -1,0 +1,15 @@
+.ui-card {
+  background-color: var(--bg-card, #1e1e1e); /* Usa variable, fallback a hex */
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #333);
+  margin-bottom: 1rem;
+  color: var(--text-main, #fff);
+}
+
+.ui-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: var(--text-highlight, #fff);
+}

@@ -1,35 +1,26 @@
-// src/shared/ui/Button/index.js
-import "./style.css"; // <--- IMPORTACIÓN DEL NUEVO CSS
+import { el } from "../../../core/dom.js";
+import { Icon } from "../Icon/index.js";
+import "./style.css";
 
-export function Button({
+export const Button = ({
   text,
+  icon,
   onClick,
-  variant = "primary", // primary, secondary, danger
-  type = "button",
-  fullWidth = false,
+  variant = "primary",
   className = "",
-  title = "",
-}) {
-  const btn = document.createElement("button");
-  btn.type = type;
+  type = "button",
+}) => {
+  const content = [];
+  if (icon) content.push(Icon(icon));
+  if (text) content.push(el("span", {}, text));
 
-  if (text && typeof text === "string" && text.includes("<")) {
-    btn.innerHTML = text;
-  } else {
-    btn.textContent = text;
-  }
-
-  const classes = ["btn", `btn-${variant}`];
-  if (fullWidth) classes.push("w-full");
-  if (className) classes.push(className);
-
-  btn.className = classes.join(" ");
-
-  if (title) btn.title = title;
-
-  if (onClick) {
-    btn.addEventListener("click", onClick);
-  }
-
-  return btn;
-}
+  return el(
+    "button",
+    {
+      type,
+      className: `ui-btn btn-${variant} ${className}`,
+      onClick,
+    },
+    ...content
+  );
+};

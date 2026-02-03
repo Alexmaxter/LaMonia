@@ -1,0 +1,46 @@
+/* Overlay totalmente transparente pero que bloquea clics */
+.minimal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.5); /* Un oscurecimiento muy sutil */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* Contenedor sin recuadros ni fondos */
+.loader-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Spinner más fino y elegante */
+.spinner-clean {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid #3b82f6; /* Color azul principal */
+  border-radius: 50%;
+  animation: spin-simple 0.8s linear infinite;
+}
+
+/* Texto simple */
+.loader-text-simple {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+@keyframes spin-simple {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,95 +1,85 @@
-.app-sidebar {
-  --sb-width: 250px;
-  --sb-bg: #1e1e1e;
-  --sb-header-height: 70px;
+/* src/app/Layout/Sidebar/style.css */
 
-  width: var(--sb-width);
-  height: 100vh;
-  background-color: var(--sb-bg);
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #333;
-  flex-shrink: 0;
-
-  /* Desktop: Sticky para que baje con el scroll si fuera necesario */
-  position: sticky;
-  top: 0;
-  z-index: 100; /* Alto, pero menor que el Overlay móvil */
-  transition: transform 0.3s ease;
+  height: 100%;
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.02); /* Sutil sombra a la derecha */
 }
 
-/* --- CLASES INTERNAS (Header, Links...) IGUAL QUE ANTES --- */
-.app-sidebar__header {
-  height: var(--sb-header-height);
-  display: flex;
-  align-items: center;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid #333;
+.sidebar-header {
+  display: none;
 }
-.app-sidebar__title {
-  margin: 0;
-  color: #fff;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-.app-sidebar__nav {
-  flex: 1;
-  padding: 1rem;
-  overflow-y: auto;
-}
-.app-sidebar__list {
+
+.sidebar-menu {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
 }
-.app-sidebar__link {
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.menu-item {
   display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
-  color: #a0a0a0;
-  text-decoration: none;
   align-items: center;
-  transition: all 0.2s;
+  gap: 12px;
+  padding: 12px 24px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  font-weight: 600; /* Un poco más grueso para contraste */
+  transition: all 0.2s ease;
+  position: relative;
 }
-.app-sidebar__link:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+
+/* Solo hover en PC */
+@media (hover: hover) {
+  .menu-item:hover {
+    /* Cambio: Fondo oscuro tenue en lugar de blanco tenue */
+    background-color: var(--hover-overlay);
+    color: var(--text-main);
+  }
 }
-.app-sidebar__link.active {
-  background: #2563eb;
-  color: #fff;
+
+.menu-item.active {
+  background-color: #eff6ff; /* Azul muy pálido */
+  color: var(--primary);
+  border-left-color: var(--primary);
 }
-.app-sidebar__link svg {
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-}
-.app-sidebar__footer {
+
+.sidebar-footer {
   padding: 1rem;
   text-align: center;
-  color: #555;
-  font-size: 0.8rem;
-  border-top: 1px solid #333;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  border-top: 1px solid var(--border-color);
 }
 
-/* --- MÓVIL (La Magia) --- */
+/* MOBILE */
 @media (max-width: 768px) {
-  .app-sidebar {
-    position: fixed; /* Flota sobre el contenido */
-    left: 0;
-    top: 0;
-    height: 100%;
-    transform: translateX(-100%); /* ESCONDIDO a la izquierda por defecto */
-    z-index: 1000; /* Encima de todo */
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+  .sidebar {
+    background-color: var(--bg-panel); /* Blanco */
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* Sombra suave */
   }
 
-  /* Clase para ABRIR el menú */
-  .app-sidebar.open {
-    transform: translateX(0); /* Vuelve a su lugar (visible) */
+  .menu-item.active {
+    background-color: transparent;
+    color: var(--primary);
+  }
+
+  /* Feedback táctil sutil */
+  .menu-item:active {
+    background-color: var(--hover-overlay);
   }
 }

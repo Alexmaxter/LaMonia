@@ -1,0 +1,77 @@
+/* Contenedor principal: sutil y limpio */
+.summary-hero-container {
+  padding: 2rem 1.5rem;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.summary-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Etiqueta superior sutil */
+.summary-hero-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 600;
+}
+
+/* Grupo de monto y botón */
+.summary-hero-amount-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Monto Hero */
+.summary-hero-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+/* Botón del ojo integrado sutilmente */
+.summary-hero-amount-group .btn-icon-toggle {
+  background: var(--bg-input); /* Fondo muy ligero */
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.summary-hero-amount-group .btn-icon-toggle:hover {
+  background: var(--border-color);
+  color: var(--primary);
+  transform: scale(1.05);
+}
+
+.summary-hero-amount-group .btn-icon-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Ajuste para móviles */
+@media (max-width: 768px) {
+  .summary-hero-container {
+    padding: 1.5rem;
+  }
+  .summary-hero-value {
+    font-size: 1.75rem;
+  }
+}

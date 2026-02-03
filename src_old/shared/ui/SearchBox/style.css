@@ -1,0 +1,40 @@
+/* src/shared/ui/SearchBox/style.css */
+.search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: 12px;
+  gap: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+  background-color: var(--bg-input); /* Asegurar fondo correcto */
+}
+
+.search-box:focus-within {
+  border-color: var(--primary); /* Resalta con el color principal de la app */
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.search-box svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary); /* Icono gris claro */
+  flex-shrink: 0;
+}
+
+.search-field {
+  background: transparent;
+  border: none;
+  color: var(--text-main); /* Corregido: Texto principal (blanco en dark) */
+  width: 100%;
+  outline: none;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.search-field::placeholder {
+  color: var(--text-muted);
+}

@@ -1,41 +1,25 @@
 import { el } from "../../../core/dom.js";
 import { Sidebar } from "../Sidebar/index.js";
-import { Icon } from "../../../shared/ui/Icon.js"; // Asegúrate de tener un icono 'menu'
 import "./style.css";
 
-export function MainLayout(currentRoute) {
-  const sidebarComponent = Sidebar(currentRoute);
+export function MainLayout(currentRouteId) {
+  // 1. Inicializamos el Sidebar
+  const sidebar = Sidebar(currentRouteId);
 
-  // 1. Botón Hamburguesa (Solo visible en CSS móvil)
-  const btnMenu = el("button", { className: "mobile-menu-btn" }, Icon("menu")); // Usa "bars" o "menu" según tu set
+  // 2. Creamos el área donde se mostrarán las pantallas (Dashboard, Proveedores, etc.)
+  const contentArea = el("main", { className: "main-content" });
 
-  // 2. Overlay (Fondo oscuro al abrir menú)
-  const overlay = el("div", { className: "sidebar-overlay" });
-
-  // Lógica de Toggle
-  const toggleMenu = () => {
-    sidebarComponent.classList.toggle("open");
-    overlay.classList.toggle("visible");
-  };
-
-  btnMenu.onclick = toggleMenu;
-  overlay.onclick = toggleMenu; // Click afuera cierra el menú
-
-  // 3. Contenido Principal
-  const mainContent = el("main", {
-    className: "main-content",
-    id: "main-container",
-  });
-
-  // 4. Estructura Final
-  const container = el(
+  // 3. Estructura flex: Sidebar | Contenido
+  const layoutElement = el(
     "div",
-    { className: "app-container" },
-    btnMenu, // Botón flotante
-    overlay, // Fondo oscuro (invisible por defecto)
-    sidebarComponent, // Barra lateral
-    mainContent // Contenido derecho
+    { className: "main-layout" },
+    sidebar.element,
+    contentArea
   );
 
-  return { element: container, contentArea: mainContent };
+  return {
+    element: layoutElement, // El HTML completo para montar en body
+    contentContainer: contentArea, // Referencia para inyectar vistas
+    sidebarAPI: sidebar, // Para controlar el sidebar desde fuera
+  };
 }

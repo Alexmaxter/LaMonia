@@ -1,50 +1,49 @@
-// src/main.js
-import { Router } from "./core/router.js";
-import { MainLayout } from "./app/layout/MainLayout/index.js";
-import { el } from "./core/dom.js";
+// src_v2/main.js
 import "./style.css";
+import { mount, el } from "./core/dom.js";
+import { MainLayout } from "./app/Layout/MainLayout/index.js";
+import { Router } from "./core/router.js";
 
+// ESTA ES LA LÍNEA QUE FALTABA:
+import { SupplierController } from "./modules/suppliers/controller.js";
+
+console.log("🚀 [Main] Inicializando aplicación...");
+
+// 1. Iniciar el marco de la app
+const layout = MainLayout();
+const root = document.getElementById("app");
+
+if (!root) {
+  console.error("❌ No se encontró el elemento #app en el HTML");
+} else {
+  mount(root, layout.element);
+  console.log("✅ Layout montado en #app");
+}
+
+// 2. Instanciar el controlador (esto devuelve la función que usará el router)
+const supplierModule = SupplierController();
+
+// 3. Definir las rutas
 const routes = {
-  dashboard: () => {
-    return () =>
-      el(
-        "div",
-        { style: { padding: "20px" } },
-        el("h2", {}, "Resumen General"),
-        el(
-          "p",
-          { style: { marginTop: "10px", color: "#666" } },
-          "Selecciona una opción del menú para comenzar."
-        )
-      );
+  "#cashflow": (container) => {
+    console.log("📍 Ruta: Cierre de Caja");
+    container.innerHTML = "<h2>💸 Cierre de Caja</h2><p>Próximamente...</p>";
+    layout.sidebarAPI.setActive("cashflow");
   },
-  suppliers: () =>
-    import("./modules/suppliers/views/SupplierListView/index.js").then(
-      (m) => m.SuppliersListView
-    ),
-  "supplier-detail": () =>
-    import("./modules/suppliers/views/SupplierDetailView/index.js").then(
-      (m) => m.SupplierDetailView
-    ),
+
+  "#suppliers": (container) => {
+    console.log("📍 Ruta: Proveedores");
+    // Ejecutamos la función del controlador pasándole el hueco del layout
+    supplierModule(container);
+    layout.sidebarAPI.setActive("suppliers");
+  },
 };
 
-const app = document.getElementById("app");
+// 4. Iniciar el Router
+console.log("🛠️ Iniciando Router...");
+new Router(routes, layout.contentContainer);
 
-const initApp = async () => {
-  app.innerHTML = "";
-
-  // 1. Obtener la ruta actual para el estado inicial
-  const hash = window.location.hash.slice(1) || "dashboard";
-  const routeBase = hash.split("?")[0];
-  let activeMenu = routeBase === "supplier-detail" ? "suppliers" : routeBase;
-
-  // 2. Renderizar el Layout base
-  const layout = MainLayout(activeMenu);
-  app.appendChild(layout.element);
-
-  // 3. Inicializar el Router en el área de contenido del layout
-  const router = new Router(routes, layout.contentArea);
-  router.init();
-};
-
-initApp();
+// 5. Redirección inicial
+if (!window.location.hash) {
+  window.location.hash = "#cashflow";
+}

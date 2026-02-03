@@ -1,0 +1,100 @@
+/* Layout principal del formulario */
+.config-form-layout {
+  display: flex;
+  flex-direction: column;
+  /* El 'gap' aquí es clave: separa cada bloque principal (form-groups) */
+  gap: 24px;
+  padding-top: 8px;
+  color: var(--text-main);
+}
+
+/* Nota: .form-group ya añade su propio spacing interno, 
+   pero el gap de arriba maneja la separación ENTRE grupos */
+
+/* Sección Catálogo (Caja visualmente separada) */
+.catalog-section {
+  background-color: rgba(255, 255, 255, 0.03); /* Fondo sutil */
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.catalog-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.catalog-input-row .modern-input {
+  flex: 1; /* El input ocupa todo el ancho disponible */
+}
+
+/* Grilla de etiquetas (tags) */
+.items-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px; /* Separación del input de arriba */
+}
+
+.empty-msg {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Estilo de cada etiqueta */
+.item-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.item-tag:hover {
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
+
+/* Botón 'x' dentro de la etiqueta */
+.btn-remove-tag {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: color 0.2s;
+}
+
+.btn-remove-tag:hover {
+  color: var(--danger);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.btn-remove-tag svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Footer de botones */
+.modal-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Dos columnas iguales */
+  gap: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 24px;
+}

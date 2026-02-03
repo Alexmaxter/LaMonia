@@ -1,19 +1,15 @@
-/**
- * Configuración centralizada del menú lateral.
- * Aquí defines qué botones aparecen en la barra de navegación.
- */
+// src_v2/config/menu.js
+
 export const MENU_ITEMS = [
   {
-    id: "dashboard",
-    label: "Inicio",
-    icon: "dollar", // Asegúrate que este icono exista en Icon.js
-    requiresAdmin: false,
+    id: "cashflow", // ID de la ruta
+    label: "Cierre Diario",
+    icon: "dollar", // Nombre del icono en tu Icon/index.js
   },
   {
     id: "suppliers",
     label: "Proveedores",
-    icon: "truckPlus", // O 'truck', verifica tu Icon.js
-    requiresAdmin: false,
+    icon: "truckPlus",
   },
-  // Futuro: { id: "settings", label: "Configuración", icon: "gear" }
+  // { id: "settings", label: "Configuración", icon: "settings" } // Futuro
 ];

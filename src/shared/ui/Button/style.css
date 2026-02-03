@@ -1,65 +1,82 @@
-/* src/shared/ui/Button/style.css */
+/* src_v2/shared/ui/Button/style.css */
 
-.btn {
+.ui-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-  font-size: 0.95rem;
+  padding: 10px 20px;
   font-family: inherit;
-  user-select: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: var(--radius-pill, 9999px); /* Fallback si falta la variable */
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition, all 0.2s ease);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none; /* Por si usamos el botón como link <a> */
 }
 
-/* Efecto de pulsación para móviles */
-.btn:active {
-  transform: scale(0.96);
+.ui-btn:active {
+  transform: scale(0.98);
 }
 
-/* Variantes */
+/* --- VARIANTES --- */
+
+/* Primary: Acción principal (Azul habitualmente) */
 .btn-primary {
-  background: var(--primary);
-  color: white;
+  background-color: var(--primary, #3b82f6);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
-
 .btn-primary:hover {
-  background: var(--primary-hover);
+  background-color: var(--primary-hover, #2563eb);
 }
 
+/* Secondary: Acciones secundarias (Bordes/Neutro) */
 .btn-secondary {
-  background: transparent; /* Corregido: Transparente para Dark Mode */
-  border: 1px solid var(--border-color);
-  color: var(--text-main); /* Corregido: Color texto main */
+  background-color: var(--bg-input, #2a2a2a);
+  color: var(--text-main, #fff);
+  border-color: var(--border-color, #444);
 }
-
 .btn-secondary:hover {
-  background: var(--bg-input); /* Fondo sutil al hover */
-  border-color: var(--text-secondary);
+  background-color: var(--border-color, #444);
 }
 
+/* Danger: Eliminar / Acciones destructivas (Rojo) */
 .btn-danger {
-  background: rgba(239, 68, 68, 0.15); /* Rojo transparente */
-  color: var(--danger);
+  background-color: var(--danger, #ef4444);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
-
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: var(--danger);
+  background-color: var(--danger-hover, #dc2626);
 }
 
-/* Utilidad de ancho completo */
-.w-full {
-  width: 100%;
+/* Ghost: Botones transparentes / Iconos solos */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary, #aaa);
+  padding: 8px; /* Menos padding para botones ghost */
+}
+.btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-main, #fff);
 }
 
-/* Estado deshabilitado (Para evitar doble clic) */
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  filter: grayscale(0.5);
+/* --- ESTADOS DE CARGA --- */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

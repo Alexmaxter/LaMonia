@@ -1,0 +1,193 @@
+/* src/modules/suppliers/components/SupplierTable/style.css */
+
+.suppliers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.supplier-card {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.supplier-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: var(--primary);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-avatar {
+  width: 48px;
+  height: 48px;
+  background-color: var(--bg-input);
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.card-info {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.card-info h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-alias {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Un poco más de espacio entre texto e icono */
+  margin-top: 2px;
+}
+
+/* --- CORRECCIÓN ICONO GIGANTE DE COPIAR --- */
+.card-alias svg {
+  width: 14px; /* Tamaño fijo pequeño */
+  height: 14px;
+  opacity: 0.7; /* Un poco más sutil */
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.card-alias svg:hover {
+  opacity: 1;
+  color: var(--primary);
+}
+
+/* Botones de acción rápida (llamar, etc) */
+.btn-icon-action {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-icon-action:hover {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+/* Asegurar tamaño de icono interno */
+.btn-icon-action svg {
+  width: 16px;
+  height: 16px;
+}
+
+.card-footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-footer .label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.amount-negative {
+  color: var(--danger);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+.amount-positive {
+  color: var(--success);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.status-pill {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-pill.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+.status-pill.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+/* --- ADAPTACIÓN MÓVIL --- */
+@media (max-width: 480px) {
+  .suppliers-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+
+  .card-footer {
+    justify-content: space-between;
+  }
+}
+/* Badge para deudas de stock */
+.stock-debt-badge {
+  background-color: rgba(59, 130, 246, 0.15); /* Azul sutil */
+  color: #60a5fa;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px; /* Evita que rompa la tarjeta si es muy largo */
+  display: inline-block;
+}
+
+.stock-neutral-badge {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Opcional: Avatar diferente para stock */
+.avatar-stock {
+  background-color: #7c3aed !important; /* Un violeta para diferenciar */
+  color: white;
+}

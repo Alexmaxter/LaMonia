@@ -1,0 +1,82 @@
+/* src/shared/ui/PageHeader/style.css */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-text h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* --- ESTILOS BOTÓN ATRÁS (FIX VISIBILIDAD) --- */
+.btn-back {
+  background: transparent;
+  border: 1px solid var(--border-color); /* Borde suave */
+  color: var(--text-main); /* Color explícito blanco/claro */
+  cursor: pointer;
+  padding: 8px !important;
+  border-radius: 50% !important;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  background-color: var(--bg-input);
+  border-color: var(--text-secondary);
+  color: var(--primary); /* Color al hacer hover */
+}
+
+/* Asegurar que el SVG herede el color */
+.btn-back svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+/* --- ADAPTACIÓN MÓVIL --- */
+@media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-text h2 {
+    font-size: 1.5rem;
+  }
+
+  .page-header > *:last-child {
+    align-self: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}

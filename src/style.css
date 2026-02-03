@@ -1,91 +1,225 @@
 :root {
-  /* --- PALETA DE COLORES (Tema Oscuro) --- */
-  --bg-app: #121212; /* Fondo principal de la pantalla */
-  --bg-panel: #1e1e1e; /* Fondo de tarjetas, sidebar, modales */
-  --bg-input: #2a2a2a; /* Fondo de inputs */
+  /* --- PALETA DE COLORES (High Contrast Light Mode) --- */
+  --primary: #2563eb; /* Azul fuerte principal */
+  --primary-hover: #1d4ed8; /* Azul más oscuro para hover */
 
-  --primary: #2563eb; /* Azul Principal (Botones, Links activos) */
-  --primary-hover: #1d4ed8;
+  --danger: #dc2626; /* Rojo fuerte para errores/deudas */
+  --danger-hover: #b91c1c;
 
-  --success: #22c55e; /* Verde (Pagos, Exito) */
-  --danger: #ef4444; /* Rojo (Deudas, Errores, Borrar) */
-  --warning: #f59e0b; /* Amarillo/Naranja (Alertas) */
+  --success: #059669; /* Verde esmeralda oscuro */
+  --warning: #d97706; /* Amarillo ocre */
 
-  --text-main: #ffffff; /* Texto principal */
-  --text-secondary: #a3a3a3; /* Texto secundario / Etiquetas */
-  --text-muted: #525252; /* Texto deshabilitado */
+  /* --- FONDOS --- */
+  --bg-app: #f9fafb; /* Gris muy claro (Casi blanco) para el fondo de la app */
+  --bg-panel: #ffffff; /* Blanco puro para paneles, sidebar y modales */
+  --bg-card: #ffffff; /* Blanco puro para tarjetas */
+  --bg-input: #f3f4f6; /* Gris claro para inputs */
 
-  --border-color: #333333; /* Bordes sutiles */
-  --radius-md: 8px; /* Borde redondeado estándar */
+  /* --- TEXTO --- */
+  --text-main: #111827; /* Negro suave (Gris muy oscuro) para lectura principal */
+  --text-secondary: #374151; /* Gris oscuro para textos secundarios */
+  --text-muted: #6b7280; /* Gris medio para placeholders o etiquetas */
+  --text-inverse: #ffffff; /* Blanco para texto sobre botones oscuros */
+
+  /* --- BORDES --- */
+  --border-color: #e5e7eb; /* Gris muy claro para separadores */
+  --border-strong: #d1d5db; /* Gris visible para bordes de inputs */
+
+  /* --- MEDIDAS --- */
+  --sidebar-width: 260px;
+  --header-height: 60px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* --- EFECTOS --- */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --hover-overlay: rgba(0, 0, 0, 0.04); /* Capa oscura muy sutil para hovers */
 }
 
-/* --- RESET & BASICS --- */
-*,
-*::before,
-*::after {
+/* --- RESET Y BASES --- */
+* {
   box-sizing: border-box;
-}
-
-html,
-body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
+  -webkit-tap-highlight-color: transparent; /* Elimina el flash azul al tocar en móviles */
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-main);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  font-size: 16px;
+  font-size: 16px; /* Base legible */
   line-height: 1.5;
-  -webkit-font-smoothing: antialiased; /* Texto más nítido en Mac */
+  overflow-x: hidden; /* Previene scroll horizontal accidental */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- ELEMENTOS DE FORMULARIO GLOBALES --- */
-/* (Define el estilo base para inputs que no sean componentes específicos) */
-input,
-select,
-textarea {
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 10px;
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--primary);
-}
-
-/* --- SCROLLBAR PERSONALIZADO (Estilo Dark) --- */
+/* --- SCROLLBAR PERSONALIZADO (Desktop) --- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-app);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #444;
+  background: #d1d5db;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background: #9ca3af;
 }
 
-/* --- UTILIDADES VISUALES --- */
+/* --- UTILIDADES DE TEXTO --- */
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.text-left {
+  text-align: left;
+}
 
-/* Animación suave al cambiar de vista */
+.font-bold {
+  font-weight: 700;
+}
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-success {
+  color: var(--success);
+}
+.text-danger {
+  color: var(--danger);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+.text-primary {
+  color: var(--primary);
+}
+
+/* --- UTILIDADES FLEXBOX --- */
+.d-flex {
+  display: flex;
+}
+.flex-column {
+  flex-direction: column;
+}
+.align-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.justify-end {
+  justify-content: flex-end;
+}
+.gap-1 {
+  gap: 0.25rem;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-3 {
+  gap: 1rem;
+}
+.gap-4 {
+  gap: 1.5rem;
+}
+
+/* --- UTILIDADES ESPACIADO --- */
+.m-0 {
+  margin: 0;
+}
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.mb-3 {
+  margin-bottom: 1rem;
+}
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-4 {
+  margin-top: 1rem;
+}
+.p-2 {
+  padding: 0.5rem;
+}
+.p-4 {
+  padding: 1rem;
+}
+
+/* --- ELEMENTOS DE FORMULARIO GLOBALES --- */
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: var(--text-main);
+}
+
+/* Botón de configuración genérico (Icono engranaje, etc) */
+.btn-icon-only {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon-only:hover {
+  background-color: var(--bg-input);
+  color: var(--primary);
+}
+
+/* Selectores de configuración */
+.settings-select {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+}
+.settings-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* --- ANIMACIONES GLOBALES --- */
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: globalFadeIn 0.3s ease-out forwards;
 }
 
-@keyframes fadeIn {
+@keyframes globalFadeIn {
   from {
     opacity: 0;
     transform: translateY(5px);
@@ -96,62 +230,75 @@ textarea:focus {
   }
 }
 
-/* Tipografía útil */
-.text-center {
-  text-align: center;
-}
-.text-right {
-  text-align: right;
-}
-.text-bold {
-  font-weight: bold;
-}
-.text-sm {
-  font-size: 0.85rem;
-}
-.text-danger {
-  color: var(--danger);
-}
-.text-success {
-  color: var(--success);
-}
-.text-secondary {
-  color: var(--text-secondary);
-}
+/* ==========================================================================
+   ADAPTACIÓN MÓVIL (RESPONSIVE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  :root {
+    /* En móvil, el sidebar suele ocultarse o ser overlay, 
+       por lo que el ancho "reservado" en el layout debe ser 0 */
+    --sidebar-width: 0px;
+    --header-height: 56px; /* Header un poco más compacto */
+  }
 
-/* Espaciados rápidos */
-.mt-1 {
-  margin-top: 0.5rem;
-}
-.mt-2 {
-  margin-top: 1rem;
-}
-.mb-1 {
-  margin-bottom: 0.5rem;
-}
-.mb-2 {
-  margin-bottom: 1rem;
-}
-.gap-1 {
-  gap: 0.5rem;
-}
-.gap-2 {
-  gap: 1rem;
-}
+  body {
+    /* Ajuste para evitar conflictos con el notch y barra inferior de iPhone X+ */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 
-/* Flexbox Helpers */
-.flex {
-  display: flex;
-}
-.flex-col {
-  flex-direction: column;
-}
-.items-center {
-  align-items: center;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.justify-end {
-  justify-content: flex-end;
+  /* Inputs: Tamaño de fuente 16px OBLIGATORIO en iOS para evitar zoom automático al enfocar */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Ajuste de tipografía para pantallas pequeñas */
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  /* Botones más grandes para facilitar el toque (Touch Targets) */
+  button,
+  .btn,
+  .btn-primary-v1,
+  .btn-secondary-v1 {
+    min-height: 44px; /* Estándar de accesibilidad móvil */
+  }
+
+  /* Ajuste de scrollbar para móvil: Ocultarlo visualmente pero permitir scroll */
+  ::-webkit-scrollbar {
+    width: 4px; /* Muy fino */
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  /* Contenedores principales ocupan todo el ancho */
+  .container,
+  .main-content,
+  .view-container {
+    width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin: 0 !important;
+  }
+
+  /* Utilidad para ocultar elementos en móvil */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Utilidad para mostrar solo en móvil */
+  .show-on-mobile {
+    display: block !important;
+  }
 }

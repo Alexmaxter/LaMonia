@@ -1,0 +1,133 @@
+/* Componente: SupplierCard (Lista) */
+
+.supplier-card-v1 {
+  padding: 12px !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-panel) !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.supplier-card-v1:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary) !important;
+}
+
+.card-content-v1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Iconos circulares controlados */
+.supplier-card-v1 .circle-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info-v1 {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* El nombre siempre será 1rem en la lista */
+.supplier-card-v1 .name-v1 {
+  font-weight: 700;
+  font-size: 1rem !important;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.meta-v1 {
+  margin-top: 4px;
+}
+.no-alias {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.alias-tag {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+}
+
+.btn-add-v1 {
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Fila de Saldo */
+.balance-row-v1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.label-v1 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* El monto siempre será 1.15rem en la lista */
+.supplier-card-v1 .amount-v1 {
+  font-size: 1.15rem !important;
+  font-weight: 900;
+}
+
+/* Colores de estado e iconos */
+.circle-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+.circle-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+.circle-neutral {
+  background: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+}
+
+.circle-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  color: inherit;
+}
+
+.text-danger {
+  color: #f87171 !important;
+}
+.text-success {
+  color: #34d399 !important;
+}

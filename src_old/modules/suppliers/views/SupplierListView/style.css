@@ -1,0 +1,80 @@
+/* src/modules/suppliers/views/SupplierListView/style.css */
+
+/* Contenedor Principal: Coincide con el esquema de DailyClosingView */
+.supplier-list-view {
+  max-width: 1100px;
+  margin: 0 auto;
+  color: var(--text-main);
+  padding-bottom: 2rem;
+  width: 100%;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Espaciado consistente entre header, resumen y lista */
+}
+
+/* Sección de carga */
+.loading-state {
+  padding: 1rem 0;
+}
+
+/* Animaciones de entrada (Coherencia visual) */
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mensajes de error */
+.error-msg {
+  padding: 3rem;
+  text-align: center;
+  color: var(--danger);
+  background: var(--bg-panel);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
+}
+
+/* Ajustes específicos para secciones si son necesarios */
+.section-summary {
+  /* Si el resumen necesita algún margen extra o contenedor */
+}
+
+.section-list {
+  /* Contenedor de la grilla de tarjetas */
+}
+
+/* --- ESTILO BOTÓN PILL (Si no es global) --- */
+/* Esto asegura que el botón "Nuevo Proveedor" se vea igual que "Nuevo Cierre" */
+.btn-primary-pill {
+  border-radius: 50px !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+.btn-primary-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .supplier-list-view {
+    padding: 0 1rem 2rem 1rem; /* Padding lateral en móviles */
+  }
+
+  .content-wrapper {
+    gap: 1rem;
+  }
+}

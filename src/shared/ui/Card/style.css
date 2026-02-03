@@ -1,15 +1,19 @@
+/* src/shared/ui/Card/style.css */
+
 .ui-card {
-  background-color: var(--bg-card, #1e1e1e); /* Usa variable, fallback a hex */
+  background-color: var(--bg-card, #ffffff);
   padding: 1.5rem;
   border-radius: 8px;
-  border: 1px solid var(--border-color, #333);
+  border: 1px solid var(--border-color, #e5e7eb);
   margin-bottom: 1rem;
-  color: var(--text-main, #fff);
+  color: var(--text-main, #111827);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .ui-card h3 {
   margin-top: 0;
   margin-bottom: 1rem;
   font-size: 1.2rem;
-  color: var(--text-highlight, #fff);
+  font-weight: 600;
+  color: var(--text-main, #111827);
 }

@@ -1,56 +1,37 @@
-// src/shared/ui/SearchBox/index.js
 import { el } from "../../../core/dom.js";
-import { Icon } from "../Icon.js";
 import "./style.css";
 
-/**
- * Componente SearchBox con Debounce integrado.
- * * @param {Object} props
- * @param {string} props.placeholder - Texto placeholder.
- * @param {Function} props.onSearch - Callback que recibe el término de búsqueda.
- * @param {number} props.debounceTime - Tiempo de espera en ms antes de disparar onSearch (default: 300ms).
- */
 export function SearchBox({
   placeholder = "Buscar...",
   onSearch,
-  debounceTime = 300,
+  delay = 300,
+  initialValue = "",
 }) {
-  let debounceTimer = null;
+  let debounceTimer;
 
+  // Icono SVG
+  const searchIcon = el("div", { className: "search-box-icon" }, [
+    el("div", {
+      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+    }),
+  ]);
+
+  // Input
   const input = el("input", {
-    className: "search-field",
     type: "text",
+    className: "search-box-input",
     placeholder: placeholder,
-    oninput: (e) => {
-      const term = e.target.value.toLowerCase().trim();
-
-      // 1. Limpiar el temporizador anterior si el usuario sigue escribiendo
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-
-      // 2. Configurar nuevo temporizador
-      debounceTimer = setTimeout(() => {
-        if (onSearch) {
-          onSearch(term); // Solo se ejecuta si pasaron 300ms sin nuevos eventos
-        }
-      }, debounceTime);
-    },
+    value: initialValue,
   });
 
-  const container = el(
-    "div",
-    { className: "search-box" },
-    Icon("search"),
-    input
-  );
+  // Lógica del Delay (Debounce)
+  input.addEventListener("input", (e) => {
+    const value = e.target.value;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      if (onSearch) onSearch(value);
+    }, delay);
+  });
 
-  // Método para limpiar el input externamente
-  container.clear = () => {
-    input.value = "";
-    if (debounceTimer) clearTimeout(debounceTimer); // Limpiamos timers pendientes
-    if (onSearch) onSearch("");
-  };
-
-  return container;
+  return el("div", { className: "search-box-wrapper" }, [searchIcon, input]);
 }

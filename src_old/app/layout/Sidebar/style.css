@@ -1,0 +1,187 @@
+/* src/app/layout/Sidebar/style.css */
+
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--bg-panel); /* Fondo #1e1e1e */
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 10;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem 0;
+  overflow-y: auto;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* --- ITEM DEL MENÚ --- */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 24px;
+  color: var(--text-secondary); /* Gris claro */
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  font-size: 0.95rem;
+}
+
+/* --- FIX DE SVGs GIGANTES --- */
+.menu-item svg {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+/* Estado Activo */
+.menu-item.active {
+  background-color: rgba(
+    37,
+    99,
+    235,
+    0.15
+  ); /* Azul translúcido (basado en --primary) */
+  color: var(--primary);
+  border-left-color: var(--primary);
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- ADAPTACIÓN MÓVIL MEJORADA --- */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-width: 0; /* Permite que flexbox encoja el contenedor */
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    /* Importante: nowrap para forzar la estructura, o wrap controlado */
+    flex-wrap: nowrap;
+    overflow: hidden; /* Asegura que nada se salga del padre */
+  }
+
+  .sidebar-header {
+    padding: 1rem;
+    border-bottom: none;
+    flex-shrink: 0; /* El título no se aplasta */
+    z-index: 2; /* Por encima del scroll si fuera necesario */
+    background-color: var(--bg-panel); /* Evita transparencias raras */
+  }
+
+  .sidebar-header h1 {
+    font-size: 1rem;
+  }
+
+  .sidebar-nav {
+    flex: 1; /* Toma el espacio restante */
+    min-width: 0; /* CRUCIAL: Permite al flex item encogerse y activar el scroll */
+    padding: 0 0.5rem;
+    overflow-y: hidden;
+    overflow-x: auto; /* Scroll horizontal */
+
+    /* Configuración para scroll suave y sin barra */
+    -webkit-overflow-scrolling: touch; /* Inercia nativa en iOS */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+
+    /* Máscara opcional para indicar continuidad (fade out a la derecha) */
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 5%,
+      black 95%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 5%,
+      black 95%,
+      transparent 100%
+    );
+  }
+
+  /* Ocultar barra scroll en Webkit (Chrome, Safari, etc) */
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px; /* Espacio pequeño entre botones */
+    padding-right: 1rem; /* Espacio final para que el último item no quede pegado */
+  }
+
+  .menu-item {
+    padding: 0.6rem 0.8rem;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    border-radius: var(--radius-sm);
+    justify-content: center;
+    white-space: nowrap; /* El texto nunca baja de línea */
+    flex-shrink: 0; /* Los botones no se aplastan, mantienen su tamaño */
+  }
+
+  .menu-item span {
+    /* Opcional: Si quieres ocultar texto en pantallas MUY pequeñas, descomenta esto: */
+    /* display: none; */
+  }
+
+  .menu-item svg {
+    margin: 0; /* Asegurar centrado si no hay texto o para ajustar */
+  }
+
+  .menu-item.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--primary);
+    background-color: rgba(37, 99, 235, 0.1);
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+}

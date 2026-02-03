@@ -1,0 +1,147 @@
+.supplier-detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+/* BARRA DE HERRAMIENTAS */
+.detail-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+/* BOTÓN VOLVER */
+.btn-toolbar-back {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-toolbar-back:hover {
+  color: #0f172a;
+}
+
+/* CONTENEDOR DERECHA */
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* BOTÓN + NUEVO MOVIMIENTO */
+.btn-add-movement {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-add-movement:hover {
+  background-color: #1d4ed8;
+}
+
+/* SEPARADOR */
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background-color: #e2e8f0;
+}
+
+/* GRUPO ICONOS */
+.utility-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-utility {
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-utility:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .detail-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.btn-generate-report {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-generate-report:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #94a3b8;
+}
+
+/* En móviles, ocultamos el texto para ahorrar espacio si es necesario */
+@media (max-width: 600px) {
+  .btn-generate-report {
+    padding: 8px;
+  }
+}

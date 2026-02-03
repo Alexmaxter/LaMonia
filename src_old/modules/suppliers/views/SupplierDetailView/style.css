@@ -1,0 +1,133 @@
+/* src/modules/suppliers/views/SupplierDetailView/style.css */
+
+/* Contenedor principal de la vista de detalle */
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+/* --- ESTILOS DEL DIÁLOGO DE CONFIRMACIÓN --- */
+
+.confirm-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* Contenedor del icono de advertencia */
+.confirm-icon-wrapper {
+  color: #f59e0b; /* Color ámbar/naranja para advertencias */
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Forzamos el tamaño del SVG del icono */
+.confirm-icon-wrapper svg {
+  width: 64px;
+  height: 64px;
+}
+
+/* Mensaje de texto de la confirmación */
+.confirm-message {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  margin-bottom: 30px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+/* Contenedor de los botones de acción */
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+/* --- BOTONES DEL MODAL DE CONFIRMACIÓN --- */
+
+/* Botón de Cancelar: Estilo secundario moderno */
+.btn-secondary-modal {
+  flex: 1;
+  background-color: #f3f4f6; /* Gris muy claro */
+  color: #4b5563; /* Gris oscuro para el texto */
+  border: 1px solid #d1d5db; /* Borde sutil */
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-modal:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+/* Botón de Eliminar: Estilo de peligro */
+.btn-danger-modal {
+  flex: 1;
+  background-color: #ef4444; /* Rojo vibrante */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-danger-modal:hover {
+  background-color: #dc2626; /* Rojo más oscuro al pasar el mouse */
+}
+
+/* --- OTROS ESTILOS DE LA VISTA --- */
+
+/* Contenedor del PDF */
+.pdf-modal-container {
+  width: 100%;
+  height: 70vh;
+  background: #f0f0f0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.pdf-iframe-preview {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Botón de edición en el header */
+.btn-icon-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon-action:hover {
+  background: var(--border-color);
+  color: var(--primary-color);
+}
+
+/* Mensajes de error */
+.error-msg {
+  padding: 2rem;
+  color: #ef4444;
+  text-align: center;
+  background: #fef2f2;
+  border-radius: var(--radius-md);
+  border: 1px solid #fee2e2;
+}
