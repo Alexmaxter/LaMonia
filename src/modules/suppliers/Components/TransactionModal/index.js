@@ -2,7 +2,7 @@ import { el } from "../../../../core/dom.js";
 import { FirebaseDB } from "../../../../core/firebase/db.js";
 import "./style.css";
 
-// --- HELPERS (Tu lógica original intacta) ---
+// --- HELPERS ---
 const getSafeName = (item) => {
   if (!item) return "";
   if (typeof item === "string") return item;
@@ -54,13 +54,10 @@ export function TransactionModal({
   let currentSupplier = supplier;
   let selectedType = initialData?.type || "invoice";
   let localMovements = [...movements];
-
-  // BUFFER DE CENTAVOS
   let centsBuffer =
     initialData && typeof initialData.amount === "number"
       ? Math.round(initialData.amount * 100).toString()
       : "0";
-
   let itemsState = [];
   let selectedDate = initialData?.date
     ? initialData.date.toDate
@@ -69,18 +66,15 @@ export function TransactionModal({
     : new Date();
   let calendarViewDate = new Date(selectedDate);
 
-  // --- HELPER FORMATO ATM ---
   const formatATMDisplay = (bufferStr) => {
     const val = parseInt(bufferStr || "0", 10);
     const amount = val / 100;
-    const numStr = amount.toLocaleString("es-AR", {
+    return `$ ${amount.toLocaleString("es-AR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
-    return `$ ${numStr}`;
+    })}`;
   };
 
-  // --- ITEMS LOGIC ---
   const initItemsState = () => {
     itemsState = [];
     const isStockSupplier = currentSupplier?.type === "stock";
@@ -125,7 +119,7 @@ export function TransactionModal({
 
   initItemsState();
 
-  // --- CALENDAR RENDER ---
+  // --- CALENDAR RENDER (FIX: Siempre 6 filas / 42 celdas) ---
   const renderCalendar = () => {
     const container = document.getElementById("inline-calendar-container");
     const labelTitle = document.getElementById("calendar-month-title");
@@ -150,6 +144,7 @@ export function TransactionModal({
     ];
     labelTitle.textContent = `${monthNames[month]} ${year}`.toUpperCase();
 
+    // Headers
     const daysHeader = el(
       "div",
       { className: "cal-grid-header" },
@@ -158,12 +153,22 @@ export function TransactionModal({
     container.appendChild(daysHeader);
 
     const daysGrid = el("div", { className: "cal-days-grid" });
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+    // Cálculos de fecha
+    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0-6
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    for (let i = 0; i < firstDayOfMonth; i++)
-      daysGrid.appendChild(el("div", { className: "cal-day empty" }));
+    // Lógica 42 Celdas (6 filas * 7 columnas) para evitar saltos
+    const totalCells = 42;
+    let cellsCount = 0;
 
+    // 1. Espacios vacíos iniciales
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      daysGrid.appendChild(el("div", { className: "cal-day empty" }));
+      cellsCount++;
+    }
+
+    // 2. Días del mes
     for (let day = 1; day <= daysInMonth; day++) {
       const dateToCheck = new Date(year, month, day);
       const isSelected =
@@ -183,7 +188,15 @@ export function TransactionModal({
         day.toString(),
       );
       daysGrid.appendChild(dayBtn);
+      cellsCount++;
     }
+
+    // 3. Rellenar el resto hasta 42 con vacíos
+    while (cellsCount < totalCells) {
+      daysGrid.appendChild(el("div", { className: "cal-day empty" }));
+      cellsCount++;
+    }
+
     container.appendChild(daysGrid);
   };
 
@@ -192,7 +205,6 @@ export function TransactionModal({
     renderCalendar();
   };
 
-  // --- ITEMS LIST RENDER ---
   const renderItemsList = () => {
     const container = document.getElementById("items-list-wrapper");
     if (!container) return;
@@ -206,7 +218,6 @@ export function TransactionModal({
     container.style.display = "flex";
 
     const isDebtMode = selectedType === "payment" || selectedType === "credit";
-
     if (isDebtMode && itemsState.length === 0) {
       container.innerHTML = `<div class="empty-stock-msg">SIN ÍTEMS PENDIENTES</div>`;
       return;
@@ -224,7 +235,7 @@ export function TransactionModal({
       } else {
         nameComp = el("input", {
           type: "text",
-          className: "fusion-input item-name-input", // CAMBIO DE CLASE
+          className: "fusion-input item-name-input",
           placeholder: "NOMBRE PRODUCTO",
           value: item.name,
           oninput: (e) => (itemsState[index].name = e.target.value),
@@ -318,7 +329,6 @@ export function TransactionModal({
     }
   };
 
-  // --- HEADER SELECTOR (Misma lógica, estructura Fusion) ---
   const headerSelector =
     suppliers.length > 0 && !supplier
       ? el(
@@ -327,7 +337,7 @@ export function TransactionModal({
           el(
             "select",
             {
-              className: "fusion-select", // CAMBIO CLASE
+              className: "fusion-select",
               onchange: async (e) => {
                 const sId = e.target.value;
                 currentSupplier = suppliers.find((s) => s.id === sId);
@@ -365,11 +375,10 @@ export function TransactionModal({
   const modalContent = el(
     "div",
     {
-      className: "fusion-card", // CAMBIO CLASE PRINCIPAL
+      className: "fusion-card",
       onclick: (e) => e.stopPropagation(),
     },
     [
-      // 1. HEADER (Estilo Fusión)
       el("div", { className: "fusion-header" }, [
         el("div", { className: "header-text-group" }, [
           el(
@@ -385,8 +394,6 @@ export function TransactionModal({
           innerHTML: iconClose,
         }),
       ]),
-
-      // 2. BODY
       el(
         "form",
         {
@@ -414,7 +421,6 @@ export function TransactionModal({
           },
         },
         [
-          // TABS (Estilo Fusión)
           el(
             "div",
             { className: "fusion-tabs-row" },
@@ -440,7 +446,7 @@ export function TransactionModal({
                       initItemsState();
                       renderItemsList();
                     },
-                    style: "display:none", // Ocultamos el radio real
+                    style: "display:none",
                   }),
                   el(
                     "span",
@@ -455,8 +461,6 @@ export function TransactionModal({
               ),
             ),
           ),
-
-          // MONTO ATM INPUT
           el("div", { className: "atm-wrapper-clean" }, [
             el("input", {
               id: "hero-atm-input",
@@ -480,25 +484,20 @@ export function TransactionModal({
               oninput: (e) => {
                 const inputVal = e.target.value;
                 const rawNums = inputVal.replace(/\D/g, "");
-                if (rawNums) {
-                  centsBuffer = parseInt(rawNums, 10).toString();
-                } else {
-                  centsBuffer = "0";
-                }
+                if (rawNums) centsBuffer = parseInt(rawNums, 10).toString();
+                else centsBuffer = "0";
                 e.target.value = formatATMDisplay(centsBuffer);
               },
             }),
           ]),
 
-          // ITEMS AREA
           el("div", {
             id: "items-list-wrapper",
-            className: "rect-items-section", // Mantengo clase layout interno
+            className: "rect-items-section",
           }),
 
-          // LOWER GRID: CALENDARIO Y CONCEPTO
+          // GRID INFERIOR (Calendario + Concepto)
           el("div", { className: "rect-lower-grid" }, [
-            // Mantengo estructura grid
             el("div", { className: "calendar-panel" }, [
               el("div", { className: "cal-nav-row" }, [
                 el("button", {
@@ -524,19 +523,17 @@ export function TransactionModal({
                 className: "cal-container",
               }),
             ]),
-
             el("div", { className: "concept-panel" }, [
               el("label", { className: "fusion-label" }, "CONCEPTO / NOTA"),
               el("textarea", {
                 name: "concept",
-                className: "fusion-textarea", // Clase nueva para estilo fusion
+                className: "fusion-textarea",
                 placeholder: "Detalle opcional...",
                 value: initialData?.concept || "",
               }),
             ]),
           ]),
 
-          // FOOTER
           el("div", { className: "fusion-footer" }, [
             el(
               "button",
@@ -561,7 +558,7 @@ export function TransactionModal({
   const overlay = el(
     "div",
     {
-      className: "fusion-overlay mesh-bg", // Fondo de Puntos
+      className: "fusion-overlay mesh-bg",
       onclick: (e) => {
         if (e.target === overlay) onClose();
       },

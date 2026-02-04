@@ -1,39 +1,11 @@
 /* src/modules/suppliers/Components/MovementList/style.css */
 
+/* --- ESTILOS BASE (TU DISEÑO "TECH") --- */
 .movements-block-container {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 16px;
-}
-
-/* HEADER */
-.block-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #000;
-  margin-bottom: 8px;
-}
-
-.block-title {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #000;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-}
-
-.block-count {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
-  background: #000;
-  color: #fff;
-  padding: 2px 8px;
-  border-radius: 4px;
+  gap: 20px;
 }
 
 .movements-list-stack {
@@ -42,280 +14,225 @@
   gap: 12px;
 }
 
-/* --- TARJETA PLANA --- */
-.flat-data-card {
+.tech-movement-card {
   display: flex;
-  align-items: center;
-  border: 1px solid #e0e0e0;
-  border-left-width: 5px; /* Borde izquierdo grueso */
   background: #fff;
-  padding: 0;
-  min-height: 85px;
+  border: 2px solid #000; /* Borde más grueso para contraste */
+  min-height: 85px; /* Más grande */
   cursor: pointer;
+  position: relative;
   transition:
     transform 0.1s,
     box-shadow 0.1s;
 }
 
-.flat-data-card:active {
-  transform: scale(0.99);
+.tech-movement-card:hover {
+  background: #fcfcfc;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px #000;
 }
 
-/* TEMAS DE COLOR */
-.card-invoice {
-  border-left-color: #d32f2f;
-}
-.card-invoice:hover {
-  background-color: #fff5f5;
-}
-.card-invoice .icon-circle {
-  color: #d32f2f;
-  background: rgba(211, 47, 47, 0.1);
-}
-.card-invoice .info-type-tag {
-  background: #d32f2f;
-  color: #fff;
-}
-.card-invoice .value-text {
-  color: #d32f2f;
-}
-
-.card-payment {
-  border-left-color: #2e7d32;
-}
-.card-payment:hover {
-  background-color: #f1f8e9;
-}
-.card-payment .icon-circle {
-  color: #2e7d32;
-  background: rgba(46, 125, 50, 0.1);
-}
-.card-payment .info-type-tag {
-  background: #2e7d32;
-  color: #fff;
-}
-.card-payment .value-text {
-  color: #2e7d32;
-}
-
-.card-credit {
-  border-left-color: #1565c0;
-}
-.card-credit:hover {
-  background-color: #e3f2fd;
-}
-.card-credit .icon-circle {
-  color: #1565c0;
-  background: rgba(21, 101, 192, 0.1);
-}
-.card-credit .info-type-tag {
-  background: #1565c0;
-  color: #fff;
-}
-.card-credit .value-text {
-  color: #1565c0;
-}
-
-/* --- GRUPO IZQUIERDO (Icono + Calendario) --- */
-.card-left-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  gap: 8px;
-  width: 80px; /* Ancho fijo para alineación */
-  border-right: 1px dashed #eee;
+.mov-status-bar {
+  width: 8px; /* Más ancha */
   flex-shrink: 0;
+  border-right: 2px solid #000;
 }
+.type-invoice .mov-status-bar {
+  background: #ff0000;
+} /* Rojo puro */
+.type-payment .mov-status-bar {
+  background: #00aa00;
+} /* Verde puro */
 
-.icon-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.mov-content {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 12px 18px;
+  gap: 15px;
+  min-width: 0; /* Vital para flexbox responsive */
 }
 
-/* CALENDARIO RECTANGULAR */
-.calendar-badge {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  background: #f4f4f4;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.cal-day {
-  font-family: var(--font-sans);
-  font-size: 1.1rem;
-  font-weight: 800;
-  line-height: 1;
-  color: #000;
-}
-
-.cal-month {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #666;
-  text-transform: uppercase;
-}
-
-/* --- COLUMNA CENTRAL (Info) --- */
-.card-info-col {
-  flex: 1;
-  padding: 12px 16px;
+.mov-date-col {
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 0; /* Evita desbordes de texto */
+  border-right: 2px solid #000;
+  padding-right: 15px;
+  min-width: 60px;
 }
 
-.info-top-row {
+.date-day {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 1.4rem; /* Grande */
+  font-weight: 900;
+  color: #000;
+  line-height: 1;
+}
+
+.date-month {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+}
+
+.mov-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Un poco menos de gap para agrupar nombre y badge */
+  min-width: 0; /* Permite truncate */
+  justify-content: center;
+}
+
+.info-row-primary {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8px; /* Menos gap entre badge y nombre */
+  flex-wrap: wrap;
 }
 
-.info-type-tag {
-  font-family: var(--font-mono);
-  font-size: 0.8rem; /* Más grande */
+.type-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
   font-weight: 800;
-  text-transform: uppercase;
   padding: 4px 8px;
+  background: #000;
+  color: #fff;
   border-radius: 4px;
-  letter-spacing: 0.5px;
 }
 
-.info-concept-text {
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  color: #333;
+/* --- ESTILO PROTAGÓNICO PARA EL PROVEEDOR --- */
+.supplier-name-tag {
+  font-family: var(--font-sans, sans-serif); /* Cambio a Sans */
+  font-size: 1.1rem; /* Más grande */
+  font-weight: 800; /* Extra bold */
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: -0.5px; /* Estilo apretado moderno */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Eliminamos underline para darle look de título */
+  text-decoration: none;
+}
+
+.desc-text {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.95rem;
   font-weight: 500;
+  color: #555; /* Un poco más gris para dar jerarquía al nombre */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.info-items-row {
+.mov-money-col {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 100px; /* Ajustado un poco */
+  justify-content: center;
 }
 
-.item-pill {
-  font-family: var(--font-mono);
+.amount-main {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.2rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.val-invoice {
+  color: #cc0000;
+}
+.val-payment {
+  color: #008800;
+}
+
+.balance-partial {
+  font-family: var(--font-mono, monospace);
   font-size: 0.7rem;
-  background: #eee;
-  padding: 2px 6px;
-  border-radius: 2px;
-  color: #555;
+  font-weight: 700;
+  color: #666;
+  margin-top: 4px;
+  white-space: nowrap;
 }
 
-/* --- COLUMNA DERECHA (Valor + Borrar) --- */
-.card-value-col {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-  min-width: 180px; /* Asegura espacio */
-}
-
-.value-text {
-  font-family: var(--font-mono);
-  font-size: 1.5rem; /* MUCHO MÁS GRANDE */
-  font-weight: 800;
-  letter-spacing: -1px;
-  text-align: right;
-  flex: 1;
-}
-
-.btn-card-del {
-  background: #fff;
-  border: 2px solid #eee;
-  border-radius: 6px;
-  width: 40px;
-  height: 40px;
+.btn-row-del {
+  background: transparent;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: #ccc;
   transition: all 0.2s;
-  flex-shrink: 0;
+}
+.btn-row-del:hover {
+  background: #000;
+  color: #fff;
 }
 
-.btn-card-del:hover {
-  border-color: #d32f2f;
-  color: #d32f2f;
-  background: #fff5f5;
-}
-
-/* EMPTY STATE */
 .empty-state-flat {
-  padding: 40px;
   text-align: center;
-  border: 2px dashed #ddd;
-  font-family: var(--font-mono);
+  padding: 20px;
+  font-family: var(--font-mono, monospace);
   color: #999;
-  border-radius: 8px;
+  border: 2px dashed #ccc;
 }
 
-/* --- RESPONSIVE MOBILE --- */
+/* =========================================
+   ADAPTACIÓN RESPONSIVE (MÓVIL)
+   ========================================= */
 @media (max-width: 600px) {
-  .flat-data-card {
-    flex-wrap: wrap;
-    padding-bottom: 8px;
-    align-items: flex-start;
+  .tech-movement-card {
+    min-height: auto;
   }
 
-  /* El grupo izquierdo se queda arriba a la izquierda */
-  .card-left-group {
-    width: 60px;
-    padding: 8px;
-    border-right: none;
-    flex-direction: column;
-    gap: 4px;
+  .mov-content {
+    padding: 10px 12px; /* Menos padding */
+    gap: 10px;
   }
 
-  .icon-circle {
-    width: 30px;
-    height: 30px;
+  /* Reducir columna fecha */
+  .mov-date-col {
+    min-width: 45px;
+    padding-right: 10px;
   }
-
-  .card-info-col {
-    width: calc(100% - 60px); /* Resto del ancho */
-    padding: 12px 12px 0 0;
+  .date-day {
+    font-size: 1.1rem;
   }
-
-  .info-type-tag {
+  .date-month {
     font-size: 0.7rem;
   }
-  .info-concept-text {
-    font-size: 0.95rem;
-    white-space: normal;
-    line-height: 1.2;
+
+  /* Ajustar Info */
+  .supplier-name-tag {
+    font-size: 0.95rem; /* Un poco más chico en móvil pero sigue fuerte */
+  }
+  .desc-text {
+    font-size: 0.85rem;
+  }
+  .type-badge {
+    padding: 2px 6px;
+    font-size: 0.65rem;
   }
 
-  /* Fila inferior: Monto y Acción */
-  .card-value-col {
-    width: 100%;
-    margin-top: 8px;
-    padding: 12px 16px;
-    border-top: 1px dashed #eee;
-    justify-content: space-between;
-    background: #fafafa; /* Fondo sutil para separar */
+  /* Ajustar Dinero */
+  .mov-money-col {
+    min-width: auto; /* Dejar que se ajuste */
+    align-items: flex-end;
+  }
+  .amount-main {
+    font-size: 1rem;
   }
 
-  .value-text {
-    text-align: left;
-    font-size: 1.4rem;
+  .btn-row-del {
+    padding: 4px; /* Botón más compacto */
   }
 }

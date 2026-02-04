@@ -36,21 +36,12 @@ export function SupplierDetailView({
     if (e && e.currentTarget) {
       e.currentTarget.innerHTML = newState ? iconEye : iconEyeOff;
     }
-    // Actualizar Header
     if (debtValueDisplay) {
       debtValueDisplay.textContent = SupplierModel.formatAmount(
         supplier.balance,
         isVisible,
       );
     }
-    // Actualizar Lista (forzando re-render de las tarjetas internas si fuera necesario,
-    // aunque MovementList usa su propio render, aquí podríamos necesitar un mecanismo para
-    // propagar la visibilidad si MovementList no es reactivo.
-    // Por ahora asumimos que el usuario al tocar el ojo quiere ver el total arriba principalmente).
-
-    // NOTA: Para que la lista de movimientos oculte/muestre montos individualmente,
-    // MovementList debería soportar setVisibility o re-renderizarse.
-    // Como simplificación, recargamos la lista:
     renderList();
   };
 
@@ -58,13 +49,35 @@ export function SupplierDetailView({
     if (!supplier.alias) return;
     navigator.clipboard.writeText(supplier.alias);
     const originalText = e.target.innerText;
-    // Feedback visual simple
-    const iconSpan = e.target.querySelector("span"); // el icono
+    const iconSpan = e.target.querySelector("span");
     if (iconSpan) iconSpan.style.color = "#2e7d32";
     setTimeout(() => {
       if (iconSpan) iconSpan.style.color = "";
     }, 1000);
   };
+
+  // --- CÁLCULO DE SALDO PARCIAL (RUNNING BALANCE) ---
+  // Partimos del saldo actual y vamos "deshaciendo" hacia atrás
+  let runningBalance = parseFloat(supplier.balance) || 0;
+
+  // Clonamos y calculamos (Asumimos movements ordenados NEWEST -> OLDEST)
+  const movementsWithBalance = movements.map((m) => {
+    const snapshotBalance = runningBalance;
+    const amount = parseFloat(m.amount) || 0;
+
+    // Si es Boleta (Sumó deuda), para ir atrás RESTAMOS.
+    // Si es Pago (Restó deuda), para ir atrás SUMAMOS.
+    if (m.type === "invoice") {
+      runningBalance -= amount;
+    } else {
+      runningBalance += amount;
+    }
+
+    return {
+      ...m,
+      partialBalance: snapshotBalance,
+    };
+  });
 
   // --- COMPONENTES UI ---
 
@@ -76,7 +89,6 @@ export function SupplierDetailView({
   );
 
   const headerPanel = el("div", { className: "tech-panel-header-detail" }, [
-    // Fila Superior: Atrás + Título + Deuda
     el("div", { className: "tech-header-top" }, [
       el("div", { className: "left-group" }, [
         el(
@@ -107,9 +119,7 @@ export function SupplierDetailView({
       ]),
     ]),
 
-    // Fila Inferior: Info (Alias) + Acciones
     el("div", { className: "tech-controls-row" }, [
-      // Info Container (Alias/CBU)
       el("div", { className: "info-mini-container" }, [
         supplier.alias
           ? el(
@@ -127,7 +137,6 @@ export function SupplierDetailView({
           : el("span", { className: "no-alias" }, "Sin datos bancarios"),
       ]),
 
-      // Actions Container
       el("div", { className: "tech-actions-container" }, [
         el(
           "button",
@@ -156,13 +165,10 @@ export function SupplierDetailView({
 
   const renderList = () => {
     contentContainer.innerHTML = "";
-
-    // Usamos el componente MovementList existente
-    // IMPORTANTE: MovementList debe renderizar las tarjetas full-width
     contentContainer.appendChild(
       MovementList({
-        movements,
-        isVisible, // Pasamos la visibilidad
+        movements: movementsWithBalance, // Usamos la lista enriquecida
+        isVisible,
         onEdit: onEditMovement,
         onDelete: onDeleteMovement,
       }),

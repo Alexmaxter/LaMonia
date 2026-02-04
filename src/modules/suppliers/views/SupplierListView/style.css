@@ -9,18 +9,16 @@
   padding-top: 0;
 }
 
-/* --- HEADER TECH PANEL (Sticky, Contiene TODO el bloque superior) --- */
+/* --- HEADER TECH PANEL --- */
 .tech-panel-header {
   background: #fff;
   border-bottom: 2px solid #000;
-  /* Reducimos el padding inferior del contenedor principal 
-     para dejar que el toolbar ocupe el fondo */
-  padding: 16px 24px 0 24px;
+  padding: 16px 24px 0 24px; /* Padding Desktop */
   display: flex;
   flex-direction: column;
   gap: 16px;
 
-  /* STICKY CONFIG */
+  /* STICKY CONFIG (Por defecto en Desktop) */
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -127,11 +125,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.btn-primary:active {
-  transform: translateY(1px);
+  white-space: nowrap;
 }
 
 .btn-secondary {
@@ -144,23 +138,17 @@
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-/* --- TOOLBAR TABS (Integrado en Header) --- */
+/* Toolbar (Tabs) */
 .toolbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  /* Ajustes de espaciado dentro del header */
   padding: 12px 0 16px 0;
-  margin-top: 8px; /* Separación visual del buscador */
-  border-top: 1px dashed #eee; /* Opcional: línea sutil separadora */
-
-  background: transparent; /* Fondo transparente hereda del header */
-
-  /* YA NO ES STICKY POR SI MISMO */
-  position: static;
+  margin-top: 8px;
+  border-top: 1px dashed #eee;
 }
 
 .tabs-group {
@@ -184,7 +172,6 @@
   color: #666;
   cursor: pointer;
   border-radius: 4px;
-  transition: all 0.2s;
 }
 
 .tab-btn.active {
@@ -198,24 +185,7 @@
   gap: 8px;
 }
 
-.btn-sort {
-  background: transparent;
-  border: 1px solid #ddd;
-  padding: 6px 12px;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  color: #666;
-}
-.btn-sort.active {
-  background: #000;
-  color: #fff;
-  border-color: #000;
-}
-
+.btn-sort,
 .filter-chip {
   background: #eee;
   border: none;
@@ -225,7 +195,12 @@
   font-weight: 600;
   cursor: pointer;
   color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
+
+.btn-sort.active,
 .filter-chip.active {
   background: #000;
   color: #fff;
@@ -237,42 +212,33 @@
   background: #2e7d32;
 }
 
-/* --- CONTENT WRAPPER --- */
+/* Content Wrapper */
 .content-wrapper {
   flex: 1;
   padding: 24px;
 }
-
-/* Grid Layout for Directory */
 .suppliers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
-
-/* Empty State */
 .empty-state {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   height: 200px;
   color: #999;
   font-family: var(--font-mono, monospace);
-  text-align: center;
   border: 2px dashed #ddd;
 }
-
-/* --- SEPARADORES DE FECHA --- */
 .activity-list-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 100%;
   width: 100%;
-  margin: 0;
 }
 
+/* Separadores */
 .group-separator-modern {
   display: flex;
   align-items: center;
@@ -281,22 +247,18 @@
   padding-bottom: 4px;
   border-bottom: 2px solid #000;
 }
-
 .separator-date {
   font-family: var(--font-mono, monospace);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.85rem;
-  white-space: nowrap;
 }
-
 .separator-totals {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .total-tag {
   display: flex;
   align-items: center;
@@ -304,209 +266,94 @@
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
 }
-
-.tag-label {
-  color: #666;
-}
-
-.separator-amount {
-  font-weight: 700;
-}
-
 .total-tag.debt .separator-amount {
   color: #d32f2f;
+  font-weight: 700;
 }
 .total-tag.payment .separator-amount {
   color: #2e7d32;
-}
-
-/* =========================================
-   ESTILOS DE TARJETA FLAT
-   ========================================= */
-
-.flat-data-card {
-  display: flex;
-  border: 1px solid;
-  padding: 0;
-  min-height: 70px;
-  cursor: pointer;
-  background: #fff;
-  transition: background-color 0.1s;
-}
-
-.card-invoice {
-  border-color: #d32f2f;
-  border-left-width: 4px;
-}
-.card-invoice:hover {
-  background-color: #ffebee;
-}
-.card-invoice .icon-wrapper {
-  color: #d32f2f;
-}
-.card-invoice .info-type-tag {
-  background: #d32f2f;
-  color: #fff;
-}
-.card-invoice .value-text {
-  color: #d32f2f;
-}
-
-.card-payment {
-  border-color: #2e7d32;
-  border-left-width: 4px;
-}
-.card-payment:hover {
-  background-color: #e8f5e9;
-}
-.card-payment .icon-wrapper {
-  color: #2e7d32;
-}
-.card-payment .info-type-tag {
-  background: #2e7d32;
-  color: #fff;
-}
-.card-payment .value-text {
-  color: #2e7d32;
-}
-
-.card-icon-col {
-  width: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.card-info-col {
-  flex: 1;
-  padding: 12px 16px 12px 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.info-header-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.info-type-tag {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.65rem;
   font-weight: 700;
-  text-transform: uppercase;
-  padding: 1px 5px;
-  border-radius: 2px;
 }
 
-.supplier-name-tag {
-  font-family: var(--font-sans, sans-serif);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #000;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
-}
-
-.info-concept-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.info-concept-text {
-  font-family: var(--font-sans, sans-serif);
-  font-size: 0.85rem;
-  color: #444;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-value-col {
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-left: 1px solid #eee;
-  min-width: 140px;
-  justify-content: flex-end;
-}
-
-.value-text {
-  font-family: var(--font-mono, monospace);
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-align: right;
-  flex: 1;
-}
-
-.btn-delete-flat {
-  background: transparent;
-  border: none;
-  color: #ccc;
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
-  border-radius: 4px;
-}
-.btn-delete-flat:hover {
-  color: #d32f2f;
-  background: rgba(211, 47, 47, 0.1);
-}
-
+/* =================================================================
+   RESPONSIVE (MOBILE) - AQUÍ ESTÁ LA MEJORA PRINCIPAL
+   ================================================================= */
 @media (max-width: 768px) {
-  .tech-header-top {
-    flex-direction: column;
+  /* 1. Quitamos el Sticky para que no ocupe pantalla al bajar */
+  .tech-panel-header {
+    position: relative;
+    top: auto;
+    padding: 12px 16px 0 16px; /* Menos padding */
     gap: 12px;
   }
-  .tech-debt-group {
-    text-align: left;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
+
+  /* 2. Reorganizamos la fila superior */
+  .tech-header-top {
+    flex-direction: row; /* Mantenemos fila pero ajustada */
     align-items: center;
   }
-  .debt-label-row {
-    margin: 0;
+  .page-title {
+    font-size: 1.25rem; /* Título más pequeño */
+  }
+  .header-debt-value {
+    font-size: 1.4rem; /* Valor más pequeño */
   }
 
+  /* 3. Controles en columna */
   .tech-controls-row {
     flex-direction: column;
-    align-items: stretch;
+    align-items: stretch; /* Que ocupen todo el ancho */
+    gap: 12px;
   }
+
+  .tech-search-container {
+    max-width: 100%; /* Buscador full width */
+  }
+
+  /* 4. Botones de acción en grid para ocupar el ancho */
   .tech-actions-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
-  .flat-data-card {
-    flex-wrap: wrap;
-    padding-bottom: 8px;
-  }
-  .card-value-col {
-    width: 100%;
-    border-left: none;
-    border-top: 1px dashed #eee;
-    margin-top: 4px;
-    padding-top: 8px;
-    justify-content: space-between;
-  }
-  .value-text {
-    text-align: left;
+  .btn-primary,
+  .btn-secondary {
+    justify-content: center; /* Centrar texto */
+    font-size: 0.75rem; /* Letra un poco más chica */
+    padding: 0 8px;
   }
 
+  /* 5. Toolbar ajustado */
   .toolbar-container {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: column; /* Tabs arriba, filtros abajo */
+    align-items: flex-start;
     gap: 12px;
   }
-  .controls-group {
+
+  .tabs-group {
+    width: 100%;
     justify-content: space-between;
+  }
+  .tab-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .controls-group {
+    width: 100%;
+    overflow-x: auto; /* Scroll horizontal si hay muchos filtros */
+    padding-bottom: 4px;
+  }
+
+  .content-wrapper {
+    padding: 16px; /* Menos margen en el contenido */
+  }
+
+  .separator-totals {
+    gap: 6px;
+  }
+  .tag-label {
+    display: none; /* Ocultar "D:" y "P:" en móvil si falta espacio */
   }
 }

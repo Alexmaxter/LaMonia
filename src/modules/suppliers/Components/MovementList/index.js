@@ -5,136 +5,108 @@ import "./style.css";
 export function MovementList({
   movements,
   isVisible,
-  onDelete, // Corregido: Coincide con lo que envía SupplierDetailView
-  onEdit, // Corregido: Coincide con lo que envía SupplierDetailView
+  onDelete,
+  onEdit,
+  showSupplierName = false,
 }) {
-  // --- ICONOS ---
-  const icons = {
-    invoice: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
-    payment: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="0"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>`,
-    credit: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>`,
-    trash: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`,
-  };
+  const iconTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-  const typeLabels = {
-    invoice: "BOLETA",
-    payment: "PAGO",
-    credit: "NOTA CRÉDITO",
-  };
+  const container = el("div", { className: "movements-block-container" });
+  const listStack = el("div", { className: "movements-list-stack" });
 
-  return el("div", { className: "movements-block-container" }, [
-    // Header
-    el("div", { className: "block-header" }, [
-      el("span", { className: "block-title" }, "HISTORIAL DE MOVIMIENTOS"),
-      el("span", { className: "block-count" }, `${movements.length}`),
-    ]),
+  if (!movements || movements.length === 0) {
+    container.appendChild(
+      el("div", { className: "empty-state-flat" }, "SIN MOVIMIENTOS"),
+    );
+    return container;
+  }
 
-    // Lista
-    el(
+  movements.forEach((m) => {
+    // 1. Preparar Datos
+    const isDebt = m.type === "invoice";
+    const typeClass = isDebt ? "type-invoice" : "type-payment";
+
+    // Fecha
+    const dateObj = m.date?.seconds
+      ? new Date(m.date.seconds * 1000)
+      : new Date(m.date);
+
+    // Día (ej: "04")
+    const dayStr = dateObj.getDate().toString().padStart(2, "0");
+    // Mes (ej: "FEB")
+    const monthStr = dateObj
+      .toLocaleString("es-AR", { month: "short" })
+      .toUpperCase()
+      .replace(".", "");
+
+    const rawDesc = m.description || m.concept || "";
+    const hasDesc = rawDesc.trim().length > 0;
+
+    // 2. Estructura HTML idéntica a tu CSS
+    const card = el(
       "div",
-      { className: "movements-list-stack" },
-      movements.length > 0
-        ? movements.map((m) => {
-            const date = m.date?.seconds
-              ? new Date(m.date.seconds * 1000)
-              : new Date(m.date);
+      {
+        className: `tech-movement-card ${typeClass}`,
+        onclick: () => onEdit && onEdit(m),
+      },
+      [
+        // Barra lateral de color
+        el("div", { className: "mov-status-bar" }),
 
-            // Clase base según tipo
-            const cardClass =
-              m.type === "invoice"
-                ? "card-invoice"
-                : m.type === "payment"
-                  ? "card-payment"
-                  : "card-credit";
+        // Contenido Principal
+        el("div", { className: "mov-content" }, [
+          // COLUMNA FECHA
+          el("div", { className: "mov-date-col" }, [
+            el("span", { className: "date-day" }, dayStr),
+            el("span", { className: "date-month" }, monthStr),
+          ]),
 
-            // Formato de Fecha: Día y Mes (3 letras)
-            const day = date.getDate();
-            const month = date
-              .toLocaleString("es-AR", { month: "short" })
-              .toUpperCase()
-              .replace(".", "");
+          // COLUMNA INFO
+          el("div", { className: "mov-info-col" }, [
+            el("div", { className: "info-row-primary" }, [
+              el("span", { className: "type-badge" }, isDebt ? "BOL" : "PAG"),
+              showSupplierName && m.supplierName
+                ? el("span", { className: "supplier-name-tag" }, m.supplierName)
+                : null,
+            ]),
+            hasDesc ? el("span", { className: "desc-text" }, rawDesc) : null,
+          ]),
 
-            return el(
-              "div",
+          // COLUMNA DINERO
+          el("div", { className: "mov-money-col" }, [
+            el(
+              "span",
               {
-                className: `flat-data-card ${cardClass}`,
-                onclick: () => onEdit && onEdit(m), // Fix del click
+                className: `amount-main ${isDebt ? "val-invoice" : "val-payment"}`,
               },
-              [
-                // 1. GRUPO IZQUIERDO: Icono + Calendario
-                el("div", { className: "card-left-group" }, [
-                  el(
-                    "div",
-                    { className: "icon-circle" },
-                    el("span", { innerHTML: icons[m.type] || icons.invoice }),
-                  ),
-                  // Calendario Rectangular (Día Grande | Mes Derecha)
-                  el("div", { className: "calendar-badge" }, [
-                    el("span", { className: "cal-day" }, day),
-                    el("span", { className: "cal-month" }, month),
-                  ]),
-                ]),
+              SupplierModel.formatAmount(m.amount, isVisible),
+            ),
+            // Si hay saldo parcial (opcional)
+            m.partialBalance !== undefined
+              ? el(
+                  "div",
+                  { className: "balance-partial" },
+                  `Parcial: ${SupplierModel.formatAmount(m.partialBalance, isVisible)}`,
+                )
+              : null,
+          ]),
 
-                // 2. CENTRO: Tipo y Concepto
-                el("div", { className: "card-info-col" }, [
-                  el("div", { className: "info-top-row" }, [
-                    el(
-                      "span",
-                      { className: "info-type-tag" },
-                      typeLabels[m.type] || "MOVIMIENTO",
-                    ),
-                  ]),
+          // BOTON BORRAR
+          el("button", {
+            className: "btn-row-del",
+            onclick: (e) => {
+              e.stopPropagation();
+              onDelete && onDelete(m);
+            },
+            innerHTML: iconTrash,
+          }),
+        ]),
+      ],
+    );
 
-                  el(
-                    "span",
-                    { className: "info-concept-text" },
-                    m.concept || "Sin descripción",
-                  ),
+    listStack.appendChild(card);
+  });
 
-                  // Items (si existen)
-                  m.items && m.items.length > 0
-                    ? el(
-                        "div",
-                        { className: "info-items-row" },
-                        m.items.map((i) =>
-                          el(
-                            "span",
-                            { className: "item-pill" },
-                            `${i.quantity}x ${i.name}`,
-                          ),
-                        ),
-                      )
-                    : null,
-                ]),
-
-                // 3. DERECHA: Valor y Acción (En fila)
-                el("div", { className: "card-value-col" }, [
-                  el(
-                    "span",
-                    { className: "value-text" },
-                    SupplierModel.formatAmount(m.amount, isVisible),
-                  ),
-                  el(
-                    "button",
-                    {
-                      className: "btn-card-del",
-                      title: "Eliminar",
-                      onclick: (e) => {
-                        e.stopPropagation(); // Evita abrir edición
-                        onDelete && onDelete(m);
-                      },
-                    },
-                    el("span", { innerHTML: icons.trash }),
-                  ),
-                ]),
-              ],
-            );
-          })
-        : el(
-            "div",
-            { className: "empty-state-flat" },
-            "NO HAY MOVIMIENTOS REGISTRADOS",
-          ),
-    ),
-  ]);
+  container.appendChild(listStack);
+  return container;
 }
