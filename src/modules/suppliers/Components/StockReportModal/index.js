@@ -41,7 +41,7 @@ export function StockReportModal({ supplier, movements, onClose }) {
           el(
             "span",
             { className: "modal-subtitle" },
-            "ESTADO DE CUENTA FÍSICO"
+            "ESTADO DE CUENTA FÍSICO",
           ),
           el("h2", {}, supplier.name),
         ]),
@@ -63,15 +63,15 @@ export function StockReportModal({ supplier, movements, onClose }) {
                           item.balance > 0 ? "text-danger" : "text-success"
                         }`,
                       },
-                      `${item.balance > 0 ? "+" : ""}${item.balance}`
+                      `${item.balance > 0 ? "+" : ""}${item.balance}`,
                     ),
-                  ])
+                  ]),
                 ),
               ])
             : el(
                 "div",
                 { className: "empty-state-stock" },
-                "No hay pendientes de stock con este proveedor."
+                "No hay pendientes de stock con este proveedor.",
               ),
         ]),
 
@@ -79,10 +79,10 @@ export function StockReportModal({ supplier, movements, onClose }) {
           el(
             "button",
             { className: "btn-confirm", onclick: onClose },
-            "Cerrar Reporte"
+            "Cerrar Reporte",
           ),
         ]),
       ]),
-    ]
+    ],
   );
 }

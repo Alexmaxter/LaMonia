@@ -21,6 +21,6 @@ export const Button = ({
       className: `ui-btn btn-${variant} ${className}`,
       onClick,
     },
-    ...content
+    ...content,
   );
 };

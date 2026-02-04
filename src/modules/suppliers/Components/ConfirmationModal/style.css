@@ -1,119 +1,139 @@
-/* Overlay: Fondo oscurecido y desenfoque */
-.modal-overlay {
+/* src/modules/suppliers/Components/ConfirmationModal/style.css */
+
+/* --- OVERLAY (Malla de Puntos) --- */
+.fusion-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
+  inset: 0;
+  z-index: 11000; /* Encima de todo */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 11000; /* Por encima de todo, incluso del otro modal */
+  padding: 16px;
+  /* Sin animación de entrada */
 }
 
-/* Contenedor del mensaje */
-.modal-content-optimized.text-center {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 40px;
-  width: 90%;
-  max-width: 380px;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+.mesh-bg {
+  background-color: rgba(255, 255, 255, 0.95);
+  background-image: radial-gradient(#aaa 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-/* Icono de advertencia circular */
-.confirm-icon {
-  width: 64px;
-  height: 64px;
-  background: rgba(239, 68, 68, 0.1); /* Rojo suave */
-  color: #ef4444; /* Rojo vibrante */
-  border-radius: 50%;
+/* --- CARD --- */
+.fusion-card {
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.15); /* Sombra dura */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Sin border-radius */
+}
+
+.confirmation-size {
+  width: 100%;
+  max-width: 400px; /* Compacto */
+}
+
+/* --- HEADER DE ADVERTENCIA --- */
+.fusion-header.header-warning {
+  background: #000; /* Fondo negro para alto contraste */
+  color: #fff;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: 900;
-  margin: 0 auto 24px;
-  border: 2px solid rgba(239, 68, 68, 0.2);
-}
-
-/* Tipografía de la pregunta */
-.confirm-title {
-  font-size: 1.5rem;
-  font-weight: 850;
-  margin-bottom: 12px;
-  color: var(--text-main);
-  letter-spacing: -0.5px;
-}
-
-.confirm-text {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 32px;
-}
-
-/* Botones como "Respuestas" */
-.modal-footer {
-  display: grid;
-  grid-template-columns: 1fr; /* Uno sobre otro en móviles, o 1fr 1fr */
   gap: 12px;
+  border-bottom: 2px solid #000;
 }
 
-/* Botón de Confirmar (Acción Peligrosa) */
-.btn-danger-confirm {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  order: 1; /* El botón de borrar primero */
+.header-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
 }
 
-.btn-danger-confirm:hover {
-  background: #dc2626;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-/* Botón de Cancelar (Cerrar) */
-.btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  padding: 14px;
-  border-radius: 12px;
+.header-title-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
   font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* --- BODY --- */
+.fusion-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.warning-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.warning-title {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #000;
+  margin: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.warning-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* --- FOOTER & BOTONES --- */
+.fusion-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-fusion-cancel {
+  flex: 1;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #555;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
-  order: 2;
+  font-size: 0.85rem;
+}
+.btn-fusion-cancel:hover {
+  border-color: #000;
+  color: #000;
+  background: #f4f4f4;
 }
 
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-main);
+.btn-fusion-danger {
+  flex: 1;
+  padding: 14px;
+  background: #000;
+  border: 1px solid #000;
+  color: #fff;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.1s;
 }
-
-/* Animación de escala al aparecer */
-.scale-in {
-  animation: confirmScaleIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes confirmScaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.btn-fusion-danger:hover {
+  background: #d32f2f; /* Rojo al hover para indicar peligro */
+  border-color: #d32f2f;
+  transform: translateY(1px);
 }

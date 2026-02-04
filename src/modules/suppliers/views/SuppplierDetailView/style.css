@@ -1,147 +1,274 @@
+/* src/modules/suppliers/views/SuppplierDetailView/style.css */
+
 .supplier-detail-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 2rem;
+  min-height: 100vh;
+  background-color: #f4f4f4;
+  position: relative;
+  /* Eliminamos padding superior global */
+  padding-top: 0;
 }
 
-/* BARRA DE HERRAMIENTAS */
-.detail-toolbar {
+/* --- HEADER TECH PANEL (Sticky) --- */
+.tech-panel-header-detail {
+  background: #fff;
+  border-bottom: 2px solid #000;
+  /* Padding interno */
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  /* STICKY CONFIG: Se pega al techo */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  margin-top: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Fila Superior */
+.tech-header-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
+  align-items: flex-start;
 }
 
-/* BOTÓN VOLVER */
-.btn-toolbar-back {
-  background: transparent;
+.left-group {
+  display: flex;
+  align-items: flex-start; /* Alineado arriba */
+  gap: 16px;
+}
+
+.btn-back-arrow {
+  background: none;
   border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #64748b;
-  font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;
-}
-
-.btn-toolbar-back:hover {
-  color: #0f172a;
-}
-
-/* CONTENEDOR DERECHA */
-.toolbar-actions {
+  padding: 0;
+  margin-top: 4px; /* Ajuste fino para alinear con el texto */
+  color: #000;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  transition: transform 0.2s;
+}
+.btn-back-arrow:hover {
+  transform: translateX(-4px);
 }
 
-/* BOTÓN + NUEVO MOVIMIENTO */
-.btn-add-movement {
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.btn-add-movement:hover {
-  background-color: #1d4ed8;
-}
-
-/* SEPARADOR */
-.toolbar-sep {
-  width: 1px;
-  height: 20px;
-  background-color: #e2e8f0;
-}
-
-/* GRUPO ICONOS */
-.utility-icons {
+.title-block {
   display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
-.btn-utility {
-  background: transparent;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+.page-title {
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+  color: #000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.supplier-type-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  background: #eee;
+  padding: 2px 6px;
+  border-radius: 2px;
+  align-self: flex-start;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #666;
+}
+
+/* Grupo de Deuda (Derecha) */
+.tech-debt-group {
+  text-align: right;
+}
+
+.debt-label-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.btn-utility:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
-}
-
-.icon-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-/* RESPONSIVE */
-@media (max-width: 600px) {
-  .detail-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  .toolbar-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.btn-generate-report {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
+.debt-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #666;
   font-weight: 600;
+}
+
+.btn-icon-toggle {
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  padding: 0;
+  display: flex;
+  color: #666;
+}
+
+.header-debt-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #000;
+  line-height: 1;
+}
+
+/* Fila Inferior (Controles) */
+.tech-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  /* Separador sutil opcional */
+  padding-top: 12px;
+  border-top: 1px dashed #eee;
+}
+
+.info-mini-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.alias-chip {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 6px 12px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: #444;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.alias-chip:hover {
+  border-color: #000;
+  background: #fff;
+  color: #000;
+}
+.alias-text {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.no-alias {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: #999;
+  font-style: italic;
 }
 
-.btn-generate-report:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #94a3b8;
+/* Botones de Acción */
+.tech-actions-container {
+  display: flex;
+  gap: 12px;
 }
 
-/* En móviles, ocultamos el texto para ahorrar espacio si es necesario */
-@media (max-width: 600px) {
-  .btn-generate-report {
-    padding: 8px;
+.btn-primary {
+  background: #000;
+  color: #fff;
+  border: none;
+  height: 40px;
+  padding: 0 16px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  height: 40px;
+  padding: 0 16px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-secondary-icon {
+  background: #fff;
+  color: #000;
+  border: 2px solid #ddd; /* Borde más suave para configs */
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.btn-secondary-icon:hover {
+  border-color: #000;
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.detail-content-wrapper {
+  flex: 1;
+  padding: 24px;
+  width: 100%;
+  max-width: 100%; /* Asegura Full Width */
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .tech-header-top {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tech-debt-group {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0; /* Separador en móvil */
+    padding-top: 8px;
+  }
+  .debt-label-row {
+    margin: 0;
+  }
+
+  .tech-controls-row {
+    flex-direction: column-reverse; /* Acciones arriba en móvil es más cómodo, o abajo */
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .tech-actions-container {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr; /* Config | Reporte | Nuevo */
+  }
+
+  .alias-chip {
+    width: 100%;
+    justify-content: center;
+  }
+  .detail-content-wrapper {
+    padding: 16px;
   }
 }

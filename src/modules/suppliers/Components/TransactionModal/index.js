@@ -2,39 +2,19 @@ import { el } from "../../../../core/dom.js";
 import { FirebaseDB } from "../../../../core/firebase/db.js";
 import "./style.css";
 
-// Helper para obtener el nombre del ítem de forma segura
+// --- HELPERS (Tu lógica original intacta) ---
 const getSafeName = (item) => {
   if (!item) return "";
   if (typeof item === "string") return item;
   return item.name || item.description || item.desc || "";
 };
 
-/**
- * Genera un string YYYY-MM-DD en horario local
- * Evita el error de toISOString() que suma horas por UTC.
- */
-const getLocalDateString = (dateInput) => {
-  if (!dateInput) return new Date().toLocaleDateString("sv-SE"); // sv-SE usa formato YYYY-MM-DD
-
-  // Si viene de Firestore como Timestamp, lo convertimos a Date
-  const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-// Función para calcular deuda desde el historial (usada en pagos/créditos)
 const calculatePendingFromHistory = (movements) => {
   const totals = {};
   if (!movements || !Array.isArray(movements)) return totals;
-
   movements.forEach((m) => {
     const type = m.type ? m.type.toLowerCase() : "";
     const isEntry = type === "invoice" || type === "boleta";
-
     if (m.items && Array.isArray(m.items)) {
       m.items.forEach((item) => {
         const name = getSafeName(item).trim();
@@ -46,14 +26,13 @@ const calculatePendingFromHistory = (movements) => {
       });
     }
   });
-
-  // Limpiar saldos insignificantes
   Object.keys(totals).forEach((key) => {
     if (totals[key] <= 0.01) delete totals[key];
   });
   return totals;
 };
 
+// --- COMPONENTE PRINCIPAL ---
 export function TransactionModal({
   supplier = null,
   suppliers = [],
@@ -64,28 +43,49 @@ export function TransactionModal({
 }) {
   const isEdit = !!initialData?.id;
 
-  // --- ESTADO INTERNO ---
+  // ICONOS
+  const iconClose = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+  const iconTrash = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+  const iconPlus = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>`;
+  const iconChevronLeft = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>`;
+  const iconChevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
+
+  // ESTADO
   let currentSupplier = supplier;
   let selectedType = initialData?.type || "invoice";
-  let localMovements = [...movements]; // Copia para manejar cambios en selector global
+  let localMovements = [...movements];
 
-  // ✅ FIX: Evitar NaN inicializando en "0" si amount no existe
-  let rawAmount =
+  // BUFFER DE CENTAVOS
+  let centsBuffer =
     initialData && typeof initialData.amount === "number"
-      ? (initialData.amount * 100).toFixed(0)
+      ? Math.round(initialData.amount * 100).toString()
       : "0";
 
   let itemsState = [];
+  let selectedDate = initialData?.date
+    ? initialData.date.toDate
+      ? initialData.date.toDate()
+      : new Date(initialData.date)
+    : new Date();
+  let calendarViewDate = new Date(selectedDate);
 
-  /**
-   * INICIALIZADOR DE ITEMS (CORREGIDO)
-   */
+  // --- HELPER FORMATO ATM ---
+  const formatATMDisplay = (bufferStr) => {
+    const val = parseInt(bufferStr || "0", 10);
+    const amount = val / 100;
+    const numStr = amount.toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return `$ ${numStr}`;
+  };
+
+  // --- ITEMS LOGIC ---
   const initItemsState = () => {
     itemsState = [];
     const isStockSupplier = currentSupplier?.type === "stock";
     if (!isStockSupplier) return;
 
-    // 1. Edición
     if (isEdit && initialData.items) {
       itemsState = initialData.items.map((i) => ({
         name: getSafeName(i),
@@ -95,7 +95,6 @@ export function TransactionModal({
       return;
     }
 
-    // 2. Pago / Nota de Crédito (Cargar deuda pendiente)
     if (selectedType === "payment" || selectedType === "credit") {
       const debtMap = calculatePendingFromHistory(localMovements);
       itemsState = Object.entries(debtMap)
@@ -106,9 +105,7 @@ export function TransactionModal({
           isLocked: true,
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
-    }
-    // 3. Boleta (Cargar predefinidos)
-    else {
+    } else {
       let rawDefaults = currentSupplier?.defaultItems || [];
       if (typeof rawDefaults === "string") {
         rawDefaults = rawDefaults
@@ -116,75 +113,121 @@ export function TransactionModal({
           .map((s) => s.trim())
           .filter((s) => s !== "");
       }
-
       itemsState = rawDefaults.map((it) => ({
         name: getSafeName(it),
         qty: 0,
         isLocked: true,
       }));
-
-      // Si no hay predefinidos, permitir entrada manual
-      if (itemsState.length === 0) {
+      if (itemsState.length === 0)
         itemsState.push({ name: "", qty: 0, isLocked: false });
-      }
     }
   };
 
   initItemsState();
 
-  const renderItemsList = () => {
-    const container = document.getElementById("items-list-container");
-    const sectionTitle = document.getElementById("items-section-title");
+  // --- CALENDAR RENDER ---
+  const renderCalendar = () => {
+    const container = document.getElementById("inline-calendar-container");
+    const labelTitle = document.getElementById("calendar-month-title");
+    if (!container || !labelTitle) return;
 
+    container.innerHTML = "";
+    const year = calendarViewDate.getFullYear();
+    const month = calendarViewDate.getMonth();
+    const monthNames = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+    labelTitle.textContent = `${monthNames[month]} ${year}`.toUpperCase();
+
+    const daysHeader = el(
+      "div",
+      { className: "cal-grid-header" },
+      ["D", "L", "M", "M", "J", "V", "S"].map((d) => el("span", {}, d)),
+    );
+    container.appendChild(daysHeader);
+
+    const daysGrid = el("div", { className: "cal-days-grid" });
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDayOfMonth; i++)
+      daysGrid.appendChild(el("div", { className: "cal-day empty" }));
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateToCheck = new Date(year, month, day);
+      const isSelected =
+        dateToCheck.toDateString() === selectedDate.toDateString();
+      const isToday = dateToCheck.toDateString() === new Date().toDateString();
+
+      const dayBtn = el(
+        "button",
+        {
+          type: "button",
+          className: `cal-day-btn ${isSelected ? "selected" : ""} ${isToday ? "today" : ""}`,
+          onclick: () => {
+            selectedDate = new Date(year, month, day);
+            renderCalendar();
+          },
+        },
+        day.toString(),
+      );
+      daysGrid.appendChild(dayBtn);
+    }
+    container.appendChild(daysGrid);
+  };
+
+  const changeMonth = (offset) => {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + offset);
+    renderCalendar();
+  };
+
+  // --- ITEMS LIST RENDER ---
+  const renderItemsList = () => {
+    const container = document.getElementById("items-list-wrapper");
     if (!container) return;
     container.innerHTML = "";
 
     const isStockSupplier = currentSupplier?.type === "stock";
-
     if (!isStockSupplier) {
       container.style.display = "none";
-      if (sectionTitle) sectionTitle.style.display = "none";
       return;
     }
-
     container.style.display = "flex";
-    if (sectionTitle) {
-      sectionTitle.style.display = "block";
-      sectionTitle.innerHTML =
-        selectedType === "invoice"
-          ? "INGRESO DE MERCADERÍA"
-          : "SELECCIONAR ITEMS A PAGAR";
-    }
 
     const isDebtMode = selectedType === "payment" || selectedType === "credit";
 
     if (isDebtMode && itemsState.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state-msg">
-          <strong>Al día</strong><br>
-          <small>No hay deuda de stock pendiente.</small>
-        </div>`;
+      container.innerHTML = `<div class="empty-stock-msg">SIN ÍTEMS PENDIENTES</div>`;
       return;
     }
 
     itemsState.forEach((item, index) => {
       let nameComp;
       if (item.isLocked) {
-        nameComp = el("div", { className: "item-name-wrapper" }, [
-          el("span", { className: "item-name-text" }, item.name),
-          isDebtMode && item.max !== undefined
-            ? el("span", { className: "badge-debt" }, `Debe: ${item.max}`)
+        nameComp = el("div", { className: "item-text-locked" }, [
+          el("span", { className: "text-main" }, item.name),
+          isDebtMode && item.max
+            ? el("span", { className: "text-sub" }, `/ ${item.max}`)
             : null,
         ]);
       } else {
         nameComp = el("input", {
           type: "text",
-          className: "input-name-dynamic",
-          placeholder: "Producto...",
+          className: "fusion-input item-name-input", // CAMBIO DE CLASE
+          placeholder: "NOMBRE PRODUCTO",
           value: item.name,
-          oninput: (e) => {
-            itemsState[index].name = e.target.value;
-          },
+          oninput: (e) => (itemsState[index].name = e.target.value),
         });
       }
 
@@ -201,49 +244,52 @@ export function TransactionModal({
         },
       });
 
-      container.appendChild(
-        el("div", { className: "item-row scale-in" }, [
-          el("div", { className: "item-left-col" }, [
-            isDebtMode
-              ? el("div", { style: "width:24px" })
-              : el("button", {
-                  type: "button",
-                  className: "btn-delete-row",
-                  innerHTML: "&times;",
-                  onclick: () => {
-                    itemsState.splice(index, 1);
-                    renderItemsList();
-                  },
-                }),
-            nameComp,
-          ]),
-          el("div", { className: "stepper-wrapper" }, [
-            el("button", {
+      const row = el("div", { className: "item-row-strip" }, [
+        !isDebtMode
+          ? el("button", {
               type: "button",
-              className: "stepper-btn",
-              innerHTML: "-",
+              className: "btn-icon-del",
+              innerHTML: iconTrash,
+              onclick: () => {
+                itemsState.splice(index, 1);
+                renderItemsList();
+              },
+            })
+          : null,
+        el("div", { className: "item-col-grow" }, [nameComp]),
+        el("div", { className: "stepper-block" }, [
+          el(
+            "button",
+            {
+              type: "button",
+              className: "btn-step",
               onclick: () => {
                 if (itemsState[index].qty > 0) {
                   itemsState[index].qty--;
                   qtyInput.value = itemsState[index].qty;
                 }
               },
-            }),
-            qtyInput,
-            el("button", {
+            },
+            "-",
+          ),
+          qtyInput,
+          el(
+            "button",
+            {
               type: "button",
-              className: "stepper-btn",
-              innerHTML: "+",
+              className: "btn-step",
               onclick: () => {
                 if (isDebtMode && item.max && itemsState[index].qty >= item.max)
                   return;
                 itemsState[index].qty++;
                 qtyInput.value = itemsState[index].qty;
               },
-            }),
-          ]),
-        ])
-      );
+            },
+            "+",
+          ),
+        ]),
+      ]);
+      container.appendChild(row);
     });
 
     if (!isDebtMode) {
@@ -252,222 +298,295 @@ export function TransactionModal({
           "button",
           {
             type: "button",
-            className: "btn-add-item",
+            className: "btn-rect-dotted",
             onclick: () => {
               itemsState.push({ name: "", qty: 0, isLocked: false });
               renderItemsList();
             },
           },
-          "+ Agregar otro"
-        )
+          [el("span", { innerHTML: iconPlus }), "AGREGAR ÍTEM"],
+        ),
       );
     }
   };
 
-  const formatCurrency = (val) =>
-    (parseFloat(val) / 100).toLocaleString("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    });
-
   const updateTheme = (type) => {
-    const heroAmount = document.getElementById("hero-amount");
-    if (heroAmount) {
-      heroAmount.className = `hero-amount ${
-        type === "invoice" ? "theme-danger" : "theme-success"
-      }`;
+    const hero = document.getElementById("hero-atm-input");
+    if (hero) {
+      hero.classList.remove("col-danger", "col-success");
+      hero.classList.add(type === "invoice" ? "col-danger" : "col-success");
     }
   };
 
-  const headerTitle =
+  // --- HEADER SELECTOR (Misma lógica, estructura Fusion) ---
+  const headerSelector =
     suppliers.length > 0 && !supplier
       ? el(
-          "select",
-          {
-            className: "supplier-selector-global",
-            required: true,
-            onchange: async (e) => {
-              const sId = e.target.value;
-              currentSupplier = suppliers.find((s) => s.id === sId);
-
-              try {
-                localMovements = await FirebaseDB.getByFilter(
-                  "supplier_transactions",
-                  "supplierId",
-                  sId,
-                  "date",
-                  "desc"
-                );
-              } catch (err) {
-                console.error("Error cargando movimientos globales:", err);
-                localMovements = [];
-              }
-
-              initItemsState();
-              renderItemsList();
+          "div",
+          { className: "header-select-box" },
+          el(
+            "select",
+            {
+              className: "fusion-select", // CAMBIO CLASE
+              onchange: async (e) => {
+                const sId = e.target.value;
+                currentSupplier = suppliers.find((s) => s.id === sId);
+                try {
+                  localMovements = await FirebaseDB.getByFilter(
+                    "supplier_transactions",
+                    "supplierId",
+                    sId,
+                    "date",
+                    "desc",
+                  );
+                } catch (err) {
+                  localMovements = [];
+                }
+                initItemsState();
+                renderItemsList();
+              },
             },
-          },
-          [
-            el(
-              "option",
-              { value: "", disabled: true, selected: true },
-              "Seleccionar Proveedor..."
-            ),
-            ...suppliers.map((s) => el("option", { value: s.id }, s.name)),
-          ]
+            [
+              el(
+                "option",
+                { disabled: true, selected: true },
+                "SELECCIONAR PROVEEDOR",
+              ),
+              ...suppliers.map((s) => el("option", { value: s.id }, s.name)),
+            ],
+          ),
         )
       : el(
           "h2",
-          { className: "modal-title" },
-          currentSupplier?.name || "Proveedor"
+          { className: "header-title-text" },
+          currentSupplier?.name || "PROVEEDOR",
         );
 
-  const modal = el(
+  const modalContent = el(
     "div",
     {
-      className: "modal-overlay",
-      onclick: (e) => {
-        if (e.target.className === "modal-overlay") onClose();
-      },
+      className: "fusion-card", // CAMBIO CLASE PRINCIPAL
+      onclick: (e) => e.stopPropagation(),
     },
     [
-      el("div", { className: "modal-card scale-in" }, [
-        el("div", { className: "modal-header" }, [
+      // 1. HEADER (Estilo Fusión)
+      el("div", { className: "fusion-header" }, [
+        el("div", { className: "header-text-group" }, [
           el(
-            "h3",
-            { className: "modal-subtitle" },
-            isEdit ? "EDITANDO" : "NUEVA OPERACIÓN"
+            "span",
+            { className: "fusion-subtitle" },
+            isEdit ? "EDITAR REGISTRO" : "NUEVO MOVIMIENTO",
           ),
-          headerTitle,
+          headerSelector,
         ]),
-        el(
-          "form",
-          {
-            onsubmit: (e) => {
-              e.preventDefault();
-              if (!currentSupplier) return alert("Selecciona un proveedor");
-              const formData = new FormData(e.target);
-              onSave({
-                ...initialData,
-                supplierId: currentSupplier?.id,
-                amount: parseFloat(rawAmount) / 100,
-                concept: formData.get("concept"),
-                type: selectedType,
-                date: new Date(formData.get("date") + "T00:00:00"),
-                items: itemsState
-                  .filter((i) => i.qty > 0)
-                  .map((i) => ({
-                    name: i.name.trim(),
-                    quantity: parseFloat(i.qty),
-                  })),
-              });
-            },
-          },
-          [
-            el(
-              "div",
-              { className: "type-selector" },
-              ["invoice", "payment", "credit"].map((type) =>
-                el(
-                  "label",
-                  {
-                    className: `type-option ${
-                      selectedType === type ? "active" : ""
-                    }`,
-                  },
-                  [
-                    el("input", {
-                      type: "radio",
-                      name: "type",
-                      value: type,
-                      checked: selectedType === type,
-                      onchange: (e) => {
-                        selectedType = e.target.value;
-                        const labels = e.target
-                          .closest(".type-selector")
-                          .querySelectorAll(".type-option");
-                        labels.forEach((l) => l.classList.remove("active"));
-                        e.target.parentElement.classList.add("active");
+        el("button", {
+          className: "btn-close-fusion",
+          onclick: onClose,
+          innerHTML: iconClose,
+        }),
+      ]),
 
-                        updateTheme(selectedType);
-                        initItemsState();
-                        renderItemsList();
-                      },
-                    }),
-                    el(
-                      "span",
-                      {},
-                      type === "invoice"
-                        ? "Boleta"
-                        : type === "payment"
-                        ? "Pago"
-                        : "Nota Crédito"
-                    ),
-                  ]
-                )
-              )
-            ),
-            el("div", { className: "amount-wrapper" }, [
-              el("input", {
-                id: "hero-amount",
-                className: `hero-amount ${
-                  selectedType === "invoice" ? "theme-danger" : "theme-success"
-                }`,
-                value: formatCurrency(rawAmount),
-                oninput: (e) => {
-                  rawAmount = e.target.value.replace(/\D/g, "");
-                  e.target.value = formatCurrency(rawAmount);
+      // 2. BODY
+      el(
+        "form",
+        {
+          className: "fusion-body",
+          onsubmit: (e) => {
+            e.preventDefault();
+            if (!currentSupplier) return alert("Selecciona un proveedor");
+            const formData = new FormData(e.target);
+            const finalAmount = parseFloat(centsBuffer) / 100;
+
+            onSave({
+              ...initialData,
+              supplierId: currentSupplier?.id,
+              amount: finalAmount,
+              concept: formData.get("concept"),
+              type: selectedType,
+              date: selectedDate,
+              items: itemsState
+                .filter((i) => i.qty > 0)
+                .map((i) => ({
+                  name: i.name.trim(),
+                  quantity: parseFloat(i.qty),
+                })),
+            });
+          },
+        },
+        [
+          // TABS (Estilo Fusión)
+          el(
+            "div",
+            { className: "fusion-tabs-row" },
+            ["invoice", "payment", "credit"].map((type) =>
+              el(
+                "label",
+                {
+                  className: `fusion-tab ${selectedType === type ? "active" : ""}`,
                 },
+                [
+                  el("input", {
+                    type: "radio",
+                    name: "type",
+                    value: type,
+                    checked: selectedType === type,
+                    onchange: (e) => {
+                      selectedType = e.target.value;
+                      document
+                        .querySelectorAll(".fusion-tab")
+                        .forEach((t) => t.classList.remove("active"));
+                      e.target.parentElement.classList.add("active");
+                      updateTheme(selectedType);
+                      initItemsState();
+                      renderItemsList();
+                    },
+                    style: "display:none", // Ocultamos el radio real
+                  }),
+                  el(
+                    "span",
+                    {},
+                    type === "invoice"
+                      ? "DEUDA"
+                      : type === "payment"
+                        ? "PAGO"
+                        : "NOTA",
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // MONTO ATM INPUT
+          el("div", { className: "atm-wrapper-clean" }, [
+            el("input", {
+              id: "hero-atm-input",
+              type: "tel",
+              className: `atm-input-field ${selectedType === "invoice" ? "col-danger" : "col-success"}`,
+              value: formatATMDisplay(centsBuffer),
+              onclick: (e) => {
+                const len = e.target.value.length;
+                e.target.setSelectionRange(len, len);
+              },
+              onkeydown: (e) => {
+                if (e.key === "Backspace") {
+                  e.preventDefault();
+                  if (centsBuffer.length > 0) {
+                    centsBuffer = centsBuffer.slice(0, -1);
+                    if (centsBuffer === "") centsBuffer = "0";
+                    e.target.value = formatATMDisplay(centsBuffer);
+                  }
+                }
+              },
+              oninput: (e) => {
+                const inputVal = e.target.value;
+                const rawNums = inputVal.replace(/\D/g, "");
+                if (rawNums) {
+                  centsBuffer = parseInt(rawNums, 10).toString();
+                } else {
+                  centsBuffer = "0";
+                }
+                e.target.value = formatATMDisplay(centsBuffer);
+              },
+            }),
+          ]),
+
+          // ITEMS AREA
+          el("div", {
+            id: "items-list-wrapper",
+            className: "rect-items-section", // Mantengo clase layout interno
+          }),
+
+          // LOWER GRID: CALENDARIO Y CONCEPTO
+          el("div", { className: "rect-lower-grid" }, [
+            // Mantengo estructura grid
+            el("div", { className: "calendar-panel" }, [
+              el("div", { className: "cal-nav-row" }, [
+                el("button", {
+                  type: "button",
+                  className: "btn-cal-nav",
+                  onclick: () => changeMonth(-1),
+                  innerHTML: iconChevronLeft,
+                }),
+                el(
+                  "span",
+                  { id: "calendar-month-title", className: "cal-title" },
+                  "",
+                ),
+                el("button", {
+                  type: "button",
+                  className: "btn-cal-nav",
+                  onclick: () => changeMonth(1),
+                  innerHTML: iconChevronRight,
+                }),
+              ]),
+              el("div", {
+                id: "inline-calendar-container",
+                className: "cal-container",
               }),
             ]),
-            el("h4", {
-              id: "items-section-title",
-              className: "section-label",
-              style: "display:none",
-            }),
-            el("div", {
-              id: "items-list-container",
-              className: "items-section",
-            }),
-            el("div", { className: "meta-inputs" }, [
-              el("div", { className: "input-group" }, [
-                el("label", {}, "Fecha"),
-                el("input", {
-                  type: "date",
-                  name: "date",
-                  required: true,
-                  // ✅ FIX: Usa la fecha original en edición y evita desfase UTC
-                  value: getLocalDateString(initialData?.date),
-                }),
-              ]),
-              el("div", { className: "input-group" }, [
-                el("label", {}, "Obs"),
-                el("input", {
-                  type: "text",
-                  name: "concept",
-                  placeholder: "...",
-                  value: initialData?.concept || "",
-                }),
-              ]),
+
+            el("div", { className: "concept-panel" }, [
+              el("label", { className: "fusion-label" }, "CONCEPTO / NOTA"),
+              el("textarea", {
+                name: "concept",
+                className: "fusion-textarea", // Clase nueva para estilo fusion
+                placeholder: "Detalle opcional...",
+                value: initialData?.concept || "",
+              }),
             ]),
-            el("div", { className: "modal-footer" }, [
-              el(
-                "button",
-                { type: "button", className: "btn-cancel", onclick: onClose },
-                "Cancelar"
-              ),
-              el(
-                "button",
-                { type: "submit", className: "btn-confirm" },
-                "Guardar"
-              ),
-            ]),
-          ]
-        ),
-      ]),
-    ]
+          ]),
+
+          // FOOTER
+          el("div", { className: "fusion-footer" }, [
+            el(
+              "button",
+              {
+                type: "button",
+                className: "btn-fusion-cancel",
+                onclick: onClose,
+              },
+              "CANCELAR",
+            ),
+            el(
+              "button",
+              { type: "submit", className: "btn-fusion-save" },
+              isEdit ? "GUARDAR" : "CONFIRMAR",
+            ),
+          ]),
+        ],
+      ),
+    ],
   );
 
-  setTimeout(() => renderItemsList(), 0);
-  return modal;
+  const overlay = el(
+    "div",
+    {
+      className: "fusion-overlay mesh-bg", // Fondo de Puntos
+      onclick: (e) => {
+        if (e.target === overlay) onClose();
+      },
+    },
+    [modalContent],
+  );
+
+  setTimeout(() => {
+    renderItemsList();
+    renderCalendar();
+    if (!isEdit) {
+      const input = document.getElementById("hero-atm-input");
+      if (input) input.focus();
+    }
+  }, 0);
+
+  const handleEsc = (e) => {
+    if (e.key === "Escape") onClose();
+  };
+  document.addEventListener("keydown", handleEsc);
+  const originalClose = onClose;
+  onClose = () => {
+    document.removeEventListener("keydown", handleEsc);
+    originalClose();
+  };
+
+  return overlay;
 }

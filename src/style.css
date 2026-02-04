@@ -1,304 +1,184 @@
 :root {
-  /* --- PALETA DE COLORES (High Contrast Light Mode) --- */
-  --primary: #2563eb; /* Azul fuerte principal */
-  --primary-hover: #1d4ed8; /* Azul más oscuro para hover */
+  /* --- PALETA DE COLORES (Utilitaria) --- */
+  --bg-app: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-input: #ffffff;
 
-  --danger: #dc2626; /* Rojo fuerte para errores/deudas */
-  --danger-hover: #b91c1c;
+  /* Textos */
+  --text-main: #000000;
+  --text-secondary: #525252;
+  --text-muted: #a3a3a3;
+  --text-inverse: #ffffff;
 
-  --success: #059669; /* Verde esmeralda oscuro */
-  --warning: #d97706; /* Amarillo ocre */
+  /* Estructura & Bordes */
+  --border-light: #e5e5e5;
+  --border-color: #d4d4d4;
+  --border-strong: #000000;
 
-  /* --- FONDOS --- */
-  --bg-app: #f9fafb; /* Gris muy claro (Casi blanco) para el fondo de la app */
-  --bg-panel: #ffffff; /* Blanco puro para paneles, sidebar y modales */
-  --bg-card: #ffffff; /* Blanco puro para tarjetas */
-  --bg-input: #f3f4f6; /* Gris claro para inputs */
+  /* Semántica Técnica */
+  --primary: #000000;
+  --primary-hover: #333333;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #f59e0b;
 
-  /* --- TEXTO --- */
-  --text-main: #111827; /* Negro suave (Gris muy oscuro) para lectura principal */
-  --text-secondary: #374151; /* Gris oscuro para textos secundarios */
-  --text-muted: #6b7280; /* Gris medio para placeholders o etiquetas */
-  --text-inverse: #ffffff; /* Blanco para texto sobre botones oscuros */
+  /* --- GEOMETRÍA --- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
 
-  /* --- BORDES --- */
-  --border-color: #e5e7eb; /* Gris muy claro para separadores */
-  --border-strong: #d1d5db; /* Gris visible para bordes de inputs */
+  /* Sombras Duras (Estáticas) */
+  --shadow-hard-card: 2px 2px 0px #000000;
+  --shadow-hard-modal: 6px 6px 0px #000000;
+  --shadow-none: none;
 
-  /* --- MEDIDAS --- */
-  --sidebar-width: 260px;
-  --header-height: 60px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-pill: 9999px;
+  /* --- TIPOGRAFÍA --- */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-mono:
+    "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Console",
+    monospace;
 
-  /* --- EFECTOS --- */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --hover-overlay: rgba(0, 0, 0, 0.04); /* Capa oscura muy sutil para hovers */
+  /* --- TRANSICIONES --- */
+  --transition-color:
+    color 0.1s ease, background-color 0.1s ease, border-color 0.1s ease;
+
+  /* --- MEDIDAS RESPONSIVAS --- */
+  --height-control: 44px; /* Altura mínima para touch (dedos) */
 }
 
-/* --- RESET Y BASES --- */
+/* --- RESET BÁSICO --- */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  -webkit-tap-highlight-color: transparent; /* Elimina el flash azul al tocar en móviles */
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-app);
   color: var(--text-main);
-  font-size: 16px; /* Base legible */
   line-height: 1.5;
-  overflow-x: hidden; /* Previene scroll horizontal accidental */
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Evita el rebote elástico en iOS que a veces rompe el look de app */
+  overscroll-behavior-y: none;
 }
 
-/* --- SCROLLBAR PERSONALIZADO (Desktop) --- */
+/* --- CLASES DE UTILIDAD PARA DATOS --- */
+.font-mono,
+[data-amount],
+.amount-text {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+/* --- COMPONENTES GLOBALES --- */
+
+/* 1. INPUTS Y FORMULARIOS */
+input,
+select,
+textarea {
+  width: 100%;
+  height: var(--height-control); /* 44px para touch */
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 16px; /* 16px evita zoom automático en iOS al hacer foco */
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.1s;
+  appearance: none; /* Elimina estilos nativos de iOS/Android */
+}
+
+textarea {
+  height: auto;
+  min-height: 80px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--border-strong);
+  border-width: 2px;
+  padding: 9px 11px;
+}
+
+label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* 2. MODALES (Con ajuste móvil) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.95);
+  background-image: radial-gradient(#000000 1px, transparent 1px);
+  background-size: 24px 24px;
+  display: flex;
+  align-items: center; /* Centrado vertical en escritorio */
+  justify-content: center;
+  padding: 16px; /* Margen de seguridad en bordes */
+}
+
+.modal-content {
+  background: #ffffff;
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hard-modal);
+
+  /* RESPONSIVE: Manejo de altura en móviles */
+  max-height: 90vh; /* Nunca más alto que el 90% de la pantalla */
+  overflow-y: auto; /* Scroll interno si el contenido es largo */
+  display: flex;
+  flex-direction: column;
+}
+
+/* En móviles muy chicos, reducimos el padding del modal */
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 16px;
+    box-shadow: 4px 4px 0px #000000; /* Sombra un poco más chica */
+  }
+}
+
+/* 3. SCROLLBAR TÉCNICO */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
+  background: #d4d4d4;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #000000;
 }
 
-/* --- UTILIDADES DE TEXTO --- */
-.text-center {
-  text-align: center;
-}
-.text-right {
-  text-align: right;
-}
-.text-left {
-  text-align: left;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-.font-semibold {
-  font-weight: 600;
-}
-
-.text-success {
-  color: var(--success);
-}
+/* 4. UTILIDADES TEXTO */
 .text-danger {
-  color: var(--danger);
+  color: var(--danger) !important;
+}
+.text-success {
+  color: var(--success) !important;
 }
 .text-muted {
-  color: var(--text-muted);
-}
-.text-primary {
-  color: var(--primary);
-}
-
-/* --- UTILIDADES FLEXBOX --- */
-.d-flex {
-  display: flex;
-}
-.flex-column {
-  flex-direction: column;
-}
-.align-center {
-  align-items: center;
-}
-.justify-center {
-  justify-content: center;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.justify-end {
-  justify-content: flex-end;
-}
-.gap-1 {
-  gap: 0.25rem;
-}
-.gap-2 {
-  gap: 0.5rem;
-}
-.gap-3 {
-  gap: 1rem;
-}
-.gap-4 {
-  gap: 1.5rem;
-}
-
-/* --- UTILIDADES ESPACIADO --- */
-.m-0 {
-  margin: 0;
-}
-.mb-1 {
-  margin-bottom: 0.25rem;
-}
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-.mb-3 {
-  margin-bottom: 1rem;
-}
-.mb-4 {
-  margin-bottom: 1.5rem;
-}
-.mt-2 {
-  margin-top: 0.5rem;
-}
-.mt-4 {
-  margin-top: 1rem;
-}
-.p-2 {
-  padding: 0.5rem;
-}
-.p-4 {
-  padding: 1rem;
-}
-
-/* --- ELEMENTOS DE FORMULARIO GLOBALES --- */
-input,
-select,
-textarea {
-  font-family: inherit;
-  color: var(--text-main);
-}
-
-/* Botón de configuración genérico (Icono engranaje, etc) */
-.btn-icon-only {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background 0.2s, color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-icon-only:hover {
-  background-color: var(--bg-input);
-  color: var(--primary);
-}
-
-/* Selectores de configuración */
-.settings-select {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  color: var(--text-main);
-  font-size: 0.95rem;
-  outline: none;
-  cursor: pointer;
-  width: 100%;
-}
-.settings-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-/* --- ANIMACIONES GLOBALES --- */
-.fade-in {
-  animation: globalFadeIn 0.3s ease-out forwards;
-}
-
-@keyframes globalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ==========================================================================
-   ADAPTACIÓN MÓVIL (RESPONSIVE)
-   ========================================================================== */
-@media (max-width: 768px) {
-  :root {
-    /* En móvil, el sidebar suele ocultarse o ser overlay, 
-       por lo que el ancho "reservado" en el layout debe ser 0 */
-    --sidebar-width: 0px;
-    --header-height: 56px; /* Header un poco más compacto */
-  }
-
-  body {
-    /* Ajuste para evitar conflictos con el notch y barra inferior de iPhone X+ */
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
-  /* Inputs: Tamaño de fuente 16px OBLIGATORIO en iOS para evitar zoom automático al enfocar */
-  input,
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-
-  /* Ajuste de tipografía para pantallas pequeñas */
-  h1 {
-    font-size: 1.5rem;
-  }
-  h2 {
-    font-size: 1.25rem;
-  }
-  h3 {
-    font-size: 1.1rem;
-  }
-
-  /* Botones más grandes para facilitar el toque (Touch Targets) */
-  button,
-  .btn,
-  .btn-primary-v1,
-  .btn-secondary-v1 {
-    min-height: 44px; /* Estándar de accesibilidad móvil */
-  }
-
-  /* Ajuste de scrollbar para móvil: Ocultarlo visualmente pero permitir scroll */
-  ::-webkit-scrollbar {
-    width: 4px; /* Muy fino */
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  /* Contenedores principales ocupan todo el ancho */
-  .container,
-  .main-content,
-  .view-container {
-    width: 100% !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    margin: 0 !important;
-  }
-
-  /* Utilidad para ocultar elementos en móvil */
-  .hide-on-mobile {
-    display: none !important;
-  }
-
-  /* Utilidad para mostrar solo en móvil */
-  .show-on-mobile {
-    display: block !important;
-  }
+  color: var(--text-muted) !important;
 }

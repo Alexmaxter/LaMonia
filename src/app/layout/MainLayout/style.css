@@ -14,7 +14,10 @@
 .main-content {
   flex: 1; /* Toma todo el espacio restante */
   overflow-y: auto; /* Scroll interno solo aquí */
-  padding: 2rem;
+
+  /* CORRECCIÓN: Eliminamos el padding global para permitir encabezados full-width */
+  padding: 0;
+
   position: relative;
   height: 100%;
 }
@@ -27,20 +30,14 @@
 
   .main-content {
     width: 100%;
-    padding: 1rem; /* Menos padding en móvil */
-  }
-}
-@media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column; /* El contenido fluye normal */
-  }
 
-  .main-content {
-    width: 100%;
-    padding: 1rem;
-    /* IMPORTANTE: Añadimos padding inferior para que el contenido 
-       no quede oculto detrás del menú fijo */
+    /* CORRECCIÓN: Sin padding lateral/superior en móvil tampoco */
+    padding: 0;
+
+    /* IMPORTANTE: Mantenemos padding inferior si hay menú fijo abajo, 
+       sino puedes reducirlo a 0 o 20px según tu diseño */
     padding-bottom: 80px;
+
     overflow-y: auto;
   }
 }

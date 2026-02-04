@@ -1,12 +1,14 @@
-/* --- OVERLAY CON BLUR PREMIUM --- */
-.modal-overlay {
+/* src/modules/suppliers/Components/SupplierSettingModal/style.css */
+
+/* --- OVERLAY --- */
+.tech-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.8); /* Fondo claro semi-transparente */
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,288 +16,282 @@
   padding: 16px;
 }
 
-/* --- CONTENEDOR PRINCIPAL --- */
-.setting-modal {
-  background: #121212;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 32px;
-  padding: 35px;
-  width: 95%;
-  max-width: 550px;
+/* --- MODAL CARD --- */
+.tech-modal-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  width: 100%;
+  max-width: 500px;
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
-  animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.1); /* Sombra dura sutil */
+  animation: slideUpFade 0.2s ease-out;
 }
 
-/* --- CABECERA --- */
-.modal-header {
-  text-align: center;
-  margin-bottom: 30px;
-  position: relative;
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.modal-header h2 {
-  font-size: 1.6rem;
+/* --- HEADER --- */
+.tech-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 2px solid #000;
+  background: #f8f8f8;
+}
+
+.tech-modal-header h2 {
+  font-family: var(--font-sans, sans-serif);
   font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.02em;
+  font-size: 1.1rem;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
   margin: 0;
+  color: #000;
 }
 
-.btn-close-modal {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: none;
-  color: #666;
+.btn-close-tech {
+  background: transparent;
+  border: 1px solid transparent;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: 0.3s;
-}
-
-.btn-close-modal:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-/* --- FORMULARIO Y GRUPOS --- */
-.setting-group {
-  margin-bottom: 20px;
-}
-
-.setting-label {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 8px;
-  padding-left: 4px;
-}
-
-.setting-input,
-.setting-select,
-.setting-input-small {
-  width: 100%;
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 14px 18px;
-  color: #fff;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.setting-input:focus,
-.setting-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background: #202020;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-}
-
-/* --- SECCIÓN CATÁLOGO (STOCK) --- */
-.catalog-config-section {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 20px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-top: 10px;
-}
-
-.setting-add-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.btn-add-setting {
-  background: #ffffff;
-  color: #000;
-  border: none;
-  padding: 0 20px;
-  border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.85rem;
   cursor: pointer;
-  transition: 0.3s;
+  color: #000;
+  transition: all 0.2s;
+}
+.btn-close-tech:hover {
+  background: #eee;
+  border-color: #000;
 }
 
-.btn-add-setting:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
-}
-
-/* --- LISTADO DE ITEMS (ANCHO COMPLETO) --- */
-.setting-items-list {
+/* --- FORM BODY --- */
+.tech-form-body {
+  padding: 24px 20px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-  max-height: 280px;
-  overflow-y: auto;
-  padding-right: 5px;
+  gap: 20px;
 }
 
-.setting-item-tag {
+.form-group {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+}
+
+/* Inputs & Selects */
+.tech-input,
+.tech-select {
   width: 100%;
-  background: #1a1a1a;
-  padding: 14px 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.2s ease;
-  animation: itemSlideIn 0.3s ease-out;
+  padding: 10px 12px;
+  border: 1px solid #000;
+  background: #fff;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9rem;
+  color: #000;
+  border-radius: 0; /* Bordes rectos */
 }
 
-.setting-item-tag:hover {
-  background: #222;
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateX(4px);
+.tech-input:focus,
+.tech-select:focus {
+  outline: none;
+  background: #fdfdfd;
+  box-shadow: 2px 2px 0px #000; /* Feedback visual brutalista */
 }
 
-.setting-item-tag span {
-  color: #e2e8f0;
-  font-size: 1rem;
-  font-weight: 500;
+/* --- SECTION CATALOGO --- */
+.tech-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px dashed #000;
+  padding: 16px;
+  background: #f9f9f9;
 }
 
-/* --- BOTONES DE ACCIÓN (EDITAR Y BORRAR) --- */
-.item-actions {
+.section-header {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: underline;
+  margin-bottom: 4px;
+}
+
+.add-row-group {
   display: flex;
   gap: 8px;
 }
 
-.btn-edit-item,
-.btn-remove-item {
+.tech-input-add {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+}
+.tech-input-add:focus {
+  border-color: #000;
+  outline: none;
+}
+
+.btn-square-add {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
+  background: #000;
+  color: #fff;
   border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-square-add:hover {
+  background: #333;
+}
+
+/* LISTA DE ITEMS */
+.tech-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.tech-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+}
+
+.item-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+}
+
+.empty-params {
+  font-family: var(--font-mono, monospace);
+  color: #999;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 10px;
+}
+
+/* Acciones en item */
+.row-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-icon-action {
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  color: #000;
+  border-radius: 4px;
+}
+.btn-icon-action:hover {
+  background: #eee;
+}
+.btn-icon-action.delete:hover {
+  background: #ffebee;
+  color: #d32f2f;
+}
+.btn-icon-action.confirm {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
-/* Estilo Editar (Azul/Gris) */
-.btn-edit-item {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+/* Input de edición inline */
+.tech-input-small {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #000;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
 }
 
-.btn-edit-item:hover {
-  background: #3b82f6;
-  color: #ffffff;
-}
-
-/* Estilo Borrar (Rojo) */
-.btn-remove-item {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.btn-remove-item:hover {
-  background: #ef4444;
-  color: #ffffff;
-}
-
-/* --- FOOTER DEL MODAL --- */
-.modal-footer {
-  margin-top: 35px;
+/* --- FOOTER --- */
+.tech-modal-footer {
   display: flex;
-  flex-direction: column-reverse; /* Confirmar arriba en móvil */
+  justify-content: flex-end;
   gap: 12px;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
 }
 
-.btn-save {
-  width: 100%;
-  padding: 16px;
-  background: #3b82f6;
+.btn-tech-cancel {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 0 16px;
+  height: 40px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-tech-cancel:hover {
+  border-color: #000;
+  color: #000;
+}
+
+.btn-tech-save {
+  background: #000;
   color: #fff;
   border: none;
-  border-radius: 18px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-}
-
-.btn-save:hover {
-  background: #2563eb;
-  transform: translateY(-2px);
-  box-shadow: 0 15px 25px rgba(59, 130, 246, 0.3);
-}
-
-.btn-cancel {
-  width: 100%;
-  padding: 16px;
-  background: transparent;
-  color: #64748b;
-  border: none;
-  font-size: 0.95rem;
+  padding: 0 20px;
+  height: 40px;
+  font-family: var(--font-mono, monospace);
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
 }
-
-.btn-cancel:hover {
-  color: #94a3b8;
+.btn-tech-save:hover {
+  background: #333;
 }
 
-/* --- ANIMACIONES Y SCROLL --- */
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
+/* MOBILE */
+@media (max-width: 600px) {
+  .tech-modal-card {
+    height: 100vh;
+    max-height: 100vh;
+    border: none;
   }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+  .tech-modal-footer {
+    flex-direction: column-reverse;
   }
-}
-
-@keyframes itemSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.setting-items-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.setting-items-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
-/* --- RESPONSIVE --- */
-@media (min-width: 640px) {
-  .modal-footer {
-    flex-direction: row; /* Lado a lado en PC */
-    justify-content: flex-end;
-  }
-
-  .btn-save,
-  .btn-cancel {
-    width: auto;
-    min-width: 150px;
+  .btn-tech-save,
+  .btn-tech-cancel {
+    width: 100%;
   }
 }

@@ -1,25 +1,19 @@
 /**
  * SupplierModel.js
- * Lógica de negocio pura y gestión de estado (Caché) para el módulo de proveedores.
+ * Lógica de negocio pura y gestión de estado (Caché).
  */
 
-// Variable persistente en memoria mientras la app esté abierta
 let cachedSuppliers = null;
 
 export const SupplierModel = {
-  // --- GESTIÓN DE ESTADO (CACHÉ) ---
   setCache(data) {
     cachedSuppliers = data;
   },
-
   getCache() {
     return cachedSuppliers;
   },
-
   clearCache() {
-    console.info(
-      "[Model] Caché invalidada (Se forzará recarga desde Firebase)"
-    );
+    console.info("[Model] Caché invalidada");
     cachedSuppliers = null;
   },
 
@@ -28,12 +22,8 @@ export const SupplierModel = {
     const current = parseFloat(currentBalance) || 0;
     const val = parseFloat(amount) || 0;
     const isDebt = type === "invoice";
-
-    let result = isDebt ? current + val : current - val;
-
-    // TRUCO PRO: Multiplicar por 100, redondear y dividir.
-    // Esto elimina los errores de punto flotante en monedas.
-    return Math.round(result * 100) / 100;
+    // Evita errores de punto flotante
+    return Math.round((isDebt ? current + val : current - val) * 100) / 100;
   },
 
   getVisibility() {
@@ -63,37 +53,37 @@ export const SupplierModel = {
 
   calculateStatus(balance) {
     const b = parseFloat(balance) || 0;
-    if (b > 0.01) return "danger";
-    if (b < -0.01) return "success";
+    if (b > 0.01) return "danger"; // Debe plata
+    if (b < -0.01) return "success"; // A favor
     return "neutral";
   },
 
   calculateTotalBalance(transactions = []) {
-    console.info(
-      `[Model] Calculando balance para ${transactions.length} movimientos.`
-    );
-    const total = transactions.reduce((acc, t) => {
+    return transactions.reduce((acc, t) => {
       const amount = parseFloat(t.amount) || 0;
       return t.type === "invoice" ? acc + amount : acc - amount;
     }, 0);
-    return total;
   },
 
+  // --- MAPEO DE DATOS ---
   mapSupplier(rawData) {
-    const mapped = {
+    return {
       id: rawData.id,
       name: rawData.name || "Proveedor sin nombre",
-      phone: rawData.phone || "Sin teléfono",
-      email: rawData.email || "",
-      alias: rawData.alias || "",
-      cbu: rawData.cbu || "",
+      // Unificamos Alias y CBU
+      alias: rawData.alias || rawData.cbu || "",
+
       balance: parseFloat(rawData.balance) || 0,
+
+      // El tipo ahora es crucial: "monetary" vs "stock"
+      type: rawData.type || "monetary",
+
+      // CORRECCIÓN: Aseguramos que pasen los items por defecto
       defaultItems: rawData.defaultItems || [],
-      stockDebt: rawData.stockDebt || {}, // Incluimos stockDebt si existe
-      type: rawData.type || "standard",
+
+      stockDebt: rawData.stockDebt || {},
       lastUpdate: rawData.updatedAt || rawData.createdAt || null,
     };
-    return mapped;
   },
 
   filterSuppliers(suppliers, term) {
@@ -102,7 +92,7 @@ export const SupplierModel = {
     return suppliers.filter(
       (s) =>
         s.name.toLowerCase().includes(search) ||
-        (s.phone && s.phone.includes(search))
+        (s.alias && s.alias.toLowerCase().includes(search)),
     );
   },
 };

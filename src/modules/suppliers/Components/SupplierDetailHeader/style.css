@@ -1,246 +1,221 @@
-/* Contenedor principal de la cabecera */
-.detail-header-v1 {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+/* src/modules/suppliers/Components/SupplierDetailHeader/style.css */
+
+/* --- CONTENEDOR PRINCIPAL (Tarjeta Técnica) --- */
+.tech-header-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #000; /* Marco duro estilo brutalista */
+  width: 100%;
+  box-sizing: border-box;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ETIQUETAS MICRO */
+.header-micro-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* --- BLOQUE SUPERIOR (Identidad) --- */
+.header-top-block {
   padding: 24px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  position: relative;
-  overflow: hidden;
+  align-items: flex-start;
+  border-bottom: 1px solid #eee;
+  gap: 16px;
 }
 
-/* Semáforo de bordes laterales */
-.status-border-danger {
-  border-left: 6px solid #ef4444;
-}
-.status-border-success {
-  border-left: 6px solid #10b981;
-}
-.status-border-neutral {
-  border-left: 6px solid var(--border-color);
+.identity-col {
+  flex: 1;
 }
 
-/* Parte izquierda: Icono y Nombre */
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.supplier-hero-name {
+  font-family: var(--font-sans);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #000;
+  margin: 0;
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
-.circle-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.badge-col {
   flex-shrink: 0;
 }
 
-.circle-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
-.circle-success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-}
-.circle-neutral {
-  background: rgba(156, 163, 175, 0.15);
-  color: #9ca3af;
-}
-
-.header-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.name-v1 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin: 0;
-  line-height: 1.1;
-  color: var(--text-main);
-}
-
-.alias-v1 {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-/* Píldora de alias (copiar) */
-.alias-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  transition: all 0.2s;
-  width: fit-content;
-  cursor: pointer;
-}
-
-.alias-pill:hover {
-  background: #3b82f6;
-  color: white;
-  transform: scale(1.05);
-}
-
-/* Parte derecha: Saldo */
-.header-right {
-  text-align: right;
-}
-
-.label-v1 {
+.tech-badge {
+  font-family: var(--font-mono);
   font-size: 0.7rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  letter-spacing: 1.5px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border: 1px solid #000;
   text-transform: uppercase;
-  display: block;
-  margin-bottom: 2px;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+.badge-dark {
+  background: #000;
+  color: #fff;
+}
+.badge-light {
+  background: #fff;
+  color: #000;
 }
 
-.amount-v1 {
-  font-size: 2.6rem;
-  font-weight: 950;
-  margin: 0;
-  letter-spacing: -1.5px;
+/* --- BLOQUE MEDIO (Saldo) --- */
+.header-balance-block {
+  padding: 32px 24px;
+  background: #fafafa; /* Fondo técnico sutil */
+  border-bottom: 1px solid #000; /* Línea divisoria fuerte */
+}
+
+.balance-hero-text {
+  font-family: var(--font-mono);
+  font-size: 4rem; /* Tamaño Hero Desktop */
+  font-weight: 700;
+  letter-spacing: -2px;
   line-height: 1;
 }
 
-/* Colores de texto para el monto */
-.text-danger {
-  color: #f87171 !important;
-}
-.text-success {
-  color: #34d399 !important;
-}
-.text-neutral {
-  color: #9ca3af !important;
+.color-debt {
+  color: #d00;
+} /* Rojo técnico */
+.color-ok {
+  color: #090;
+} /* Verde técnico */
+
+/* --- BLOQUE INFERIOR (Grid de Datos) --- */
+.header-data-grid {
+  display: flex;
+  width: 100%;
 }
 
-/* ========================================
-   RESPONSIVE MOBILE
-   ======================================== */
+.data-cell {
+  flex: 1;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0; /* Prevenir desbordes flex */
+}
+
+/* Bordes verticales solo en desktop */
+.border-desktop-left {
+  border-left: 1px solid #eee;
+}
+
+.cell-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #bbb;
+  text-transform: uppercase;
+}
+
+.cell-content-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cell-value-mono {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-value-sans {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.muted {
+  color: #888;
+}
+
+.btn-copy-mini {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.btn-copy-mini:hover {
+  color: #000;
+}
+
+/* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
-  .detail-header-v1 {
+  /* 1. Stackear Identidad */
+  .header-top-block {
     flex-direction: column;
-    align-items: stretch;
-    gap: 20px;
-    padding: 18px;
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
-  }
-
-  .header-left {
-    gap: 16px;
-  }
-
-  .circle-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .circle-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .name-v1 {
-    font-size: 1.4rem;
-  }
-
-  .alias-v1 {
-    font-size: 0.85rem;
-  }
-
-  .alias-pill {
-    font-size: 0.7rem;
-    padding: 3px 8px;
-    border-radius: 10px;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .alias-pill:active {
-    transform: scale(0.95);
-    background: #3b82f6;
-    color: white;
-  }
-
-  .header-right {
-    text-align: left;
-    border-top: 1px solid var(--border-color);
-    padding-top: 16px;
-    width: 100%;
-  }
-
-  .label-v1 {
-    font-size: 0.65rem;
-    letter-spacing: 1px;
-  }
-
-  .amount-v1 {
-    font-size: 2rem;
-    letter-spacing: -1px;
-  }
-}
-
-/* Tablets */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .detail-header-v1 {
+    align-items: flex-start;
+    gap: 12px;
     padding: 20px;
   }
 
-  .circle-icon {
-    width: 52px;
-    height: 52px;
+  .supplier-hero-name {
+    font-size: 1.5rem; /* Ajuste nombre */
   }
 
-  .name-v1 {
-    font-size: 1.6rem;
+  /* 2. Ajustar Saldo */
+  .header-balance-block {
+    padding: 24px 20px;
   }
 
-  .amount-v1 {
-    font-size: 2.4rem;
-  }
-}
-
-/* Pantallas muy pequeñas */
-@media (max-width: 400px) {
-  .detail-header-v1 {
-    padding: 16px;
-    gap: 16px;
+  .balance-hero-text {
+    font-size: 2.8rem; /* Reducir drásticamente para que entre en pantalla vertical */
+    word-break: break-all; /* Por seguridad si es millonario */
   }
 
-  .header-left {
-    gap: 12px;
+  /* 3. Stackear Grid de Datos */
+  .header-data-grid {
+    flex-direction: column;
   }
 
-  .circle-icon {
-    width: 44px;
-    height: 44px;
+  .data-cell {
+    width: 100%;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0; /* Separadores horizontales */
   }
 
-  .name-v1 {
-    font-size: 1.2rem;
+  .data-cell:last-child {
+    border-bottom: none;
   }
 
-  .amount-v1 {
-    font-size: 1.75rem;
-  }
-
-  .alias-pill {
-    font-size: 0.65rem;
-    padding: 2px 6px;
+  /* Quitar bordes izquierdos de desktop */
+  .border-desktop-left {
+    border-left: none;
   }
 }

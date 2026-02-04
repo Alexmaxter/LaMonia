@@ -1,152 +1,218 @@
-/* --- OVERLAY (Mismo que el de transacciones para consistencia) --- */
-.modal-overlay {
+/* src/modules/suppliers/Components/SupplierModal/style.css */
+
+/* --- OVERLAY CON MALLA DE PUNTOS --- */
+.fusion-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
   z-index: 10000;
-}
-
-/* --- CONTENEDOR PRINCIPAL --- */
-.modal-content-optimized {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 32px;
-  padding: 35px;
-  width: 90%;
-  max-width: 60%;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
-}
-
-/* --- CABECERA --- */
-.modal-header-info {
-  text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.modal-subtitle {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #3b82f6; /* Azul primario */
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.modal-title-name {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: var(--text-main);
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-/* --- CUERPO DEL FORMULARIO --- */
-.form-body {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.input-group label {
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.input-group input {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  justify-content: center;
+  align-items: center;
   padding: 16px;
-  color: var(--text-main);
-  font-size: 1rem;
-  outline: none;
-  transition: all 0.2s ease;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.input-group input:focus {
-  border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.04);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+.mesh-bg {
+  background-color: rgba(255, 255, 255, 0.95);
+  background-image: radial-gradient(#aaa 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-.input-group input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
-}
-
-/* --- FOOTER (BOTONES) --- */
-.modal-footer {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 15px;
-  margin-top: 40px;
-}
-
-.btn-confirm {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 18px;
-  border-radius: 18px;
-  font-weight: 800;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.btn-confirm:hover {
-  background: #2563eb;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-}
-
-.btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  padding: 18px;
-  border-radius: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-main);
-  border-color: var(--text-muted);
-}
-
-/* --- ANIMACIÓN --- */
-.scale-in {
-  animation: modalScaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes modalScaleIn {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(30px);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+  }
+}
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* --- CARD PRINCIPAL --- */
+.fusion-card {
+  background: #fff;
+  width: 100%;
+  max-width: 450px;
+  /* Sombra sólida desplazada */
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.15);
+  border: 2px solid #000; /* Borde exterior sólido */
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* --- HEADER FUSIÓN (El "oscurito") --- */
+.fusion-header {
+  background: #f8f8f8; /* Fondo gris técnico */
+  padding: 16px 24px;
+  border-bottom: 2px solid #000; /* Separación fuerte */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fusion-header h2 {
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  margin: 0;
+  color: #000;
+}
+
+.btn-close-fusion {
+  background: transparent;
+  border: 1px solid transparent;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #000;
+  transition: all 0.2s;
+}
+.btn-close-fusion:hover {
+  background: #eee;
+  border-color: #000;
+}
+
+/* --- BODY --- */
+.fusion-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: #fff;
+}
+
+/* --- INPUTS & LABELS --- */
+.fusion-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fusion-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+}
+
+/* Input limpio (Estilo Transacción) */
+.fusion-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 1rem;
+  background: transparent;
+  border-radius: 0;
+  color: #000;
+  transition: border-color 0.2s;
+}
+.fusion-input:focus {
+  outline: none;
+  border-bottom-color: #000;
+}
+.fusion-input::placeholder {
+  color: #ccc;
+  font-size: 0.85rem;
+  font-family: var(--font-sans, sans-serif);
+}
+
+/* --- TABS --- */
+.fusion-tabs-row {
+  display: flex;
+  gap: 0; /* Pegados */
+  border: 1px solid #ddd;
+}
+
+.fusion-tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #999;
+  cursor: pointer;
+  background: #fff;
+  border-right: 1px solid #ddd;
+  transition: all 0.1s;
+}
+.fusion-tab:last-child {
+  border-right: none;
+}
+.fusion-tab:hover {
+  background: #f9f9f9;
+  color: #000;
+}
+.fusion-tab.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+/* --- FOOTER --- */
+.fusion-footer {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.btn-fusion-cancel {
+  flex: 1;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #555;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.btn-fusion-cancel:hover {
+  border-color: #000;
+  color: #000;
+}
+
+.btn-fusion-save {
+  flex: 2;
+  padding: 14px;
+  background: #000;
+  border: 1px solid #000;
+  color: #fff;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+.btn-fusion-save:hover {
+  background: #222;
+  transform: translateY(1px);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .fusion-card {
+    width: 100%;
+    max-width: 100%;
   }
 }

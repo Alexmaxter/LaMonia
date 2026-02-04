@@ -1,133 +1,214 @@
-/* Componente: SupplierCard (Lista) */
+/* src/modules/suppliers/Components/SupplierCard/style.css */
 
-.supplier-card-v1 {
-  padding: 12px !important;
-  border: 1px solid var(--border-color) !important;
-  background-color: var(--bg-panel) !important;
-  border-radius: 8px !important;
+.tech-supplier-card {
+  display: flex;
+  background: #ffffff;
+  border: 1px solid #000000;
+  min-height: 160px; /* Un poco más alto para que respire el nuevo bloque */
   cursor: pointer;
-  transition: transform 0.2s ease;
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  border-radius: 0;
+  transition: none;
+  box-shadow: none;
+  flex-direction: row;
 }
 
-.supplier-card-v1:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary) !important;
+.tech-supplier-card:hover {
+  background: #fdfdfd;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1); /* Hover sutil tech */
+  transform: translateY(-1px);
 }
 
-.card-content-v1 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-/* Iconos circulares controlados */
-.supplier-card-v1 .circle-icon {
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* STATUS BAR */
+.card-status-bar {
+  width: 6px;
+  border-right: 1px solid #000;
   flex-shrink: 0;
+  background: #eee;
+}
+.status-debt .card-status-bar {
+  background: #d32f2f;
+}
+.status-credit .card-status-bar {
+  background: #2e7d32;
+}
+.status-neutral .card-status-bar {
+  background: #cccccc;
 }
 
-.info-v1 {
+/* LAYOUT VERTICAL */
+.card-content-stack {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  padding: 14px 16px;
+  gap: 12px; /* Espacio entre secciones */
+  min-width: 0;
 }
 
-/* El nombre siempre será 1rem en la lista */
-.supplier-card-v1 .name-v1 {
-  font-weight: 700;
-  font-size: 1rem !important;
-  color: var(--text-main);
+/* --- TOP ROW --- */
+.card-row-top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.supplier-name {
   margin: 0;
-}
-
-.meta-v1 {
-  margin-top: 4px;
-}
-.no-alias {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-family: var(--font-sans, sans-serif);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.5px;
 }
 
 .alias-tag {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 0;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: #666;
+  cursor: pointer;
+  width: fit-content;
+}
+.alias-tag:hover {
+  color: #000;
+}
+.alias-tag.is-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+  height: 1em;
 }
 
-.btn-add-v1 {
-  background: var(--bg-app);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+/* --- BLOQUE ÚLTIMO MOVIMIENTO (El nuevo protagonista) --- */
+.last-move-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f8f8f8; /* Fondo técnico */
+  border: 1px dashed #ccc; /* Borde discontinuo de dato secundario */
+  padding: 8px 10px;
+  margin-top: auto; /* Empuja hacia el medio si hay espacio */
+  margin-bottom: auto;
+}
+
+.last-move-block.empty {
+  opacity: 0.6;
+  border-style: dotted;
+}
+
+.tech-label-small {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.last-move-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.move-date {
+  font-size: 0.85rem;
+  color: #000;
+  font-weight: 600;
+}
+
+.move-amount {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.move-empty {
+  font-size: 0.8rem;
+  color: #999;
+  font-style: italic;
+}
+
+/* Colores de monto */
+.val-debt {
+  color: #d32f2f;
+}
+.val-payment {
+  color: #2e7d32;
+}
+
+/* --- BOTTOM ROW --- */
+.card-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 4px;
+}
+
+.balance-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.tech-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-display {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.color-debt {
+  color: #d32f2f;
+}
+.color-credit {
+  color: #2e7d32;
+}
+.color-neutral {
+  color: #999;
+}
+
+.btn-square-add {
+  width: 36px;
+  height: 36px;
+  background: #000;
+  color: #fff;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-square-add:hover {
+  background: #333;
 }
 
-/* Fila de Saldo */
-.balance-row-v1 {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-color);
-}
-
-.label-v1 {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-/* El monto siempre será 1.15rem en la lista */
-.supplier-card-v1 .amount-v1 {
-  font-size: 1.15rem !important;
-  font-weight: 900;
-}
-
-/* Colores de estado e iconos */
-.circle-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-.circle-success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-}
-.circle-neutral {
-  background: rgba(156, 163, 175, 0.15);
-  color: #9ca3af;
-}
-
-.circle-icon svg {
-  display: block;
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-  stroke-width: 2;
-  color: inherit;
-}
-
-.text-danger {
-  color: #f87171 !important;
-}
-.text-success {
-  color: #34d399 !important;
+/* MOBILE */
+@media (max-width: 600px) {
+  .tech-supplier-card {
+    min-height: 140px;
+  }
+  .balance-display {
+    font-size: 1.2rem;
+  }
+  .last-move-block {
+    padding: 6px 8px;
+  }
 }

@@ -7,35 +7,117 @@ export function SupplierCard({
   isVisible,
   onClick,
   onAddTransaction,
+  lastTransaction,
 }) {
   const balance = parseFloat(supplier.balance) || 0;
-  const iconPlus = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
 
-  return el("div", { className: "supplier-card", onclick: onClick }, [
-    el("div", { className: "card-info" }, [
-      el("h3", { className: "card-name" }, supplier.name),
-      el("span", { className: "card-alias" }, supplier.alias || "Sin alias"),
-    ]),
+  const isDebt = balance > 0.01;
+  const isCredit = balance < -0.01;
+  const statusClass = isDebt
+    ? "status-debt"
+    : isCredit
+      ? "status-credit"
+      : "status-neutral";
 
-    el("div", { className: "card-balance" }, [
-      el("span", { className: "balance-label" }, "DEUDA TOTAL"),
-      el(
-        "span",
-        {
-          className: `balance-value ${
-            balance > 0 ? "text-danger" : "text-success"
-          }`,
-          // ESTA ES LA MEMORIA: Guardamos el número real aquí
-          "data-amount": balance,
-        },
-        SupplierModel.formatAmount(balance, isVisible)
-      ),
-    ]),
+  const iconPlus = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+  const iconCopy = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="0" ry="0"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 
-    el("button", {
-      className: "btn-quick-add-v1",
-      onclick: onAddTransaction,
-      innerHTML: iconPlus,
-    }),
-  ]);
+  const hasAlias = !!supplier.alias;
+  const aliasText = hasAlias ? supplier.alias : "PLACEHOLDER";
+
+  // --- BLOQUE ÚLTIMO MOVIMIENTO (TECH STYLE) ---
+  let lastMoveBlock = null;
+
+  if (lastTransaction) {
+    const dateObj = lastTransaction.date.seconds
+      ? new Date(lastTransaction.date.seconds * 1000)
+      : new Date(lastTransaction.date);
+
+    // Formato fecha técnico: DD.MM.YY
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear().toString().slice(-2);
+    const dateStr = `${day}.${month}.${year}`;
+
+    const amountStr = SupplierModel.formatAmount(
+      lastTransaction.amount,
+      isVisible,
+    );
+    const isTxDebt = lastTransaction.type === "invoice";
+    const valClass = isTxDebt ? "val-debt" : "val-payment";
+
+    lastMoveBlock = el("div", { className: "last-move-block" }, [
+      el("span", { className: "tech-label-small" }, "ÚLTIMO MOVIMIENTO"),
+      el("div", { className: "last-move-row" }, [
+        el("span", { className: "move-date" }, dateStr),
+        el("span", { className: `move-amount ${valClass}` }, amountStr),
+      ]),
+    ]);
+  } else {
+    // Placeholder vacío para mantener estructura visual si quisieras,
+    // o simplemente null. Lo dejaremos visualmente presente pero vacío
+    // para incitar a registrar algo.
+    lastMoveBlock = el("div", { className: "last-move-block empty" }, [
+      el("span", { className: "tech-label-small" }, "ÚLTIMO MOVIMIENTO"),
+      el("div", { className: "last-move-row" }, [
+        el("span", { className: "move-empty" }, "SIN REGISTROS"),
+      ]),
+    ]);
+  }
+
+  return el(
+    "div",
+    {
+      className: `tech-supplier-card ${statusClass}`,
+      onclick: onClick,
+      "data-id": supplier.id,
+    },
+    [
+      el("div", { className: "card-status-bar" }),
+      el("div", { className: "card-content-stack" }, [
+        // TOP: Nombre y Alias
+        el("div", { className: "card-row-top" }, [
+          el("h3", { className: "supplier-name" }, supplier.name),
+          el(
+            "div",
+            {
+              className: `alias-tag ${hasAlias ? "" : "is-placeholder"}`,
+              onclick: (e) => {
+                if (!hasAlias) return;
+                e.stopPropagation();
+                navigator.clipboard.writeText(supplier.alias);
+              },
+            },
+            [el("span", { innerHTML: iconCopy }), el("span", {}, aliasText)],
+          ),
+        ]),
+
+        // MIDDLE: Bloque Técnico de Último Movimiento
+        lastMoveBlock,
+
+        // BOTTOM: Saldo y Botón
+        el("div", { className: "card-row-bottom" }, [
+          el("div", { className: "balance-wrapper" }, [
+            el("span", { className: "tech-label" }, "SALDO ACTUAL"),
+            el(
+              "span",
+              {
+                className: `balance-display ${isDebt ? "color-debt" : isCredit ? "color-credit" : "color-neutral"}`,
+                "data-amount": balance,
+              },
+              SupplierModel.formatAmount(balance, isVisible),
+            ),
+          ]),
+          el("button", {
+            className: "btn-square-add",
+            onclick: (e) => {
+              e.stopPropagation();
+              onAddTransaction();
+            },
+            innerHTML: iconPlus,
+          }),
+        ]),
+      ]),
+    ],
+  );
 }

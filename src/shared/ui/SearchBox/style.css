@@ -1,44 +1,55 @@
-.search-box-wrapper {
+/* src/shared/ui/SearchBox/style.css */
+
+.search-box-container {
   position: relative;
   width: 100%;
   display: flex;
   align-items: center;
 }
 
-.search-box-icon {
-  position: absolute;
-  left: 12px;
-  /* Gris medio para el icono, visible sobre fondo claro */
-  color: var(--text-muted, #6b7280);
-  display: flex;
-  pointer-events: none;
-  z-index: 5;
-}
-
 .search-box-input {
   width: 100%;
-  padding: 12px 16px 12px 42px;
-  font-size: 0.95rem;
+  height: 44px; /* Altura touch */
+  padding: 0 16px 0 44px; /* Icono a la izquierda */
 
-  /* CAMBIOS LIGHT MODE: Fondo gris claro y texto oscuro */
-  background-color: var(--bg-input, #f3f4f6) !important;
-  color: var(--text-main, #111827) !important;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
 
-  border: 1px solid var(--border-strong, #d1d5db);
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 16px; /* Evita zoom en iPhone */
+
+  transition: border-color 0.1s;
+  appearance: none;
 }
 
 .search-box-input:focus {
   outline: none;
-  border-color: var(--primary, #2563eb);
-  /* Sombra azul suave */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-  /* Al hacer foco, pasamos a blanco puro para máximo contraste de lectura */
-  background-color: #ffffff !important;
+  border-color: var(--border-strong);
+  border-width: 2px;
+  padding-left: 43px; /* Ajuste por el borde de 2px */
 }
 
 .search-box-input::placeholder {
-  color: var(--text-muted, #6b7280);
-  opacity: 1; /* Sin transparencia para mejorar legibilidad */
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.search-icon-wrapper {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-box-input:focus + .search-icon-wrapper {
+  color: var(--text-main);
 }
