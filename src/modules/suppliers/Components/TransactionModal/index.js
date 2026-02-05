@@ -89,6 +89,49 @@ export function TransactionModal({
     : new Date();
   let calendarViewDate = new Date(selectedDate);
 
+  // --- LOGICA DE GUARDADO (Extraída para usar en el botón) ---
+  const handleSaveAction = (e) => {
+    // Prevenir cualquier burbujeo o acción por defecto
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!currentSupplier) {
+      alert("Por favor selecciona un proveedor");
+      return;
+    }
+
+    // Obtener valor del concepto manualmente para asegurar compatibilidad
+    const conceptInput = document.getElementById("tx-concept-area");
+    const conceptVal = conceptInput ? conceptInput.value : "";
+
+    const finalAmount = parseFloat(centsBuffer) / 100;
+
+    const payload = {
+      ...initialData,
+      supplierId: currentSupplier?.id,
+      amount: finalAmount,
+      concept: conceptVal,
+      type: selectedType,
+      date: selectedDate,
+      items: itemsState
+        .filter((i) => i.qty > 0)
+        .map((i) => ({
+          name: i.name.trim(),
+          quantity: parseFloat(i.qty),
+          color: i.color || "#ddd",
+        })),
+    };
+
+    console.log("Enviando payload:", payload); // Debug
+    if (typeof onSave === "function") {
+      onSave(payload);
+    } else {
+      console.error("onSave no es una función", onSave);
+    }
+  };
+
   // --- HELPER FORMATO ATM ---
   const formatATMDisplay = (bufferStr) => {
     const val = parseInt(bufferStr || "0", 10);
@@ -343,7 +386,7 @@ export function TransactionModal({
       let nameComp;
       const colorDot = el("span", {
         className: "item-color-dot",
-        style: `background-color: ${item.color || "#ddd"};`,
+        style: { backgroundColor: item.color || "#ddd" }, // Objeto style
       });
 
       if (item.isLocked) {
@@ -526,34 +569,17 @@ export function TransactionModal({
       ]),
 
       el(
-        "form",
+        "form", // Mantenemos el form por semántica, pero no usaremos su onsubmit
         {
           className: "fusion-body",
           onsubmit: (e) => {
+            // Backup por si acaso se dispara el submit nativo
             e.preventDefault();
-            if (!currentSupplier) return alert("Selecciona un proveedor");
-            const formData = new FormData(e.target);
-            const finalAmount = parseFloat(centsBuffer) / 100;
-
-            onSave({
-              ...initialData,
-              supplierId: currentSupplier?.id,
-              amount: finalAmount,
-              concept: formData.get("concept"),
-              type: selectedType,
-              date: selectedDate,
-              items: itemsState
-                .filter((i) => i.qty > 0)
-                .map((i) => ({
-                  name: i.name.trim(),
-                  quantity: parseFloat(i.qty),
-                  color: i.color || "#ddd",
-                })),
-            });
+            handleSaveAction(e);
           },
         },
         [
-          // TABS (SOLUCIÓN: IDs únicos y htmlFor explícito)
+          // TABS
           el(
             "div",
             { className: "fusion-tabs-row" },
@@ -563,11 +589,11 @@ export function TransactionModal({
                 "label",
                 {
                   className: `fusion-tab ${selectedType === type ? "active" : ""}`,
-                  htmlFor: radioId, // Vinculación explícita
+                  htmlFor: radioId,
                 },
                 [
                   el("input", {
-                    id: radioId, // ID explícito
+                    id: radioId,
                     type: "radio",
                     name: "type",
                     value: type,
@@ -583,7 +609,7 @@ export function TransactionModal({
                       initItemsState();
                       renderItemsList();
                     },
-                    style: "display:none",
+                    style: { display: "none" }, // Objeto style
                   }),
                   el(
                     "span",
@@ -667,7 +693,7 @@ export function TransactionModal({
               }),
             ]),
 
-            // SOLUCIÓN: Asociación correcta de label y textarea
+            // TEXTAREA
             el("div", { className: "concept-panel" }, [
               el(
                 "label",
@@ -675,7 +701,7 @@ export function TransactionModal({
                 "CONCEPTO / NOTA",
               ),
               el("textarea", {
-                id: "tx-concept-area", // ID explícito
+                id: "tx-concept-area",
                 name: "concept",
                 className: "fusion-textarea",
                 placeholder: "Detalle opcional...",
@@ -695,9 +721,14 @@ export function TransactionModal({
               },
               "CANCELAR",
             ),
+            // BOTÓN GUARDAR: Tipo 'button' para evitar submit implícito del form
             el(
               "button",
-              { type: "submit", className: "btn-fusion-save" },
+              {
+                type: "button", // IMPORTANTE: type="button", no "submit"
+                className: "btn-fusion-save",
+                onclick: handleSaveAction, // Acción directa
+              },
               isEdit ? "GUARDAR" : "CONFIRMAR",
             ),
           ]),
