@@ -25,7 +25,6 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
       m.items.forEach((item) => {
         const name = getSafeName(item).trim().toUpperCase();
         const qty = parseFloat(item.quantity || item.qty || 0);
-        // Intentamos preservar el color del historial, o lo buscamos en defaults
         let color = getSafeColor(item);
         if (color === "#ddd") {
           const defItem = defaultItems.find(
@@ -37,7 +36,6 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
         if (name) {
           if (!totals[name]) totals[name] = { qty: 0, color: color };
           totals[name].qty += isEntry ? qty : -qty;
-          // Actualizamos color si encontramos uno válido
           if (color !== "#ddd") totals[name].color = color;
         }
       });
@@ -82,7 +80,7 @@ export function TransactionModal({
       ? Math.round(initialData.amount * 100).toString()
       : "0";
 
-  let itemsState = []; // { name, qty, color, isLocked, max? }
+  let itemsState = [];
 
   let selectedDate = initialData?.date
     ? initialData.date.toDate
@@ -108,7 +106,7 @@ export function TransactionModal({
     }
   };
 
-  // --- LÓGICA DE SUGERENCIAS ---
+  // --- SUGERENCIAS ---
   const renderSuggestions = () => {
     if (!currentSupplier) return null;
 
@@ -116,13 +114,11 @@ export function TransactionModal({
     const usedAmounts = new Set();
     const totalDebt = parseFloat(currentSupplier.balance) || 0;
 
-    // 1. CONDICIONAL: Total Deuda (Solo si es PAGO y hay deuda)
     if (selectedType === "payment" && totalDebt > 1) {
       suggestions.push({ amount: totalDebt, isTotal: true });
       usedAmounts.add(totalDebt);
     }
 
-    // 2. BUSCAR HISTORIAL (Últimas boletas)
     const sortedInvoices = [...localMovements]
       .filter((m) => m.type === "invoice")
       .sort((a, b) => {
@@ -156,7 +152,6 @@ export function TransactionModal({
             "button",
             {
               type: "button",
-              // Solo 'chip-total' tiene borde destacado (definido en CSS)
               className: `tech-chip ${s.isTotal ? "chip-total" : "chip-hist"}`,
               onclick: (e) => {
                 e.preventDefault();
@@ -202,7 +197,6 @@ export function TransactionModal({
       return;
     }
 
-    // Si es Pago o Nota, mostramos items pendientes con su deuda máxima
     if (selectedType === "payment" || selectedType === "credit") {
       const debtMap = calculatePendingFromHistory(
         localMovements,
@@ -219,10 +213,7 @@ export function TransactionModal({
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      // Si es Deuda (Invoice), cargamos defaults
       let rawDefaults = currentSupplier?.defaultItems || [];
-
-      // Normalizamos defaults (puede ser array strings o array objetos)
       let defaults = [];
       if (typeof rawDefaults === "string") {
         defaults = rawDefaults
@@ -249,7 +240,7 @@ export function TransactionModal({
 
   initItemsState();
 
-  // --- CALENDAR RENDER (FIXED 42 CELLS) ---
+  // --- CALENDAR RENDER ---
   const renderCalendar = () => {
     const container = document.getElementById("inline-calendar-container");
     const labelTitle = document.getElementById("calendar-month-title");
@@ -285,7 +276,6 @@ export function TransactionModal({
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Grid fijo de 6 filas (42 celdas)
     const totalSlots = 42;
     let slotsFilled = 0;
 
@@ -316,7 +306,6 @@ export function TransactionModal({
       slotsFilled++;
     }
 
-    // Rellenar final
     for (let j = 0; j < totalSlots - slotsFilled; j++) {
       daysGrid.appendChild(
         el("div", { className: "cal-day empty next-month" }),
@@ -330,7 +319,7 @@ export function TransactionModal({
     renderCalendar();
   };
 
-  // --- ITEMS LIST RENDER (CON COLORES Y STEPPER) ---
+  // --- ITEMS LIST RENDER ---
   const renderItemsList = () => {
     const container = document.getElementById("items-list-wrapper");
     if (!container) return;
@@ -352,8 +341,6 @@ export function TransactionModal({
 
     itemsState.forEach((item, index) => {
       let nameComp;
-
-      // Círculo de color
       const colorDot = el("span", {
         className: "item-color-dot",
         style: `background-color: ${item.color || "#ddd"};`,
@@ -560,24 +547,27 @@ export function TransactionModal({
                 .map((i) => ({
                   name: i.name.trim(),
                   quantity: parseFloat(i.qty),
-                  color: i.color || "#ddd", // GUARDAMOS EL COLOR
+                  color: i.color || "#ddd",
                 })),
             });
           },
         },
         [
-          // TABS
+          // TABS (SOLUCIÓN: IDs únicos y htmlFor explícito)
           el(
             "div",
             { className: "fusion-tabs-row" },
-            ["invoice", "payment", "credit"].map((type) =>
-              el(
+            ["invoice", "payment", "credit"].map((type) => {
+              const radioId = `radio-type-${type}`;
+              return el(
                 "label",
                 {
                   className: `fusion-tab ${selectedType === type ? "active" : ""}`,
+                  htmlFor: radioId, // Vinculación explícita
                 },
                 [
                   el("input", {
+                    id: radioId, // ID explícito
                     type: "radio",
                     name: "type",
                     value: type,
@@ -605,8 +595,8 @@ export function TransactionModal({
                         : "NOTA",
                   ),
                 ],
-              ),
-            ),
+              );
+            }),
           ),
 
           // ATM INPUT
@@ -677,9 +667,15 @@ export function TransactionModal({
               }),
             ]),
 
+            // SOLUCIÓN: Asociación correcta de label y textarea
             el("div", { className: "concept-panel" }, [
-              el("label", { className: "fusion-label" }, "CONCEPTO / NOTA"),
+              el(
+                "label",
+                { className: "fusion-label", htmlFor: "tx-concept-area" },
+                "CONCEPTO / NOTA",
+              ),
               el("textarea", {
+                id: "tx-concept-area", // ID explícito
                 name: "concept",
                 className: "fusion-textarea",
                 placeholder: "Detalle opcional...",
