@@ -1,6 +1,7 @@
 import { el } from "../../../../core/dom.js";
 import { SupplierModel } from "../../model.js";
 import { MovementList } from "../../Components/MovementList/index.js";
+import { StockStatsPanel } from "../../Components/StockStatskPanel/index.js";
 import "./style.css";
 
 export function SupplierDetailView({
@@ -16,8 +17,6 @@ export function SupplierDetailView({
   onOpenSettings,
 }) {
   let isVisible = initialIsVisible;
-
-  // Referencia para actualizar el saldo sin recargar todo
   let debtValueDisplay = null;
 
   // --- ICONOS ---
@@ -29,13 +28,12 @@ export function SupplierDetailView({
   const iconFile = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
   const iconCopy = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="0" ry="0"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 
-  // --- LOGICA INTERNA ---
+  // --- HANDLERS ---
   const handleToggle = (e) => {
     const newState = onToggleVisibility();
     isVisible = newState;
-    if (e && e.currentTarget) {
+    if (e && e.currentTarget)
       e.currentTarget.innerHTML = newState ? iconEye : iconEyeOff;
-    }
     if (debtValueDisplay) {
       debtValueDisplay.textContent = SupplierModel.formatAmount(
         supplier.balance,
@@ -48,7 +46,6 @@ export function SupplierDetailView({
   const copyAlias = (e) => {
     if (!supplier.alias) return;
     navigator.clipboard.writeText(supplier.alias);
-    const originalText = e.target.innerText;
     const iconSpan = e.target.querySelector("span");
     if (iconSpan) iconSpan.style.color = "#2e7d32";
     setTimeout(() => {
@@ -56,32 +53,88 @@ export function SupplierDetailView({
     }, 1000);
   };
 
-  // --- CÁLCULO DE SALDO PARCIAL (RUNNING BALANCE) ---
-  // Partimos del saldo actual y vamos "deshaciendo" hacia atrás
-  let runningBalance = parseFloat(supplier.balance) || 0;
+  // --- HELPER DE COLOR (RETROCOMPATIBILIDAD) ---
+  const findColorInSettings = (itemName) => {
+    if (!supplier.defaultItems || !Array.isArray(supplier.defaultItems))
+      return "#ffffff";
+    const match = supplier.defaultItems.find((i) => {
+      const name = typeof i === "string" ? i : i.name;
+      return name && name.toUpperCase() === itemName.toUpperCase();
+    });
+    if (match && typeof match === "object" && match.color) return match.color;
+    return "#ffffff";
+  };
 
-  // Clonamos y calculamos (Asumimos movements ordenados NEWEST -> OLDEST)
+  // --- 1. CALCULADORA DE SALDOS ---
+  let runningBalance = parseFloat(supplier.balance) || 0;
+  let runningStock = {};
+
+  // Calcular stock actual total
+  if (supplier.type === "stock") {
+    movements.forEach((m) => {
+      if (m.items && Array.isArray(m.items)) {
+        const isEntry = m.type === "invoice";
+        const isExit = m.type === "payment" || m.type === "credit";
+        m.items.forEach((i) => {
+          const name = i.name.trim().toUpperCase();
+          const qty = parseFloat(i.quantity || 0);
+          if (!runningStock[name]) runningStock[name] = 0;
+          if (isEntry) runningStock[name] += qty;
+          else if (isExit) runningStock[name] -= qty;
+        });
+      }
+    });
+  }
+
+  // --- MAPEO DE MOVIMIENTOS CON COLOR INYECTADO ---
   const movementsWithBalance = movements.map((m) => {
+    // 1. Dinero
     const snapshotBalance = runningBalance;
     const amount = parseFloat(m.amount) || 0;
+    if (m.type === "invoice") runningBalance -= amount;
+    else runningBalance += amount;
 
-    // Si es Boleta (Sumó deuda), para ir atrás RESTAMOS.
-    // Si es Pago (Restó deuda), para ir atrás SUMAMOS.
-    if (m.type === "invoice") {
-      runningBalance -= amount;
+    // 2. Stock y Colores
+    let snapshotStock = null;
+    let enrichedItems = []; // Items con color asegurado
+
+    if (supplier.type === "stock") {
+      snapshotStock = { ...runningStock };
+
+      if (m.items && Array.isArray(m.items)) {
+        const isEntry = m.type === "invoice";
+        const isExit = m.type === "payment" || m.type === "credit";
+
+        enrichedItems = m.items.map((item) => {
+          // Si el item ya tiene color (nuevo), lo usa. Si no (viejo), lo busca en settings.
+          const finalColor = item.color || findColorInSettings(item.name);
+          return { ...item, color: finalColor };
+        });
+
+        // Revertir historial
+        m.items.forEach((i) => {
+          const name = i.name.trim().toUpperCase();
+          const qty = parseFloat(i.quantity || 0);
+          if (runningStock[name] !== undefined) {
+            if (isEntry) runningStock[name] -= qty;
+            else if (isExit) runningStock[name] += qty;
+          }
+        });
+      }
     } else {
-      runningBalance += amount;
+      // Si no es stock, igual preservamos items si hubiera
+      enrichedItems = m.items || [];
     }
 
     return {
       ...m,
+      items: enrichedItems, // Pasamos items enriquecidos con color
       partialBalance: snapshotBalance,
+      stockBalance: snapshotStock,
     };
   });
 
-  // --- COMPONENTES UI ---
-
-  // 1. HEADER TECH (Sticky)
+  // --- UI COMPONENTS ---
   debtValueDisplay = el(
     "div",
     { className: "header-debt-value" },
@@ -105,7 +158,6 @@ export function SupplierDetailView({
           ),
         ]),
       ]),
-
       el("div", { className: "tech-debt-group" }, [
         el("div", { className: "debt-label-row" }, [
           el("span", { className: "debt-label" }, "SALDO ACTUAL"),
@@ -118,7 +170,6 @@ export function SupplierDetailView({
         debtValueDisplay,
       ]),
     ]),
-
     el("div", { className: "tech-controls-row" }, [
       el("div", { className: "info-mini-container" }, [
         supplier.alias
@@ -127,7 +178,7 @@ export function SupplierDetailView({
               {
                 className: "alias-chip",
                 onclick: copyAlias,
-                title: "Copiar Alias/CBU",
+                title: "Copiar Alias",
               },
               [
                 el("span", { innerHTML: iconCopy }),
@@ -136,7 +187,6 @@ export function SupplierDetailView({
             )
           : el("span", { className: "no-alias" }, "Sin datos bancarios"),
       ]),
-
       el("div", { className: "tech-actions-container" }, [
         el(
           "button",
@@ -160,17 +210,22 @@ export function SupplierDetailView({
     ]),
   ]);
 
-  // 2. CONTENIDO PRINCIPAL
   const contentContainer = el("div", { className: "detail-content-wrapper" });
 
   const renderList = () => {
     contentContainer.innerHTML = "";
+    if (supplier.type === "stock" && movementsWithBalance.length > 0) {
+      const stockPanel = StockStatsPanel({ movements: movementsWithBalance });
+      if (stockPanel) contentContainer.appendChild(stockPanel);
+    }
+
     contentContainer.appendChild(
       MovementList({
-        movements: movementsWithBalance, // Usamos la lista enriquecida
+        movements: movementsWithBalance,
         isVisible,
         onEdit: onEditMovement,
         onDelete: onDeleteMovement,
+        isStockView: supplier.type === "stock",
       }),
     );
   };

@@ -6,31 +6,6 @@ import { SupplierCard } from "../../Components/SupplierCard/index.js";
 import { MovementList } from "../../Components/MovementList/index.js";
 import "./style.css";
 
-// --- HELPERS DE FECHA ---
-const getDateKey = (dateObj) => {
-  if (!dateObj || isNaN(dateObj)) return "unknown";
-  return `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
-};
-
-const getFriendlyDate = (dateObj) => {
-  if (!dateObj || isNaN(dateObj)) return "Fecha Desconocida";
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const compare = new Date(
-    dateObj.getFullYear(),
-    dateObj.getMonth(),
-    dateObj.getDate(),
-  );
-  const diffTime = today - compare;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return "HOY";
-  if (diffDays === 1) return "AYER";
-
-  const options = { weekday: "long", day: "numeric", month: "long" };
-  return dateObj.toLocaleDateString("es-AR", options).toUpperCase();
-};
-
 export function SupplierListView({
   suppliers,
   totalDebt,
@@ -47,9 +22,9 @@ export function SupplierListView({
   let isVisible = initialIsVisible;
   let currentSort = "name_asc";
   let currentFilteredList = [...suppliers];
-  let activeTab = "directory";
+  let activeTab = "directory"; // 'directory' | 'activity'
   let recentTransactions = [];
-  let currentActivityFilter = "all";
+  let currentActivityFilter = "all"; // 'all' | 'invoice' | 'payment'
   let isLoadingActivity = false;
 
   let debtValueDisplay = null;
@@ -70,10 +45,17 @@ export function SupplierListView({
   let btnTabActivity = null;
 
   // --- DATA FETCHING ---
+  // --- DATA FETCHING ---
   const fetchActivity = async () => {
+    // Cache simple: si ya hay datos y no se está cargando, no hacemos nada.
     if (recentTransactions.length > 0 && !isLoadingActivity) return;
+
     isLoadingActivity = true;
+    // Opcional: Podrías llamar a renderContent() aquí si tus tarjetas
+    // soportan un estado visual de "cargando..." en el campo de última transacción.
+
     try {
+      // Traemos los últimos 500 movimientos ordenados por fecha
       const data = await FirebaseDB.getByFilter(
         "supplier_transactions",
         null,
@@ -81,17 +63,23 @@ export function SupplierListView({
         "date",
         "desc",
       );
+
       recentTransactions =
         data && Array.isArray(data) ? data.slice(0, 500) : [];
-      if (activeTab === "directory") renderContent();
+
+      // SOLUCIÓN: Eliminamos el 'if (activeTab === "activity")'.
+      // Ahora renderizamos SIEMPRE que lleguen datos, sin importar la pestaña.
+      // Esto actualiza inmediatamente las tarjetas del Directorio con la "Última transacción".
+      renderContent();
     } catch (e) {
       console.error("Error cargando actividad:", e);
     } finally {
       isLoadingActivity = false;
-      if (activeTab === "activity") renderContent();
+      // Volvemos a renderizar para limpiar cualquier estado de carga pendiente
+      // y asegurar consistencia final.
+      renderContent();
     }
   };
-
   const switchTab = (tab) => {
     activeTab = tab;
     if (tab === "directory") {
@@ -106,6 +94,7 @@ export function SupplierListView({
     }
   };
 
+  // --- HELPERS LÓGICA ---
   const getSortedData = (list) => {
     return [...list].sort((a, b) => {
       const balA = parseFloat(a.balance) || 0;
@@ -116,7 +105,7 @@ export function SupplierListView({
         case "name_asc":
           return nameA.localeCompare(nameB);
         case "debt_desc":
-          return balB - balA;
+          return balB - balA; // Mayor deuda primero
         case "debt_asc":
           return balA - balB;
         default:
@@ -138,17 +127,13 @@ export function SupplierListView({
   const handleToggle = (e) => {
     const newState = onToggleVisibility();
     isVisible = newState;
-
-    if (e && e.currentTarget) {
+    if (e && e.currentTarget)
       e.currentTarget.innerHTML = newState ? iconEye : iconEyeOff;
-    }
-
-    if (debtValueDisplay) {
+    if (debtValueDisplay)
       debtValueDisplay.textContent = SupplierModel.formatAmount(
         totalDebt,
         isVisible,
       );
-    }
     renderContent();
   };
 
@@ -160,6 +145,7 @@ export function SupplierListView({
     if (activeTab === "directory") renderContent();
   };
 
+  // --- RENDERS ---
   const createSortBtn = (type, label, icon) => {
     return el(
       "button",
@@ -188,39 +174,26 @@ export function SupplierListView({
         createSortBtn("debt_asc", "Menor Deuda", iconSortUp),
       );
     } else {
+      // Filtros para la pestaña Actividad
       if (recentTransactions.length > 0) {
-        controlsGroupRight.appendChild(
-          el(
-            "button",
-            {
-              className: `filter-chip ${currentActivityFilter === "all" ? "active" : ""}`,
-              onclick: () => setActivityFilter("all"),
-            },
-            "Todos",
-          ),
-        );
-        controlsGroupRight.appendChild(
-          el(
-            "button",
-            {
-              className: `filter-chip ${currentActivityFilter === "invoice" ? "active" : ""}`,
-              "data-type": "invoice",
-              onclick: () => setActivityFilter("invoice"),
-            },
-            "Deuda",
-          ),
-        );
-        controlsGroupRight.appendChild(
-          el(
-            "button",
-            {
-              className: `filter-chip ${currentActivityFilter === "payment" ? "active" : ""}`,
-              "data-type": "payment",
-              onclick: () => setActivityFilter("payment"),
-            },
-            "Pagos",
-          ),
-        );
+        ["all", "invoice", "payment"].forEach((filter) => {
+          const label =
+            filter === "all"
+              ? "Todos"
+              : filter === "invoice"
+                ? "Deuda"
+                : "Pagos";
+          controlsGroupRight.appendChild(
+            el(
+              "button",
+              {
+                className: `filter-chip ${currentActivityFilter === filter ? "active" : ""}`,
+                onclick: () => setActivityFilter(filter),
+              },
+              label,
+            ),
+          );
+        });
       }
     }
   };
@@ -229,8 +202,10 @@ export function SupplierListView({
     contentWrapper.innerHTML = "";
     renderToolbarControls();
 
+    // =========================================================
+    // VISTA 1: DIRECTORIO DE PROVEEDORES
+    // =========================================================
     if (activeTab === "directory") {
-      // --- VISTA DIRECTORIO ---
       const gridContainer = el("div", { className: "suppliers-grid" });
       const sortedList = getSortedData(currentFilteredList);
 
@@ -245,8 +220,8 @@ export function SupplierListView({
       } else {
         const fragment = document.createDocumentFragment();
         sortedList.forEach((s) => {
+          // Buscamos la última tx para mostrar la fecha en la tarjeta
           const lastTx = recentTransactions.find((t) => t.supplierId === s.id);
-
           const card = SupplierCard({
             supplier: s,
             isVisible: isVisible,
@@ -254,14 +229,16 @@ export function SupplierListView({
             onClick: () => onSelect(s.id),
             onAddTransaction: () => onAddQuickTransaction(s),
           });
-
           fragment.appendChild(card);
         });
         gridContainer.appendChild(fragment);
       }
       contentWrapper.appendChild(gridContainer);
-    } else {
-      // --- VISTA ACTIVIDAD CON AGRUPACIÓN ---
+    }
+    // =========================================================
+    // VISTA 2: ACTIVIDAD (TIMELINE)
+    // =========================================================
+    else {
       if (isLoadingActivity) {
         contentWrapper.innerHTML = `<div class="empty-state">Buscando movimientos...</div>`;
         return;
@@ -280,103 +257,59 @@ export function SupplierListView({
         return;
       }
 
-      // --- CAMBIO CLAVE: ENRIQUECER CON NOMBRE DE PROVEEDOR ---
+      // ENRIQUECIMIENTO DE DATOS
+      // Inyectamos Nombre del Proveedor y Colores de los Ítems
       const enrichedTransactions = visibleTransactions.map((tx) => {
         const sup = suppliers.find((s) => s.id === tx.supplierId);
+
+        let enrichedItems = [];
+        if (tx.items && Array.isArray(tx.items)) {
+          enrichedItems = tx.items.map((item) => {
+            // Lógica de recuperación de color:
+            // 1. Si el movimiento ya tiene color guardado, usalo.
+            // 2. Si no, busca en los defaultItems del proveedor.
+            // 3. Si no encuentra, usa un gris default.
+            let color = item.color;
+            if (!color && sup && sup.defaultItems) {
+              // defaultItems puede ser array de strings o de objetos {name, color}
+              const match = sup.defaultItems.find((d) => {
+                const dName = typeof d === "string" ? d : d.name;
+                return dName && dName.toUpperCase() === item.name.toUpperCase();
+              });
+              if (match && typeof match === "object" && match.color)
+                color = match.color;
+            }
+            return { ...item, color: color || "#ddd" };
+          });
+        }
+
         return {
           ...tx,
-          supplierName: sup ? sup.name : "Proveedor Desconocido",
+          supplierName: sup ? sup.name : "Proveedor Eliminado",
+          items: enrichedItems,
         };
       });
 
+      // LISTA AGRUPADA (TIMELINE)
       const listContainer = el("div", { className: "activity-list-container" });
 
-      // 1. Agrupar movimientos por fecha
-      const groups = {};
-      const datesOrder = [];
-
-      enrichedTransactions.forEach((m) => {
-        const dateObj = m.date?.seconds
-          ? new Date(m.date.seconds * 1000)
-          : new Date(m.date);
-
-        const key = getDateKey(dateObj);
-
-        if (!groups[key]) {
-          groups[key] = {
-            dateObj: dateObj,
-            items: [],
-          };
-          datesOrder.push(key);
-        }
-        groups[key].items.push(m);
-      });
-
-      // 2. Renderizar grupos
-      datesOrder.forEach((key) => {
-        const group = groups[key];
-
-        const dayDebt = group.items
-          .filter((t) => t.type === "invoice")
-          .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-
-        const dayPayment = group.items
-          .filter((t) => t.type === "payment")
-          .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-
-        const totalTags = [];
-        if (dayDebt > 0) {
-          totalTags.push(
-            el("div", { className: "total-tag debt" }, [
-              el("span", { className: "tag-label" }, "D:"),
-              el(
-                "span",
-                { className: "separator-amount" },
-                SupplierModel.formatAmount(dayDebt, isVisible),
-              ),
-            ]),
-          );
-        }
-        if (dayPayment > 0) {
-          totalTags.push(
-            el("div", { className: "total-tag payment" }, [
-              el("span", { className: "tag-label" }, "P:"),
-              el(
-                "span",
-                { className: "separator-amount" },
-                SupplierModel.formatAmount(dayPayment, isVisible),
-              ),
-            ]),
-          );
-        }
-
-        const separator = el("div", { className: "group-separator-modern" }, [
-          el(
-            "span",
-            { className: "separator-date" },
-            getFriendlyDate(group.dateObj),
-          ),
-          el("div", { className: "separator-totals" }, totalTags),
-        ]);
-
-        listContainer.appendChild(separator);
-
-        // Renderizar lista con nombres
-        listContainer.appendChild(
-          MovementList({
-            movements: group.items,
-            isVisible: isVisible,
-            onEdit: onEditTransaction,
-            onDelete: onDeleteTransaction,
-            showSupplierName: true, // <--- ACTIVAR NOMBRE
-          }),
-        );
-      });
+      listContainer.appendChild(
+        MovementList({
+          movements: enrichedTransactions,
+          isVisible: isVisible,
+          onEdit: onEditTransaction,
+          onDelete: onDeleteTransaction,
+          showSupplierName: true, // IMPORTANTE: Muestra el nombre Bold
+          isStockView: false, // Muestra valores monetarios
+          groupByDay: true, // IMPORTANTE: Activa Sticky Headers y agrupación por fecha
+        }),
+      );
 
       contentWrapper.appendChild(listContainer);
     }
   };
 
+  // --- UI COMPONENTS ---
   const searchComponent = SearchBox({
     placeholder: "BUSCAR PROVEEDOR...",
     onSearch: handleSearch,
@@ -394,7 +327,8 @@ export function SupplierListView({
     [el("span", { innerHTML: iconList }), "Actividad"],
   );
 
-  fetchActivity();
+  // Iniciar carga si ya hay proveedores
+  if (suppliers.length > 0) fetchActivity();
 
   debtValueDisplay = el(
     "div",
@@ -439,7 +373,6 @@ export function SupplierListView({
       controlsGroupRight,
     ]),
   ]);
-
   return el("div", { className: "supplier-list-view" }, [
     headerPanel,
     contentWrapper,

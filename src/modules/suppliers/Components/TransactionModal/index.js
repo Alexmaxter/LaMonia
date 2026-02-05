@@ -9,27 +9,48 @@ const getSafeName = (item) => {
   return item.name || item.description || item.desc || "";
 };
 
-const calculatePendingFromHistory = (movements) => {
+const getSafeColor = (item) => {
+  if (!item || typeof item === "string") return "#ddd";
+  return item.color || "#ddd";
+};
+
+const calculatePendingFromHistory = (movements, defaultItems = []) => {
   const totals = {};
   if (!movements || !Array.isArray(movements)) return totals;
+
   movements.forEach((m) => {
     const type = m.type ? m.type.toLowerCase() : "";
     const isEntry = type === "invoice" || type === "boleta";
     if (m.items && Array.isArray(m.items)) {
       m.items.forEach((item) => {
-        const name = getSafeName(item).trim();
+        const name = getSafeName(item).trim().toUpperCase();
         const qty = parseFloat(item.quantity || item.qty || 0);
+        // Intentamos preservar el color del historial, o lo buscamos en defaults
+        let color = getSafeColor(item);
+        if (color === "#ddd") {
+          const defItem = defaultItems.find(
+            (d) => (d.name || d).toUpperCase() === name,
+          );
+          if (defItem) color = getSafeColor(defItem);
+        }
+
         if (name) {
-          if (!totals[name]) totals[name] = 0;
-          totals[name] += isEntry ? qty : -qty;
+          if (!totals[name]) totals[name] = { qty: 0, color: color };
+          totals[name].qty += isEntry ? qty : -qty;
+          // Actualizamos color si encontramos uno válido
+          if (color !== "#ddd") totals[name].color = color;
         }
       });
     }
   });
+
+  const result = {};
   Object.keys(totals).forEach((key) => {
-    if (totals[key] <= 0.01) delete totals[key];
+    if (totals[key].qty > 0.01) {
+      result[key] = totals[key];
+    }
   });
-  return totals;
+  return result;
 };
 
 // --- COMPONENTE PRINCIPAL ---
@@ -54,11 +75,15 @@ export function TransactionModal({
   let currentSupplier = supplier;
   let selectedType = initialData?.type || "invoice";
   let localMovements = [...movements];
+
+  // BUFFER DE CENTAVOS (Input ATM)
   let centsBuffer =
     initialData && typeof initialData.amount === "number"
       ? Math.round(initialData.amount * 100).toString()
       : "0";
-  let itemsState = [];
+
+  let itemsState = []; // { name, qty, color, isLocked, max? }
+
   let selectedDate = initialData?.date
     ? initialData.date.toDate
       ? initialData.date.toDate()
@@ -66,6 +91,7 @@ export function TransactionModal({
     : new Date();
   let calendarViewDate = new Date(selectedDate);
 
+  // --- HELPER FORMATO ATM ---
   const formatATMDisplay = (bufferStr) => {
     const val = parseInt(bufferStr || "0", 10);
     const amount = val / 100;
@@ -75,6 +101,92 @@ export function TransactionModal({
     })}`;
   };
 
+  const updateATMInput = () => {
+    const input = document.getElementById("hero-atm-input");
+    if (input) {
+      input.value = formatATMDisplay(centsBuffer);
+    }
+  };
+
+  // --- LÓGICA DE SUGERENCIAS ---
+  const renderSuggestions = () => {
+    if (!currentSupplier) return null;
+
+    const suggestions = [];
+    const usedAmounts = new Set();
+    const totalDebt = parseFloat(currentSupplier.balance) || 0;
+
+    // 1. CONDICIONAL: Total Deuda (Solo si es PAGO y hay deuda)
+    if (selectedType === "payment" && totalDebt > 1) {
+      suggestions.push({ amount: totalDebt, isTotal: true });
+      usedAmounts.add(totalDebt);
+    }
+
+    // 2. BUSCAR HISTORIAL (Últimas boletas)
+    const sortedInvoices = [...localMovements]
+      .filter((m) => m.type === "invoice")
+      .sort((a, b) => {
+        const dA = a.date.seconds ? a.date.seconds : new Date(a.date).getTime();
+        const dB = b.date.seconds ? b.date.seconds : new Date(b.date).getTime();
+        return dB - dA;
+      });
+
+    const limit = selectedType === "payment" && totalDebt > 1 ? 2 : 3;
+    let count = 0;
+
+    for (const inv of sortedInvoices) {
+      if (count >= limit) break;
+      const amt = parseFloat(inv.amount);
+      if (amt > 0 && !usedAmounts.has(amt)) {
+        suggestions.push({ amount: amt, isTotal: false });
+        usedAmounts.add(amt);
+        count++;
+      }
+    }
+
+    if (suggestions.length === 0) return null;
+
+    return el("div", { className: "suggestions-wrapper" }, [
+      el("span", { className: "suggestions-label" }, "SUGERENCIAS"),
+      el(
+        "div",
+        { className: "suggestions-row" },
+        suggestions.map((s) =>
+          el(
+            "button",
+            {
+              type: "button",
+              // Solo 'chip-total' tiene borde destacado (definido en CSS)
+              className: `tech-chip ${s.isTotal ? "chip-total" : "chip-hist"}`,
+              onclick: (e) => {
+                e.preventDefault();
+                centsBuffer = Math.round(s.amount * 100).toString();
+                updateATMInput();
+              },
+            },
+            [
+              el(
+                "span",
+                { className: "chip-val" },
+                `$${s.amount.toLocaleString("es-AR")}`,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ]);
+  };
+
+  const refreshSuggestions = () => {
+    const container = document.getElementById("dynamic-suggestions-container");
+    if (container) {
+      container.innerHTML = "";
+      const newSugg = renderSuggestions();
+      if (newSugg) container.appendChild(newSugg);
+    }
+  };
+
+  // --- ITEMS LOGIC ---
   const initItemsState = () => {
     itemsState = [];
     const isStockSupplier = currentSupplier?.type === "stock";
@@ -84,42 +196,60 @@ export function TransactionModal({
       itemsState = initialData.items.map((i) => ({
         name: getSafeName(i),
         qty: parseFloat(i.quantity || i.qty || 0),
+        color: getSafeColor(i),
         isLocked: true,
       }));
       return;
     }
 
+    // Si es Pago o Nota, mostramos items pendientes con su deuda máxima
     if (selectedType === "payment" || selectedType === "credit") {
-      const debtMap = calculatePendingFromHistory(localMovements);
+      const debtMap = calculatePendingFromHistory(
+        localMovements,
+        currentSupplier?.defaultItems,
+      );
+
       itemsState = Object.entries(debtMap)
-        .map(([name, pendingQty]) => ({
+        .map(([name, data]) => ({
           name: name,
           qty: 0,
-          max: pendingQty,
+          max: data.qty,
+          color: data.color || "#ddd",
           isLocked: true,
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
     } else {
+      // Si es Deuda (Invoice), cargamos defaults
       let rawDefaults = currentSupplier?.defaultItems || [];
+
+      // Normalizamos defaults (puede ser array strings o array objetos)
+      let defaults = [];
       if (typeof rawDefaults === "string") {
-        rawDefaults = rawDefaults
+        defaults = rawDefaults
           .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s !== "");
+          .map((s) => ({ name: s.trim(), color: "#ddd" }));
+      } else if (Array.isArray(rawDefaults)) {
+        defaults = rawDefaults.map((d) => {
+          if (typeof d === "string") return { name: d, color: "#ddd" };
+          return d;
+        });
       }
-      itemsState = rawDefaults.map((it) => ({
-        name: getSafeName(it),
+
+      itemsState = defaults.map((it) => ({
+        name: it.name,
         qty: 0,
+        color: it.color || "#ddd",
         isLocked: true,
       }));
+
       if (itemsState.length === 0)
-        itemsState.push({ name: "", qty: 0, isLocked: false });
+        itemsState.push({ name: "", qty: 0, color: "#ddd", isLocked: false });
     }
   };
 
   initItemsState();
 
-  // --- CALENDAR RENDER (FIX: Siempre 6 filas / 42 celdas) ---
+  // --- CALENDAR RENDER (FIXED 42 CELLS) ---
   const renderCalendar = () => {
     const container = document.getElementById("inline-calendar-container");
     const labelTitle = document.getElementById("calendar-month-title");
@@ -144,7 +274,6 @@ export function TransactionModal({
     ];
     labelTitle.textContent = `${monthNames[month]} ${year}`.toUpperCase();
 
-    // Headers
     const daysHeader = el(
       "div",
       { className: "cal-grid-header" },
@@ -153,22 +282,18 @@ export function TransactionModal({
     container.appendChild(daysHeader);
 
     const daysGrid = el("div", { className: "cal-days-grid" });
-
-    // Cálculos de fecha
-    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0-6
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Lógica 42 Celdas (6 filas * 7 columnas) para evitar saltos
-    const totalCells = 42;
-    let cellsCount = 0;
+    // Grid fijo de 6 filas (42 celdas)
+    const totalSlots = 42;
+    let slotsFilled = 0;
 
-    // 1. Espacios vacíos iniciales
     for (let i = 0; i < firstDayOfMonth; i++) {
       daysGrid.appendChild(el("div", { className: "cal-day empty" }));
-      cellsCount++;
+      slotsFilled++;
     }
 
-    // 2. Días del mes
     for (let day = 1; day <= daysInMonth; day++) {
       const dateToCheck = new Date(year, month, day);
       const isSelected =
@@ -188,15 +313,15 @@ export function TransactionModal({
         day.toString(),
       );
       daysGrid.appendChild(dayBtn);
-      cellsCount++;
+      slotsFilled++;
     }
 
-    // 3. Rellenar el resto hasta 42 con vacíos
-    while (cellsCount < totalCells) {
-      daysGrid.appendChild(el("div", { className: "cal-day empty" }));
-      cellsCount++;
+    // Rellenar final
+    for (let j = 0; j < totalSlots - slotsFilled; j++) {
+      daysGrid.appendChild(
+        el("div", { className: "cal-day empty next-month" }),
+      );
     }
-
     container.appendChild(daysGrid);
   };
 
@@ -205,6 +330,7 @@ export function TransactionModal({
     renderCalendar();
   };
 
+  // --- ITEMS LIST RENDER (CON COLORES Y STEPPER) ---
   const renderItemsList = () => {
     const container = document.getElementById("items-list-wrapper");
     if (!container) return;
@@ -218,6 +344,7 @@ export function TransactionModal({
     container.style.display = "flex";
 
     const isDebtMode = selectedType === "payment" || selectedType === "credit";
+
     if (isDebtMode && itemsState.length === 0) {
       container.innerHTML = `<div class="empty-stock-msg">SIN ÍTEMS PENDIENTES</div>`;
       return;
@@ -225,21 +352,32 @@ export function TransactionModal({
 
     itemsState.forEach((item, index) => {
       let nameComp;
+
+      // Círculo de color
+      const colorDot = el("span", {
+        className: "item-color-dot",
+        style: `background-color: ${item.color || "#ddd"};`,
+      });
+
       if (item.isLocked) {
         nameComp = el("div", { className: "item-text-locked" }, [
+          colorDot,
           el("span", { className: "text-main" }, item.name),
           isDebtMode && item.max
             ? el("span", { className: "text-sub" }, `/ ${item.max}`)
             : null,
         ]);
       } else {
-        nameComp = el("input", {
-          type: "text",
-          className: "fusion-input item-name-input",
-          placeholder: "NOMBRE PRODUCTO",
-          value: item.name,
-          oninput: (e) => (itemsState[index].name = e.target.value),
-        });
+        nameComp = el("div", { className: "item-input-wrapper" }, [
+          colorDot,
+          el("input", {
+            type: "text",
+            className: "fusion-input item-name-input",
+            placeholder: "NOMBRE PRODUCTO",
+            value: item.name,
+            oninput: (e) => (itemsState[index].name = e.target.value),
+          }),
+        ]);
       }
 
       const qtyInput = el("input", {
@@ -311,11 +449,16 @@ export function TransactionModal({
             type: "button",
             className: "btn-rect-dotted",
             onclick: () => {
-              itemsState.push({ name: "", qty: 0, isLocked: false });
+              itemsState.push({
+                name: "",
+                qty: 0,
+                color: "#ddd",
+                isLocked: false,
+              });
               renderItemsList();
             },
           },
-          [el("span", { innerHTML: iconPlus }), "AGREGAR ÍTEM"],
+          [el("span", { innerHTML: iconPlus }), "AGREGAR ÍTEM MANUAL"],
         ),
       );
     }
@@ -329,6 +472,7 @@ export function TransactionModal({
     }
   };
 
+  // --- HEADER SELECTOR ---
   const headerSelector =
     suppliers.length > 0 && !supplier
       ? el(
@@ -352,6 +496,8 @@ export function TransactionModal({
                 } catch (err) {
                   localMovements = [];
                 }
+
+                refreshSuggestions();
                 initItemsState();
                 renderItemsList();
               },
@@ -374,10 +520,7 @@ export function TransactionModal({
 
   const modalContent = el(
     "div",
-    {
-      className: "fusion-card",
-      onclick: (e) => e.stopPropagation(),
-    },
+    { className: "fusion-card", onclick: (e) => e.stopPropagation() },
     [
       el("div", { className: "fusion-header" }, [
         el("div", { className: "header-text-group" }, [
@@ -394,6 +537,7 @@ export function TransactionModal({
           innerHTML: iconClose,
         }),
       ]),
+
       el(
         "form",
         {
@@ -416,11 +560,13 @@ export function TransactionModal({
                 .map((i) => ({
                   name: i.name.trim(),
                   quantity: parseFloat(i.qty),
+                  color: i.color || "#ddd", // GUARDAMOS EL COLOR
                 })),
             });
           },
         },
         [
+          // TABS
           el(
             "div",
             { className: "fusion-tabs-row" },
@@ -443,6 +589,7 @@ export function TransactionModal({
                         .forEach((t) => t.classList.remove("active"));
                       e.target.parentElement.classList.add("active");
                       updateTheme(selectedType);
+                      refreshSuggestions();
                       initItemsState();
                       renderItemsList();
                     },
@@ -461,6 +608,8 @@ export function TransactionModal({
               ),
             ),
           ),
+
+          // ATM INPUT
           el("div", { className: "atm-wrapper-clean" }, [
             el("input", {
               id: "hero-atm-input",
@@ -489,14 +638,18 @@ export function TransactionModal({
                 e.target.value = formatATMDisplay(centsBuffer);
               },
             }),
+            el("div", { id: "dynamic-suggestions-container" }, [
+              renderSuggestions(),
+            ]),
           ]),
 
+          // ITEMS AREA
           el("div", {
             id: "items-list-wrapper",
             className: "rect-items-section",
           }),
 
-          // GRID INFERIOR (Calendario + Concepto)
+          // LOWER GRID
           el("div", { className: "rect-lower-grid" }, [
             el("div", { className: "calendar-panel" }, [
               el("div", { className: "cal-nav-row" }, [
@@ -523,6 +676,7 @@ export function TransactionModal({
                 className: "cal-container",
               }),
             ]),
+
             el("div", { className: "concept-panel" }, [
               el("label", { className: "fusion-label" }, "CONCEPTO / NOTA"),
               el("textarea", {
@@ -534,6 +688,7 @@ export function TransactionModal({
             ]),
           ]),
 
+          // FOOTER
           el("div", { className: "fusion-footer" }, [
             el(
               "button",

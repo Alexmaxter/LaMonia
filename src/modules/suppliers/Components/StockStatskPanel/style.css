@@ -1,0 +1,168 @@
+/* src/modules/suppliers/Components/StockStatsPanel/style.css */
+
+.stock-manifest-panel {
+  background: #fff;
+  border: 2px solid #000;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: var(--font-mono, monospace);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.stock-manifest-panel:hover {
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.15);
+}
+
+/* Decoración Tech: Esquina superior derecha cortada */
+.stock-manifest-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 15px 15px 0;
+  border-color: transparent #000 transparent transparent;
+}
+
+.manifest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 3px solid #000;
+  padding-bottom: 15px;
+}
+
+.title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.manifest-title {
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+}
+
+.manifest-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #000;
+  color: #fff;
+  padding: 2px 8px;
+  width: fit-content;
+}
+
+.tech-status-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  border: 1px solid #000;
+  padding: 4px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  background: #f0f0f0;
+  cursor: default;
+}
+
+.manifest-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* Altura controlada para móvil */
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Scrollbar personalizada fina */
+.manifest-grid::-webkit-scrollbar {
+  width: 6px;
+}
+.manifest-grid::-webkit-scrollbar-thumb {
+  background: #000;
+}
+.manifest-grid::-webkit-scrollbar-track {
+  background: #eee;
+}
+
+.manifest-row {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem; /* Texto grande y legible */
+}
+
+.item-color-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.item-name {
+  font-weight: 700;
+  color: #000;
+  white-space: nowrap;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dots-fill {
+  flex: 1;
+  border-bottom: 2px dotted #ccc;
+  margin: 0 10px;
+  position: relative;
+  top: -4px;
+}
+
+.item-qty-debt {
+  font-weight: 900;
+  color: #d32f2f; /* Rojo intenso para indicar deuda/pendiente */
+  font-size: 1.4rem; /* Número destacado */
+  min-width: 60px;
+  text-align: right;
+}
+
+.manifest-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #888;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* AJUSTES PARA ESCRITORIO (PC) */
+/* Cuando se usa junto al layout de 2 columnas en SupplierDetailView */
+@media (min-width: 1024px) {
+  .stock-manifest-panel {
+    padding: 30px;
+  }
+
+  .manifest-title {
+    font-size: 1.4rem;
+  }
+
+  .manifest-grid {
+    /* Permitimos que crezca en vertical para ocupar el espacio del sticky */
+    /* Calculamos: 100vh - Header(180px) - PaddingPanel(60px) - Margen(40px) aprox */
+    max-height: calc(100vh - 350px);
+  }
+
+  .item-name {
+    font-size: 1.2rem;
+  }
+}

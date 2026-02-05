@@ -295,3 +295,14 @@
     width: 100%;
   }
 }
+.settings-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid #000;
+  display: inline-block;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* El resto de estilos se debe mantener igual que el original que tenías para este componente */

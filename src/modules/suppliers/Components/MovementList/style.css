@@ -1,238 +1,279 @@
 /* src/modules/suppliers/Components/MovementList/style.css */
 
-/* --- ESTILOS BASE (TU DISEÑO "TECH") --- */
+/* --- MODO DETALLE (Lista Plana) --- */
 .movements-block-container {
   display: flex;
   flex-direction: column;
   width: 100%;
   gap: 20px;
 }
-
 .movements-list-stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+/* --- MODO ACTIVIDAD (Agrupado por día) --- */
+.movements-timeline-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+  padding-bottom: 40px;
+}
+.day-block-group {
+  display: flex;
+  flex-direction: column;
+}
+.day-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+/* STICKY HEADER (Solo Modo Actividad) */
+.day-sticky-header {
+  position: sticky;
+  top: -1px;
+  z-index: 90;
+  background: #f4f4f4; /* Mismo que el fondo de la app */
+  border-bottom: 2px solid #000;
+  border-top: 2px solid #000;
+  padding: 8px 16px;
+  margin: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.day-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.header-day-num {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #000;
+  line-height: 1;
+}
+.header-month-year {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+}
+.day-header-right {
+  display: flex;
+  gap: 12px;
+}
+.mini-stat {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.mini-stat.debt {
+  color: #cc0000;
+}
+.mini-stat.pay {
+  color: #008800;
+}
+
+/* --- TARJETA DE MOVIMIENTO (Común para ambos modos) --- */
 .tech-movement-card {
   display: flex;
   background: #fff;
-  border: 2px solid #000; /* Borde más grueso para contraste */
-  min-height: 85px; /* Más grande */
+  border: 2px solid #000;
+  min-height: 70px;
   cursor: pointer;
   position: relative;
   transition:
     transform 0.1s,
-    box-shadow 0.1s;
+    background 0.1s;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
 }
-
 .tech-movement-card:hover {
   background: #fcfcfc;
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0px #000;
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
 }
 
 .mov-status-bar {
-  width: 8px; /* Más ancha */
+  width: 6px;
   flex-shrink: 0;
-  border-right: 2px solid #000;
+  border-right: 1px solid #000;
 }
 .type-invoice .mov-status-bar {
   background: #ff0000;
-} /* Rojo puro */
+}
 .type-payment .mov-status-bar {
   background: #00aa00;
-} /* Verde puro */
+}
+.type-credit .mov-status-bar {
+  background: #1565c0;
+}
 
 .mov-content {
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 12px 18px;
-  gap: 15px;
-  min-width: 0; /* Vital para flexbox responsive */
+  padding: 10px 14px;
+  gap: 12px;
+  overflow: hidden;
 }
 
+/* COLUMNA FECHA INTERNA (Solo se ve en Modo Detalle) */
 .mov-date-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   border-right: 2px solid #000;
   padding-right: 15px;
-  min-width: 60px;
+  min-width: 75px;
 }
-
 .date-day {
   font-family: var(--font-sans, sans-serif);
-  font-size: 1.4rem; /* Grande */
+  font-size: 1.4rem;
   font-weight: 900;
   color: #000;
-  line-height: 1;
 }
-
 .date-month {
   font-family: var(--font-mono, monospace);
   font-size: 0.85rem;
   font-weight: 700;
   color: #000;
-  text-transform: uppercase;
 }
 
+/* INFO */
 .mov-info-col {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px; /* Un poco menos de gap para agrupar nombre y badge */
-  min-width: 0; /* Permite truncate */
-  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
 }
-
 .info-row-primary {
   display: flex;
   align-items: center;
-  gap: 8px; /* Menos gap entre badge y nombre */
+  gap: 10px;
   flex-wrap: wrap;
 }
-
 .type-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   font-weight: 800;
-  padding: 4px 8px;
+  padding: 2px 6px;
   background: #000;
   color: #fff;
-  border-radius: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
 }
 
-/* --- ESTILO PROTAGÓNICO PARA EL PROVEEDOR --- */
-.supplier-name-tag {
-  font-family: var(--font-sans, sans-serif); /* Cambio a Sans */
-  font-size: 1.1rem; /* Más grande */
-  font-weight: 800; /* Extra bold */
+/* Nombre Proveedor Bold */
+.supplier-name-bold {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 1.1rem;
+  font-weight: 900;
   color: #000;
   text-transform: uppercase;
-  letter-spacing: -0.5px; /* Estilo apretado moderno */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  /* Eliminamos underline para darle look de título */
-  text-decoration: none;
+  letter-spacing: -0.5px;
+  border-bottom: 2px solid transparent;
 }
 
 .desc-text {
   font-family: var(--font-sans, sans-serif);
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #555; /* Un poco más gris para dar jerarquía al nombre */
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.desc-subtext {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+  margin-top: 2px;
+}
 
+/* PILLS */
+.items-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tech-item-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #000;
+  padding: 3px 8px;
+  border-radius: 16px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+}
+.pill-name {
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+}
+.pill-qty {
+  font-weight: 900;
+  color: #000;
+  font-size: 0.9rem;
+}
+.pill-balance {
+  font-size: 0.7rem;
+  color: #555;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+  padding-left: 4px;
+  margin-left: 2px;
+}
+
+/* MONEY */
 .mov-money-col {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  min-width: 100px; /* Ajustado un poco */
-  justify-content: center;
+  min-width: 90px;
 }
-
 .amount-main {
   font-family: var(--font-mono, monospace);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 900;
-  white-space: nowrap;
 }
-
+.amount-placeholder {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #ddd;
+}
 .val-invoice {
-  color: #cc0000;
+  color: #d32f2f;
 }
 .val-payment {
-  color: #008800;
+  color: #2e7d32;
 }
-
 .balance-partial {
   font-family: var(--font-mono, monospace);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #666;
-  margin-top: 4px;
-  white-space: nowrap;
+  margin-top: 2px;
 }
 
 .btn-row-del {
   background: transparent;
   border: none;
-  color: #000;
+  color: #ccc;
   cursor: pointer;
   padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 .btn-row-del:hover {
-  background: #000;
-  color: #fff;
-}
-
-.empty-state-flat {
-  text-align: center;
-  padding: 20px;
-  font-family: var(--font-mono, monospace);
-  color: #999;
-  border: 2px dashed #ccc;
-}
-
-/* =========================================
-   ADAPTACIÓN RESPONSIVE (MÓVIL)
-   ========================================= */
-@media (max-width: 600px) {
-  .tech-movement-card {
-    min-height: auto;
-  }
-
-  .mov-content {
-    padding: 10px 12px; /* Menos padding */
-    gap: 10px;
-  }
-
-  /* Reducir columna fecha */
-  .mov-date-col {
-    min-width: 45px;
-    padding-right: 10px;
-  }
-  .date-day {
-    font-size: 1.1rem;
-  }
-  .date-month {
-    font-size: 0.7rem;
-  }
-
-  /* Ajustar Info */
-  .supplier-name-tag {
-    font-size: 0.95rem; /* Un poco más chico en móvil pero sigue fuerte */
-  }
-  .desc-text {
-    font-size: 0.85rem;
-  }
-  .type-badge {
-    padding: 2px 6px;
-    font-size: 0.65rem;
-  }
-
-  /* Ajustar Dinero */
-  .mov-money-col {
-    min-width: auto; /* Dejar que se ajuste */
-    align-items: flex-end;
-  }
-  .amount-main {
-    font-size: 1rem;
-  }
-
-  .btn-row-del {
-    padding: 4px; /* Botón más compacto */
-  }
+  color: #000;
 }

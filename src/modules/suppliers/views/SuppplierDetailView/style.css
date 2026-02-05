@@ -3,165 +3,133 @@
 .supplier-detail-view {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: #f4f4f4;
-  position: relative;
-  /* Eliminamos padding superior global */
-  padding-top: 0;
+  min-height: 100%; /* Usamos min-height en lugar de height fijo */
+  background: #f4f4f4;
+  /* IMPORTANTE: Quitamos overflow hidden para permitir scroll del navegador */
 }
 
-/* --- HEADER TECH PANEL (Sticky) --- */
+/* HEADER STICKY */
 .tech-panel-header-detail {
   background: #fff;
   border-bottom: 2px solid #000;
-  /* Padding interno */
-  padding: 16px 24px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-
-  /* STICKY CONFIG: Se pega al techo */
   position: sticky;
   top: 0;
-  z-index: 1000;
-  margin-top: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  z-index: 100; /* Debe estar por encima del panel lateral */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Fila Superior */
+/* ... (Estilos internos del Header se mantienen IGUAL) ... */
 .tech-header-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
-
 .left-group {
   display: flex;
-  align-items: flex-start; /* Alineado arriba */
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
 }
-
 .btn-back-arrow {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
-  margin-top: 4px; /* Ajuste fino para alinear con el texto */
-  color: #000;
+  padding: 4px;
   display: flex;
-  transition: transform 0.2s;
 }
 .btn-back-arrow:hover {
-  transform: translateX(-4px);
+  color: #555;
+  transform: translateX(-2px);
 }
-
 .title-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
-
 .page-title {
-  font-family: var(--font-sans, sans-serif);
-  font-weight: 800;
-  font-size: 1.5rem;
-  letter-spacing: -0.5px;
   margin: 0;
-  color: #000;
-  line-height: 1;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 900;
+  font-size: 1.4rem;
   text-transform: uppercase;
+  line-height: 1;
 }
-
 .supplier-type-badge {
   font-family: var(--font-mono, monospace);
-  font-size: 0.65rem;
-  background: #eee;
+  font-size: 0.7rem;
+  background: #000;
+  color: #fff;
   padding: 2px 6px;
-  border-radius: 2px;
-  align-self: flex-start;
-  text-transform: uppercase;
+  width: fit-content;
+  margin-top: 4px;
   font-weight: 700;
-  color: #666;
 }
-
-/* Grupo de Deuda (Derecha) */
 .tech-debt-group {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
-
 .debt-label-row {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
-
 .debt-label {
   font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #666;
-  font-weight: 600;
+  font-size: 0.7rem;
+  color: #888;
+  font-weight: 700;
 }
-
 .btn-icon-toggle {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   display: flex;
-  color: #666;
+  color: #888;
 }
-
 .header-debt-value {
   font-family: var(--font-mono, monospace);
-  font-size: 1.75rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: #000;
   line-height: 1;
+  letter-spacing: -1px;
 }
-
-/* Fila Inferior (Controles) */
 .tech-controls-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  /* Separador sutil opcional */
-  padding-top: 12px;
-  border-top: 1px dashed #eee;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-
 .info-mini-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.alias-chip {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  padding: 6px 12px;
+}
+.alias-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  cursor: pointer;
   font-family: var(--font-mono, monospace);
   font-size: 0.8rem;
-  color: #444;
-  cursor: pointer;
   transition: all 0.2s;
 }
 .alias-chip:hover {
   border-color: #000;
   background: #fff;
-  color: #000;
 }
 .alias-text {
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 700;
+  color: #444;
 }
 .no-alias {
   font-family: var(--font-mono, monospace);
@@ -169,106 +137,116 @@
   color: #999;
   font-style: italic;
 }
-
-/* Botones de Acción */
 .tech-actions-container {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
-
-.btn-primary {
-  background: #000;
-  color: #fff;
-  border: none;
-  height: 40px;
-  padding: 0 16px;
-  font-family: var(--font-mono, monospace);
-  font-weight: 600;
-  font-size: 0.85rem;
+.btn-secondary,
+.btn-primary,
+.btn-secondary-icon {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding: 10px 16px;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 800;
+  font-size: 0.85rem;
   cursor: pointer;
-  white-space: nowrap;
+  text-transform: uppercase;
 }
-.btn-primary:active {
-  transform: translateY(1px);
+.btn-secondary-icon {
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #000;
 }
-
 .btn-secondary {
   background: #fff;
+  border: 1px solid #000;
   color: #000;
-  border: 2px solid #000;
-  height: 40px;
-  padding: 0 16px;
-  font-family: var(--font-mono, monospace);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
 }
-
-.btn-secondary-icon {
-  background: #fff;
-  color: #000;
-  border: 2px solid #ddd; /* Borde más suave para configs */
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
+.btn-primary {
+  background: #000;
+  border: 1px solid #000;
+  color: #fff;
 }
+.btn-secondary:hover,
 .btn-secondary-icon:hover {
-  border-color: #000;
+  background: #f4f4f4;
+}
+.btn-primary:hover {
+  background: #333;
 }
 
-/* --- CONTENIDO PRINCIPAL --- */
+/* ----------------------------------------------------------- */
+/* --- CONTENEDOR PRINCIPAL (LAYOUT) --- */
+/* ----------------------------------------------------------- */
+
 .detail-content-wrapper {
+  padding: 16px;
+  /* Quitamos overflow-y auto para que use el scroll del body */
   flex: 1;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
-  max-width: 100%; /* Asegura Full Width */
 }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .tech-header-top {
-    flex-direction: column;
+/* --- MODO ESCRITORIO (PC) --- */
+@media (min-width: 1024px) {
+  .detail-content-wrapper {
+    display: grid;
+    /* Divide: 40% Reporte - 60% Lista (Ajustable a gusto) */
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 40px;
+    padding: 32px 40px; /* Padding generoso */
+    max-width: 100%; /* Usa todo el ancho disponible */
+    box-sizing: border-box;
+    align-items: start; /* Vital para que el sticky no se estire */
+  }
+
+  /* Si NO hay reporte (solo hay 1 hijo), la lista ocupa todo */
+  .detail-content-wrapper > :only-child {
+    grid-column: span 2;
+  }
+
+  /* PANEL DE STOCK FIJO */
+  .stock-manifest-panel {
+    position: sticky;
+    /* Ajustamos 'top' considerando la altura aprox del header (160px) + margen */
+    top: 180px;
+    z-index: 10;
+    align-self: start; /* Evita que el panel se estire a lo alto de la lista */
+    margin-bottom: 0;
+  }
+}
+
+/* MOBILE ADJUSTMENTS */
+@media (max-width: 600px) {
+  .tech-panel-header-detail {
+    padding: 12px;
     gap: 12px;
   }
-  .tech-debt-group {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid #f0f0f0; /* Separador en móvil */
-    padding-top: 8px;
+  .page-title {
+    font-size: 1.2rem;
   }
-  .debt-label-row {
-    margin: 0;
+  .header-debt-value {
+    font-size: 1.5rem;
   }
-
   .tech-controls-row {
-    flex-direction: column-reverse; /* Acciones arriba en móvil es más cómodo, o abajo */
+    flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 12px;
   }
-
-  .tech-actions-container {
-    display: grid;
-    grid-template-columns: auto 1fr 1fr; /* Config | Reporte | Nuevo */
-  }
-
-  .alias-chip {
-    width: 100%;
+  .info-mini-container {
     justify-content: center;
   }
-  .detail-content-wrapper {
-    padding: 16px;
+  .tech-actions-container {
+    justify-content: space-between;
+  }
+  .btn-secondary,
+  .btn-primary {
+    flex: 1;
+    justify-content: center;
+    padding: 12px;
   }
 }
