@@ -146,7 +146,7 @@ export function MovementList({
 
             shouldShowMoney && m.partialBalance !== undefined
               ? el("div", { className: "balance-partial" }, [
-                  el("span", { className: "balance-label" }, "$$:"),
+                  el("span", { className: "balance-label" }, "Saldo: "),
                   el(
                     "span",
                     {},
