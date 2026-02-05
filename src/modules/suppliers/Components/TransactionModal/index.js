@@ -25,7 +25,6 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
       m.items.forEach((item) => {
         const name = getSafeName(item).trim().toUpperCase();
         const qty = parseFloat(item.quantity || item.qty || 0);
-        // Intentamos preservar el color del historial, o lo buscamos en defaults
         let color = getSafeColor(item);
         if (color === "#ddd") {
           const defItem = defaultItems.find(
@@ -37,7 +36,6 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
         if (name) {
           if (!totals[name]) totals[name] = { qty: 0, color: color };
           totals[name].qty += isEntry ? qty : -qty;
-          // Actualizamos color si encontramos uno válido
           if (color !== "#ddd") totals[name].color = color;
         }
       });
@@ -82,7 +80,7 @@ export function TransactionModal({
       ? Math.round(initialData.amount * 100).toString()
       : "0";
 
-  let itemsState = []; // { name, qty, color, isLocked, max? }
+  let itemsState = [];
 
   let selectedDate = initialData?.date
     ? initialData.date.toDate
@@ -90,6 +88,60 @@ export function TransactionModal({
       : new Date(initialData.date)
     : new Date();
   let calendarViewDate = new Date(selectedDate);
+
+  // --- LOGICA DE GUARDADO (Extraída para usar en el botón) ---
+  const handleSaveAction = (e) => {
+    // Prevenir cualquier burbujeo o acción por defecto
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!currentSupplier) {
+      alert("Por favor selecciona un proveedor");
+      return;
+    }
+
+    // Obtener valor del concepto directamente del elemento
+    const conceptInput = document.getElementById("tx-concept-area");
+    const conceptVal = conceptInput ? conceptInput.value.trim() : "";
+
+    const finalAmount = parseFloat(centsBuffer) / 100;
+
+    // Validación básica
+    if (finalAmount <= 0) {
+      alert("El monto debe ser mayor a cero");
+      return;
+    }
+
+    const payload = {
+      supplierId: currentSupplier?.id,
+      amount: finalAmount,
+      concept: conceptVal,
+      type: selectedType,
+      date: selectedDate,
+      items: itemsState
+        .filter((i) => i.qty > 0)
+        .map((i) => ({
+          name: i.name.trim(),
+          quantity: parseFloat(i.qty),
+          color: i.color || "#ddd",
+        })),
+    };
+
+    // Si estamos editando, incluir el ID
+    if (isEdit && initialData?.id) {
+      payload.id = initialData.id;
+    }
+
+    console.log("Enviando payload:", payload); // Debug
+    
+    if (typeof onSave === "function") {
+      onSave(payload);
+    } else {
+      console.error("onSave no es una función", onSave);
+    }
+  };
 
   // --- HELPER FORMATO ATM ---
   const formatATMDisplay = (bufferStr) => {
@@ -108,7 +160,7 @@ export function TransactionModal({
     }
   };
 
-  // --- LÓGICA DE SUGERENCIAS ---
+  // --- SUGERENCIAS ---
   const renderSuggestions = () => {
     if (!currentSupplier) return null;
 
@@ -116,13 +168,11 @@ export function TransactionModal({
     const usedAmounts = new Set();
     const totalDebt = parseFloat(currentSupplier.balance) || 0;
 
-    // 1. CONDICIONAL: Total Deuda (Solo si es PAGO y hay deuda)
     if (selectedType === "payment" && totalDebt > 1) {
       suggestions.push({ amount: totalDebt, isTotal: true });
       usedAmounts.add(totalDebt);
     }
 
-    // 2. BUSCAR HISTORIAL (Últimas boletas)
     const sortedInvoices = [...localMovements]
       .filter((m) => m.type === "invoice")
       .sort((a, b) => {
@@ -156,7 +206,6 @@ export function TransactionModal({
             "button",
             {
               type: "button",
-              // Solo 'chip-total' tiene borde destacado (definido en CSS)
               className: `tech-chip ${s.isTotal ? "chip-total" : "chip-hist"}`,
               onclick: (e) => {
                 e.preventDefault();
@@ -202,7 +251,6 @@ export function TransactionModal({
       return;
     }
 
-    // Si es Pago o Nota, mostramos items pendientes con su deuda máxima
     if (selectedType === "payment" || selectedType === "credit") {
       const debtMap = calculatePendingFromHistory(
         localMovements,
@@ -219,304 +267,248 @@ export function TransactionModal({
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      // Si es Deuda (Invoice), cargamos defaults
-      let rawDefaults = currentSupplier?.defaultItems || [];
-
-      // Normalizamos defaults (puede ser array strings o array objetos)
-      let defaults = [];
-      if (typeof rawDefaults === "string") {
-        defaults = rawDefaults
-          .split(",")
-          .map((s) => ({ name: s.trim(), color: "#ddd" }));
-      } else if (Array.isArray(rawDefaults)) {
-        defaults = rawDefaults.map((d) => {
-          if (typeof d === "string") return { name: d, color: "#ddd" };
-          return d;
-        });
+      if (currentSupplier?.defaultItems) {
+        itemsState = currentSupplier.defaultItems.map((it) => ({
+          name: getSafeName(it),
+          qty: 0,
+          color: getSafeColor(it),
+          isLocked: true,
+        }));
       }
-
-      itemsState = defaults.map((it) => ({
-        name: it.name,
-        qty: 0,
-        color: it.color || "#ddd",
-        isLocked: true,
-      }));
-
-      if (itemsState.length === 0)
-        itemsState.push({ name: "", qty: 0, color: "#ddd", isLocked: false });
     }
   };
 
-  initItemsState();
+  const addCustomItem = () => {
+    const customName = prompt("Nombre del ítem personalizado:");
+    if (!customName || !customName.trim()) return;
 
-  // --- CALENDAR RENDER (FIXED 42 CELLS) ---
-  const renderCalendar = () => {
-    const container = document.getElementById("inline-calendar-container");
-    const labelTitle = document.getElementById("calendar-month-title");
-    if (!container || !labelTitle) return;
+    const exists = itemsState.find(
+      (i) => i.name.toUpperCase() === customName.trim().toUpperCase(),
+    );
+    if (exists) {
+      alert("Ya existe un ítem con ese nombre");
+      return;
+    }
+
+    itemsState.push({
+      name: customName.trim(),
+      qty: 0,
+      color: "#ddd",
+      isLocked: false,
+    });
+    renderItemsList();
+  };
+
+  const removeItem = (index) => {
+    if (itemsState[index].isLocked) return;
+    itemsState.splice(index, 1);
+    renderItemsList();
+  };
+
+  const updateItemQty = (index, delta) => {
+    const item = itemsState[index];
+    let newQty = item.qty + delta;
+    if (newQty < 0) newQty = 0;
+    if (item.max !== undefined && newQty > item.max) newQty = item.max;
+    item.qty = newQty;
+    renderItemsList();
+  };
+
+  const renderItemsList = () => {
+    const container = document.getElementById("items-list-wrapper");
+    if (!container) return;
+
+    const isStockSupplier = currentSupplier?.type === "stock";
+    if (!isStockSupplier) {
+      container.innerHTML = "";
+      return;
+    }
 
     container.innerHTML = "";
+
+    const itemsToShow = itemsState.filter((it) => !it.isLocked || it.qty > 0);
+
+    if (itemsToShow.length === 0 && selectedType !== "invoice") {
+      container.appendChild(
+        el(
+          "div",
+          { className: "empty-items-msg" },
+          "No hay ítems pendientes para este tipo de movimiento",
+        ),
+      );
+      return;
+    }
+
+    itemsToShow.forEach((item, idx) => {
+      const realIndex = itemsState.indexOf(item);
+
+      const qtyDisplay = item.max
+        ? `${item.qty.toLocaleString("es-AR")} / ${item.max.toLocaleString("es-AR")}`
+        : item.qty.toLocaleString("es-AR");
+
+      const itemRow = el("div", { className: "rect-item-row" }, [
+        el("div", {
+          className: "item-color-dot",
+          style: { backgroundColor: item.color },
+        }),
+        el("span", { className: "item-name-label" }, item.name),
+        el("div", { className: "item-controls-cluster" }, [
+          el("button", {
+            type: "button",
+            className: "btn-item-qty",
+            disabled: item.qty <= 0,
+            onclick: (e) => {
+              e.preventDefault();
+              updateItemQty(realIndex, -1);
+            },
+            textContent: "−",
+          }),
+          el("span", { className: "item-qty-display" }, qtyDisplay),
+          el("button", {
+            type: "button",
+            className: "btn-item-qty",
+            disabled: item.max !== undefined && item.qty >= item.max,
+            onclick: (e) => {
+              e.preventDefault();
+              updateItemQty(realIndex, 1);
+            },
+            textContent: "+",
+          }),
+          !item.isLocked
+            ? el("button", {
+                type: "button",
+                className: "btn-item-delete",
+                innerHTML: iconTrash,
+                onclick: (e) => {
+                  e.preventDefault();
+                  removeItem(realIndex);
+                },
+              })
+            : null,
+        ]),
+      ]);
+
+      container.appendChild(itemRow);
+    });
+
+    if (selectedType === "invoice") {
+      container.appendChild(
+        el("button", {
+          type: "button",
+          className: "btn-add-custom-item",
+          innerHTML: iconPlus + " AGREGAR ÍTEM",
+          onclick: (e) => {
+            e.preventDefault();
+            addCustomItem();
+          },
+        }),
+      );
+    }
+  };
+
+  // --- CALENDAR ---
+  const renderCalendar = () => {
+    const titleEl = document.getElementById("calendar-month-title");
+    const calContainer = document.getElementById("inline-calendar-container");
+    if (!titleEl || !calContainer) return;
+
     const year = calendarViewDate.getFullYear();
     const month = calendarViewDate.getMonth();
-    const monthNames = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-    labelTitle.textContent = `${monthNames[month]} ${year}`.toUpperCase();
 
-    const daysHeader = el(
-      "div",
-      { className: "cal-grid-header" },
-      ["D", "L", "M", "M", "J", "V", "S"].map((d) => el("span", {}, d)),
-    );
-    container.appendChild(daysHeader);
+    titleEl.textContent = new Intl.DateTimeFormat("es-AR", {
+      month: "long",
+      year: "numeric",
+    }).format(calendarViewDate);
 
-    const daysGrid = el("div", { className: "cal-days-grid" });
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    calContainer.innerHTML = "";
+
+    const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Grid fijo de 6 filas (42 celdas)
-    const totalSlots = 42;
-    let slotsFilled = 0;
+    const headerDays = ["D", "L", "M", "M", "J", "V", "S"];
+    headerDays.forEach((d) => {
+      const dayHeader = el("div", { className: "cal-day-header" }, d);
+      calContainer.appendChild(dayHeader);
+    });
 
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      daysGrid.appendChild(el("div", { className: "cal-day empty" }));
-      slotsFilled++;
+    for (let i = 0; i < firstDay; i++) {
+      calContainer.appendChild(el("div", { className: "cal-day-cell empty" }));
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateToCheck = new Date(year, month, day);
+      const cellDate = new Date(year, month, day);
       const isSelected =
-        dateToCheck.toDateString() === selectedDate.toDateString();
-      const isToday = dateToCheck.toDateString() === new Date().toDateString();
+        cellDate.toDateString() === selectedDate.toDateString();
+      const isToday = cellDate.toDateString() === new Date().toDateString();
 
-      const dayBtn = el(
-        "button",
+      const dayCell = el(
+        "div",
         {
-          type: "button",
-          className: `cal-day-btn ${isSelected ? "selected" : ""} ${isToday ? "today" : ""}`,
+          className: `cal-day-cell ${isSelected ? "selected" : ""} ${isToday ? "today" : ""}`,
           onclick: () => {
-            selectedDate = new Date(year, month, day);
+            selectedDate = cellDate;
             renderCalendar();
           },
         },
         day.toString(),
       );
-      daysGrid.appendChild(dayBtn);
-      slotsFilled++;
-    }
 
-    // Rellenar final
-    for (let j = 0; j < totalSlots - slotsFilled; j++) {
-      daysGrid.appendChild(
-        el("div", { className: "cal-day empty next-month" }),
-      );
+      calContainer.appendChild(dayCell);
     }
-    container.appendChild(daysGrid);
   };
 
-  const changeMonth = (offset) => {
-    calendarViewDate.setMonth(calendarViewDate.getMonth() + offset);
+  const changeMonth = (delta) => {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
     renderCalendar();
   };
 
-  // --- ITEMS LIST RENDER (CON COLORES Y STEPPER) ---
-  const renderItemsList = () => {
-    const container = document.getElementById("items-list-wrapper");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const isStockSupplier = currentSupplier?.type === "stock";
-    if (!isStockSupplier) {
-      container.style.display = "none";
-      return;
-    }
-    container.style.display = "flex";
-
-    const isDebtMode = selectedType === "payment" || selectedType === "credit";
-
-    if (isDebtMode && itemsState.length === 0) {
-      container.innerHTML = `<div class="empty-stock-msg">SIN ÍTEMS PENDIENTES</div>`;
-      return;
-    }
-
-    itemsState.forEach((item, index) => {
-      let nameComp;
-
-      // Círculo de color
-      const colorDot = el("span", {
-        className: "item-color-dot",
-        style: `background-color: ${item.color || "#ddd"};`,
-      });
-
-      if (item.isLocked) {
-        nameComp = el("div", { className: "item-text-locked" }, [
-          colorDot,
-          el("span", { className: "text-main" }, item.name),
-          isDebtMode && item.max
-            ? el("span", { className: "text-sub" }, `/ ${item.max}`)
-            : null,
-        ]);
-      } else {
-        nameComp = el("div", { className: "item-input-wrapper" }, [
-          colorDot,
-          el("input", {
-            type: "text",
-            className: "fusion-input item-name-input",
-            placeholder: "NOMBRE PRODUCTO",
-            value: item.name,
-            oninput: (e) => (itemsState[index].name = e.target.value),
-          }),
-        ]);
-      }
-
-      const qtyInput = el("input", {
-        type: "number",
-        className: "stepper-input",
-        value: item.qty,
-        min: 0,
-        onchange: (e) => {
-          let v = parseFloat(e.target.value) || 0;
-          if (isDebtMode && item.max && v > item.max) v = item.max;
-          itemsState[index].qty = v;
-          e.target.value = v;
-        },
-      });
-
-      const row = el("div", { className: "item-row-strip" }, [
-        !isDebtMode
-          ? el("button", {
-              type: "button",
-              className: "btn-icon-del",
-              innerHTML: iconTrash,
-              onclick: () => {
-                itemsState.splice(index, 1);
-                renderItemsList();
-              },
-            })
-          : null,
-        el("div", { className: "item-col-grow" }, [nameComp]),
-        el("div", { className: "stepper-block" }, [
-          el(
-            "button",
-            {
-              type: "button",
-              className: "btn-step",
-              onclick: () => {
-                if (itemsState[index].qty > 0) {
-                  itemsState[index].qty--;
-                  qtyInput.value = itemsState[index].qty;
-                }
-              },
-            },
-            "-",
-          ),
-          qtyInput,
-          el(
-            "button",
-            {
-              type: "button",
-              className: "btn-step",
-              onclick: () => {
-                if (isDebtMode && item.max && itemsState[index].qty >= item.max)
-                  return;
-                itemsState[index].qty++;
-                qtyInput.value = itemsState[index].qty;
-              },
-            },
-            "+",
-          ),
-        ]),
-      ]);
-      container.appendChild(row);
-    });
-
-    if (!isDebtMode) {
-      container.appendChild(
-        el(
-          "button",
-          {
-            type: "button",
-            className: "btn-rect-dotted",
-            onclick: () => {
-              itemsState.push({
-                name: "",
-                qty: 0,
-                color: "#ddd",
-                isLocked: false,
-              });
-              renderItemsList();
-            },
-          },
-          [el("span", { innerHTML: iconPlus }), "AGREGAR ÍTEM MANUAL"],
-        ),
-      );
-    }
-  };
-
   const updateTheme = (type) => {
-    const hero = document.getElementById("hero-atm-input");
-    if (hero) {
-      hero.classList.remove("col-danger", "col-success");
-      hero.classList.add(type === "invoice" ? "col-danger" : "col-success");
-    }
+    const overlay = document.querySelector(".fusion-overlay");
+    if (!overlay) return;
+    overlay.classList.remove("theme-invoice", "theme-payment", "theme-credit");
+    overlay.classList.add(`theme-${type}`);
   };
 
   // --- HEADER SELECTOR ---
-  const headerSelector =
-    suppliers.length > 0 && !supplier
-      ? el(
-          "div",
-          { className: "header-select-box" },
-          el(
-            "select",
-            {
-              className: "fusion-select",
-              onchange: async (e) => {
-                const sId = e.target.value;
-                currentSupplier = suppliers.find((s) => s.id === sId);
-                try {
-                  localMovements = await FirebaseDB.getByFilter(
-                    "supplier_transactions",
-                    "supplierId",
-                    sId,
-                    "date",
-                    "desc",
-                  );
-                } catch (err) {
-                  localMovements = [];
-                }
+  const headerSelector = !supplier
+    ? el(
+        "select",
+        {
+          className: "fusion-select-supplier",
+          onchange: async (e) => {
+            const sId = e.target.value;
+            currentSupplier = suppliers.find((s) => s.id === sId);
+            try {
+              localMovements = await FirebaseDB.getByFilter(
+                "supplier_transactions",
+                "supplierId",
+                sId,
+                "date",
+                "desc",
+              );
+            } catch (err) {
+              localMovements = [];
+            }
 
-                refreshSuggestions();
-                initItemsState();
-                renderItemsList();
-              },
-            },
-            [
-              el(
-                "option",
-                { disabled: true, selected: true },
-                "SELECCIONAR PROVEEDOR",
-              ),
-              ...suppliers.map((s) => el("option", { value: s.id }, s.name)),
-            ],
+            refreshSuggestions();
+            initItemsState();
+            renderItemsList();
+          },
+        },
+        [
+          el(
+            "option",
+            { disabled: true, selected: true },
+            "SELECCIONAR PROVEEDOR",
           ),
-        )
-      : el(
-          "h2",
-          { className: "header-title-text" },
-          currentSupplier?.name || "PROVEEDOR",
-        );
+          ...suppliers.map((s) => el("option", { value: s.id }, s.name)),
+        ],
+      )
+    : el(
+        "h2",
+        { className: "header-title-text" },
+        currentSupplier?.name || "PROVEEDOR",
+      );
 
   const modalContent = el(
     "div",
@@ -544,25 +536,7 @@ export function TransactionModal({
           className: "fusion-body",
           onsubmit: (e) => {
             e.preventDefault();
-            if (!currentSupplier) return alert("Selecciona un proveedor");
-            const formData = new FormData(e.target);
-            const finalAmount = parseFloat(centsBuffer) / 100;
-
-            onSave({
-              ...initialData,
-              supplierId: currentSupplier?.id,
-              amount: finalAmount,
-              concept: formData.get("concept"),
-              type: selectedType,
-              date: selectedDate,
-              items: itemsState
-                .filter((i) => i.qty > 0)
-                .map((i) => ({
-                  name: i.name.trim(),
-                  quantity: parseFloat(i.qty),
-                  color: i.color || "#ddd", // GUARDAMOS EL COLOR
-                })),
-            });
+            handleSaveAction(e);
           },
         },
         [
@@ -570,14 +544,17 @@ export function TransactionModal({
           el(
             "div",
             { className: "fusion-tabs-row" },
-            ["invoice", "payment", "credit"].map((type) =>
-              el(
+            ["invoice", "payment", "credit"].map((type) => {
+              const radioId = `radio-type-${type}`;
+              return el(
                 "label",
                 {
                   className: `fusion-tab ${selectedType === type ? "active" : ""}`,
+                  htmlFor: radioId,
                 },
                 [
                   el("input", {
+                    id: radioId,
                     type: "radio",
                     name: "type",
                     value: type,
@@ -593,7 +570,7 @@ export function TransactionModal({
                       initItemsState();
                       renderItemsList();
                     },
-                    style: "display:none",
+                    style: { display: "none" },
                   }),
                   el(
                     "span",
@@ -605,8 +582,8 @@ export function TransactionModal({
                         : "NOTA",
                   ),
                 ],
-              ),
-            ),
+              );
+            }),
           ),
 
           // ATM INPUT
@@ -677,13 +654,25 @@ export function TransactionModal({
               }),
             ]),
 
+            // TEXTAREA - CORREGIDO
             el("div", { className: "concept-panel" }, [
-              el("label", { className: "fusion-label" }, "CONCEPTO / NOTA"),
+              el(
+                "label",
+                { 
+                  className: "fusion-label", 
+                  htmlFor: "tx-concept-area" 
+                },
+                "CONCEPTO / NOTA",
+              ),
               el("textarea", {
-                name: "concept",
+                id: "tx-concept-area",
                 className: "fusion-textarea",
                 placeholder: "Detalle opcional...",
-                value: initialData?.concept || "",
+                rows: 4,
+                oninput: (e) => {
+                  // Sincronizar el valor en tiempo real si es necesario
+                  e.target.value = e.target.value;
+                },
               }),
             ]),
           ]),
@@ -701,7 +690,11 @@ export function TransactionModal({
             ),
             el(
               "button",
-              { type: "submit", className: "btn-fusion-save" },
+              {
+                type: "button",
+                className: "btn-fusion-save",
+                onclick: handleSaveAction,
+              },
               isEdit ? "GUARDAR" : "CONFIRMAR",
             ),
           ]),
@@ -722,8 +715,16 @@ export function TransactionModal({
   );
 
   setTimeout(() => {
+    // Inicializar el textarea con el valor inicial si existe
+    const conceptInput = document.getElementById("tx-concept-area");
+    if (conceptInput && initialData?.concept) {
+      conceptInput.value = initialData.concept;
+    }
+
     renderItemsList();
     renderCalendar();
+    updateTheme(selectedType);
+    
     if (!isEdit) {
       const input = document.getElementById("hero-atm-input");
       if (input) input.focus();
@@ -734,6 +735,7 @@ export function TransactionModal({
     if (e.key === "Escape") onClose();
   };
   document.addEventListener("keydown", handleEsc);
+  
   const originalClose = onClose;
   onClose = () => {
     document.removeEventListener("keydown", handleEsc);
