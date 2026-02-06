@@ -398,32 +398,28 @@
   align-items: center;
   justify-content: center;
 }
+
+/* --- CALENDARIO CORREGIDO --- */
 .cal-container {
-  display: flex;
-  flex-direction: column;
+  display: grid; /* CORREGIDO: Usar grid en lugar de flex */
+  grid-template-columns: repeat(7, 1fr); /* 7 columnas para los días */
   gap: 4px;
   margin-top: 8px;
   min-height: 220px;
 }
 
-/* Grid fijo 42 celdas */
-.cal-grid-header,
-.cal-days-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+/* Estilo para encabezados (D, L, M...) que faltaba */
+.cal-day-header {
   text-align: center;
-}
-.cal-days-grid {
-  grid-template-rows: repeat(6, 1fr);
-}
-.cal-grid-header span {
   font-family: var(--font-mono, monospace);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: #999;
   padding-bottom: 4px;
 }
-.cal-day-btn {
+
+/* Estilo para celdas (antes cal-day-btn, ahora coincide con JS) */
+.cal-day-cell {
   background: #fff;
   border: 1px solid #eee;
   height: 30px;
@@ -435,17 +431,22 @@
   font-weight: 600;
   cursor: pointer;
 }
-.cal-day-btn:hover {
+.cal-day-cell:hover {
   border-color: #000;
 }
-.cal-day-btn.selected {
+.cal-day-cell.selected {
   background: #000;
   color: #fff;
   border-color: #000;
 }
-.cal-day-btn.today {
+.cal-day-cell.today {
   font-weight: 800;
   border-bottom: 2px solid #000;
+}
+.cal-day-cell.empty {
+  border: none;
+  background: transparent;
+  cursor: default;
 }
 
 .concept-panel {
