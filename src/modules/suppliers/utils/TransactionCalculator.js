@@ -6,11 +6,11 @@ const getSafeName = (item) => {
 };
 
 export const TransactionCalculator = {
-  // Exponemos el helper por si la vista lo necesita para mostrar nombres
   getSafeName,
 
   /**
    * Calcula el balance monetario final.
+   * FIX: Normalización agresiva (.toLowerCase) para detectar Deuda vs Pago.
    */
   calculateBalance({
     currentBalance,
@@ -21,20 +21,31 @@ export const TransactionCalculator = {
   }) {
     let balance = parseFloat(currentBalance) || 0;
 
-    // Si editamos, revertimos el anterior
+    // 1. Revertir transacción anterior (si es edición)
     if (initialAmount !== null) {
       const prev = parseFloat(initialAmount) || 0;
-      balance = initialType === "invoice" ? balance - prev : balance + prev;
+      const type = initialType ? initialType.toLowerCase().trim() : "";
+      // Consideramos deuda cualquier variante: invoice, boleta, debt
+      const isDebt =
+        type === "invoice" || type === "boleta" || type === "deuda";
+
+      // Si era deuda, sumaba. Para revertir, restamos.
+      balance = isDebt ? balance - prev : balance + prev;
     }
 
-    // Aplicamos el nuevo
+    // 2. Aplicar nueva transacción
     const next = parseFloat(newAmount) || 0;
-    return newType === "invoice" ? balance + next : balance - next;
+    const type = newType ? newType.toLowerCase().trim() : "";
+    const isDebt = type === "invoice" || type === "boleta" || type === "deuda";
+
+    // LÓGICA CENTRAL:
+    // Deuda (Invoice) -> SUMA al saldo (Más deuda = Más positivo/Rojo)
+    // Pago (Payment)  -> RESTA al saldo (Menos deuda)
+    return isDebt ? balance + next : balance - next;
   },
 
   /**
-   * Calcula la deuda de stock (envases/productos).
-   * Usado para actualizar el saldo del proveedor al guardar.
+   * Calcula el estado del stock
    */
   calculateStockDebt({
     currentStockDebt,
@@ -45,25 +56,31 @@ export const TransactionCalculator = {
   }) {
     let stockDebt = { ...(currentStockDebt || {}) };
 
-    // Revertir anterior (Edición)
-    if (initialItems && initialItems.length > 0) {
-      initialItems.forEach((item) => {
-        const name = item.name;
-        const qty = parseFloat(item.quantity) || 0;
-        if (!stockDebt[name]) stockDebt[name] = 0;
-        stockDebt[name] += initialType === "invoice" ? -qty : qty;
-      });
-    }
+    // Helper para actualizar el mapa de deuda
+    const updateDebt = (items, type, revert = false) => {
+      if (!items || !Array.isArray(items)) return;
+      const t = type ? type.toLowerCase().trim() : "";
+      const isEntry = t === "invoice" || t === "boleta" || t === "deuda"; // Entrada de stock
 
-    // Aplicar nuevo
-    if (newItems && newItems.length > 0) {
-      newItems.forEach((item) => {
-        const name = item.name;
-        const qty = parseFloat(item.quantity) || 0;
+      items.forEach((item) => {
+        const name = getSafeName(item);
+        const qty = parseFloat(item.quantity || item.qty) || 0;
         if (!stockDebt[name]) stockDebt[name] = 0;
-        stockDebt[name] += newType === "invoice" ? qty : -qty;
+
+        // Lógica de signos:
+        // Entrada (Invoice) aumenta deuda de stock (+).
+        // Si revertimos (revert=true), restamos (-).
+        let change = isEntry ? qty : -qty;
+        if (revert) change = -change;
+
+        stockDebt[name] += change;
       });
-    }
+    };
+
+    // Revertir anterior
+    updateDebt(initialItems, initialType, true);
+    // Aplicar nuevo
+    updateDebt(newItems, newType, false);
 
     // Limpieza de ceros
     Object.keys(stockDebt).forEach((key) => {
@@ -71,38 +88,5 @@ export const TransactionCalculator = {
     });
 
     return stockDebt;
-  },
-
-  /**
-   * Reconstruye el estado de la deuda de stock basada en todo el historial.
-   * MOVIDO DESDE TransactionModal.
-   * @param {Array} movements - Lista completa de transacciones
-   * @returns {Object} Mapa de { producto: cantidad_debida }
-   */
-  calculatePendingFromHistory(movements) {
-    const totals = {};
-    if (!movements || !Array.isArray(movements)) return totals;
-
-    movements.forEach((m) => {
-      const type = m.type ? m.type.toLowerCase() : "";
-      const isEntry = type === "invoice" || type === "boleta";
-
-      if (m.items && Array.isArray(m.items)) {
-        m.items.forEach((item) => {
-          const name = getSafeName(item).trim();
-          const qty = parseFloat(item.quantity || item.qty || 0);
-          if (name) {
-            if (!totals[name]) totals[name] = 0;
-            totals[name] += isEntry ? qty : -qty;
-          }
-        });
-      }
-    });
-
-    // Filtramos saldos insignificantes
-    Object.keys(totals).forEach((key) => {
-      if (totals[key] <= 0.01) delete totals[key];
-    });
-    return totals;
   },
 };

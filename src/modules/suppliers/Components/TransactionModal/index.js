@@ -14,37 +14,49 @@ const getSafeColor = (item) => {
   return item.color || "#ddd";
 };
 
+// Helper interno para calcular pendientes
 const calculatePendingFromHistory = (movements, defaultItems = []) => {
   const totals = {};
-  if (!movements || !Array.isArray(movements)) return totals;
 
-  movements.forEach((m) => {
-    const type = m.type ? m.type.toLowerCase() : "";
-    const isEntry = type === "invoice" || type === "boleta";
-    if (m.items && Array.isArray(m.items)) {
-      m.items.forEach((item) => {
-        const name = getSafeName(item).trim().toUpperCase();
-        const qty = parseFloat(item.quantity || item.qty || 0);
-        let color = getSafeColor(item);
-        if (color === "#ddd") {
-          const defItem = defaultItems.find(
-            (d) => (d.name || d).toUpperCase() === name,
-          );
-          if (defItem) color = getSafeColor(defItem);
-        }
+  // 1. Cargar items por defecto
+  if (defaultItems && Array.isArray(defaultItems)) {
+    defaultItems.forEach((d) => {
+      const name = getSafeName(d).trim().toUpperCase();
+      if (name) {
+        totals[name] = { qty: 0, color: getSafeColor(d), isDefault: true };
+      }
+    });
+  }
 
-        if (name) {
-          if (!totals[name]) totals[name] = { qty: 0, color: color };
-          totals[name].qty += isEntry ? qty : -qty;
-          if (color !== "#ddd") totals[name].color = color;
-        }
-      });
-    }
-  });
+  // 2. Procesar historial
+  if (movements && Array.isArray(movements)) {
+    movements.forEach((m) => {
+      const type = m.type ? m.type.toLowerCase().trim() : "";
+      const isEntry = type === "invoice" || type === "boleta";
+
+      if (m.items && Array.isArray(m.items)) {
+        m.items.forEach((item) => {
+          const name = getSafeName(item).trim().toUpperCase();
+          const qty = parseFloat(item.quantity || item.qty || 0);
+          let color = getSafeColor(item);
+
+          if (color === "#ddd" && totals[name]?.color) {
+            color = totals[name].color;
+          }
+
+          if (name) {
+            if (!totals[name]) totals[name] = { qty: 0, color: color };
+            totals[name].qty += isEntry ? qty : -qty;
+            if (color !== "#ddd") totals[name].color = color;
+          }
+        });
+      }
+    });
+  }
 
   const result = {};
   Object.keys(totals).forEach((key) => {
-    if (totals[key].qty > 0.01) {
+    if (totals[key].qty > 0.01 || totals[key].isDefault) {
       result[key] = totals[key];
     }
   });
@@ -64,24 +76,25 @@ export function TransactionModal({
 
   // ICONOS
   const iconClose = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-  const iconTrash = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
-  const iconPlus = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>`;
+  const iconTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+  const iconPlus = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
   const iconChevronLeft = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>`;
   const iconChevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
 
-  // ESTADO
+  // ESTADO - Aseguramos minúsculas desde el inicio
   let currentSupplier = supplier;
-  let selectedType = initialData?.type || "invoice";
+  let selectedType = initialData?.type
+    ? initialData.type.toLowerCase()
+    : "invoice";
   let localMovements = [...movements];
 
-  // BUFFER DE CENTAVOS (Input ATM)
+  // BUFFER DE CENTAVOS
   let centsBuffer =
     initialData && typeof initialData.amount === "number"
       ? Math.round(initialData.amount * 100).toString()
       : "0";
 
   let itemsState = [];
-
   let selectedDate = initialData?.date
     ? initialData.date.toDate
       ? initialData.date.toDate()
@@ -89,9 +102,8 @@ export function TransactionModal({
     : new Date();
   let calendarViewDate = new Date(selectedDate);
 
-  // --- LOGICA DE GUARDADO (Extraída para usar en el botón) ---
+  // --- LOGICA DE GUARDADO ---
   const handleSaveAction = (e) => {
-    // Prevenir cualquier burbujeo o acción por defecto
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -102,13 +114,10 @@ export function TransactionModal({
       return;
     }
 
-    // Obtener valor del concepto directamente del elemento
     const conceptInput = document.getElementById("tx-concept-area");
     const conceptVal = conceptInput ? conceptInput.value.trim() : "";
-
     const finalAmount = parseFloat(centsBuffer) / 100;
 
-    // Validación básica
     if (finalAmount <= 0) {
       alert("El monto debe ser mayor a cero");
       return;
@@ -118,7 +127,8 @@ export function TransactionModal({
       supplierId: currentSupplier?.id,
       amount: finalAmount,
       concept: conceptVal,
-      type: selectedType,
+      // FIX: Forzamos minúsculas al guardar
+      type: selectedType.toLowerCase(),
       date: selectedDate,
       items: itemsState
         .filter((i) => i.qty > 0)
@@ -129,21 +139,15 @@ export function TransactionModal({
         })),
     };
 
-    // Si estamos editando, incluir el ID
     if (isEdit && initialData?.id) {
       payload.id = initialData.id;
     }
 
-    console.log("Enviando payload:", payload); // Debug
-    
     if (typeof onSave === "function") {
       onSave(payload);
-    } else {
-      console.error("onSave no es una función", onSave);
     }
   };
 
-  // --- HELPER FORMATO ATM ---
   const formatATMDisplay = (bufferStr) => {
     const val = parseInt(bufferStr || "0", 10);
     const amount = val / 100;
@@ -163,7 +167,6 @@ export function TransactionModal({
   // --- SUGERENCIAS ---
   const renderSuggestions = () => {
     if (!currentSupplier) return null;
-
     const suggestions = [];
     const usedAmounts = new Set();
     const totalDebt = parseFloat(currentSupplier.balance) || 0;
@@ -174,7 +177,7 @@ export function TransactionModal({
     }
 
     const sortedInvoices = [...localMovements]
-      .filter((m) => m.type === "invoice")
+      .filter((m) => (m.type || "").toLowerCase() === "invoice")
       .sort((a, b) => {
         const dA = a.date.seconds ? a.date.seconds : new Date(a.date).getTime();
         const dB = b.date.seconds ? b.date.seconds : new Date(b.date).getTime();
@@ -251,37 +254,25 @@ export function TransactionModal({
       return;
     }
 
-    if (selectedType === "payment" || selectedType === "credit") {
-      const debtMap = calculatePendingFromHistory(
-        localMovements,
-        currentSupplier?.defaultItems,
-      );
+    const debtMap = calculatePendingFromHistory(
+      localMovements,
+      currentSupplier?.defaultItems,
+    );
 
-      itemsState = Object.entries(debtMap)
-        .map(([name, data]) => ({
-          name: name,
-          qty: 0,
-          max: data.qty,
-          color: data.color || "#ddd",
-          isLocked: true,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-      if (currentSupplier?.defaultItems) {
-        itemsState = currentSupplier.defaultItems.map((it) => ({
-          name: getSafeName(it),
-          qty: 0,
-          color: getSafeColor(it),
-          isLocked: true,
-        }));
-      }
-    }
+    itemsState = Object.entries(debtMap)
+      .map(([name, data]) => ({
+        name: name,
+        qty: 0,
+        max: selectedType === "payment" ? data.qty : undefined,
+        color: data.color || "#ddd",
+        isLocked: true,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const addCustomItem = () => {
     const customName = prompt("Nombre del ítem personalizado:");
     if (!customName || !customName.trim()) return;
-
     const exists = itemsState.find(
       (i) => i.name.toUpperCase() === customName.trim().toUpperCase(),
     );
@@ -289,7 +280,6 @@ export function TransactionModal({
       alert("Ya existe un ítem con ese nombre");
       return;
     }
-
     itemsState.push({
       name: customName.trim(),
       qty: 0,
@@ -321,73 +311,68 @@ export function TransactionModal({
     const isStockSupplier = currentSupplier?.type === "stock";
     if (!isStockSupplier) {
       container.innerHTML = "";
+      container.style.display = "none";
       return;
     }
+    container.style.display = "flex";
 
     container.innerHTML = "";
-
-    const itemsToShow = itemsState.filter((it) => !it.isLocked || it.qty > 0);
+    const itemsToShow = itemsState;
 
     if (itemsToShow.length === 0 && selectedType !== "invoice") {
       container.appendChild(
-        el(
-          "div",
-          { className: "empty-items-msg" },
-          "No hay ítems pendientes para este tipo de movimiento",
-        ),
+        el("div", { className: "empty-stock-msg" }, "No hay ítems registrados"),
       );
-      return;
     }
 
     itemsToShow.forEach((item, idx) => {
       const realIndex = itemsState.indexOf(item);
-
-      const qtyDisplay = item.max
-        ? `${item.qty.toLocaleString("es-AR")} / ${item.max.toLocaleString("es-AR")}`
-        : item.qty.toLocaleString("es-AR");
-
-      const itemRow = el("div", { className: "rect-item-row" }, [
+      const itemRow = el("div", { className: "item-row-strip" }, [
         el("div", {
           className: "item-color-dot",
           style: { backgroundColor: item.color },
         }),
-        el("span", { className: "item-name-label" }, item.name),
-        el("div", { className: "item-controls-cluster" }, [
+        el("div", { className: "item-col-grow item-text-locked" }, [
+          el("span", { className: "text-main" }, item.name),
+        ]),
+        el("div", { className: "stepper-block" }, [
           el("button", {
             type: "button",
-            className: "btn-item-qty",
-            disabled: item.qty <= 0,
+            className: "btn-step",
             onclick: (e) => {
               e.preventDefault();
               updateItemQty(realIndex, -1);
             },
             textContent: "−",
           }),
-          el("span", { className: "item-qty-display" }, qtyDisplay),
+          el("input", {
+            type: "text",
+            className: "stepper-input",
+            readonly: true,
+            value: item.qty.toLocaleString("es-AR"),
+          }),
           el("button", {
             type: "button",
-            className: "btn-item-qty",
-            disabled: item.max !== undefined && item.qty >= item.max,
+            className: "btn-step",
             onclick: (e) => {
               e.preventDefault();
               updateItemQty(realIndex, 1);
             },
             textContent: "+",
           }),
-          !item.isLocked
-            ? el("button", {
-                type: "button",
-                className: "btn-item-delete",
-                innerHTML: iconTrash,
-                onclick: (e) => {
-                  e.preventDefault();
-                  removeItem(realIndex);
-                },
-              })
-            : null,
         ]),
+        !item.isLocked
+          ? el("button", {
+              type: "button",
+              className: "btn-icon-del",
+              innerHTML: iconTrash,
+              onclick: (e) => {
+                e.preventDefault();
+                removeItem(realIndex);
+              },
+            })
+          : null,
       ]);
-
       container.appendChild(itemRow);
     });
 
@@ -395,7 +380,7 @@ export function TransactionModal({
       container.appendChild(
         el("button", {
           type: "button",
-          className: "btn-add-custom-item",
+          className: "btn-rect-dotted",
           innerHTML: iconPlus + " AGREGAR ÍTEM",
           onclick: (e) => {
             e.preventDefault();
@@ -419,16 +404,13 @@ export function TransactionModal({
       month: "long",
       year: "numeric",
     }).format(calendarViewDate);
-
     calContainer.innerHTML = "";
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    const headerDays = ["D", "L", "M", "M", "J", "V", "S"];
-    headerDays.forEach((d) => {
-      const dayHeader = el("div", { className: "cal-day-header" }, d);
-      calContainer.appendChild(dayHeader);
+    ["D", "L", "M", "M", "J", "V", "S"].forEach((d) => {
+      calContainer.appendChild(el("div", { className: "cal-day-header" }, d));
     });
 
     for (let i = 0; i < firstDay; i++) {
@@ -452,7 +434,6 @@ export function TransactionModal({
         },
         day.toString(),
       );
-
       calContainer.appendChild(dayCell);
     }
   };
@@ -462,19 +443,33 @@ export function TransactionModal({
     renderCalendar();
   };
 
+  // --- UPDATES ---
   const updateTheme = (type) => {
     const overlay = document.querySelector(".fusion-overlay");
-    if (!overlay) return;
-    overlay.classList.remove("theme-invoice", "theme-payment", "theme-credit");
-    overlay.classList.add(`theme-${type}`);
+    if (overlay) {
+      overlay.classList.remove(
+        "theme-invoice",
+        "theme-payment",
+        "theme-credit",
+      );
+      overlay.classList.add(`theme-${type}`);
+    }
+    // FIX: Actualizar color del input inmediatamente
+    const input = document.getElementById("hero-atm-input");
+    if (input) {
+      input.classList.remove("col-danger", "col-success");
+      // Si es Invoice = Deuda = Rojo (col-danger). Si es Payment = Verde (col-success)
+      if (type === "invoice") input.classList.add("col-danger");
+      else input.classList.add("col-success");
+    }
   };
 
-  // --- HEADER SELECTOR ---
+  // --- RENDER ---
   const headerSelector = !supplier
     ? el(
         "select",
         {
-          className: "fusion-select-supplier",
+          className: "fusion-select",
           onchange: async (e) => {
             const sId = e.target.value;
             currentSupplier = suppliers.find((s) => s.id === sId);
@@ -489,7 +484,6 @@ export function TransactionModal({
             } catch (err) {
               localMovements = [];
             }
-
             refreshSuggestions();
             initItemsState();
             renderItemsList();
@@ -540,16 +534,16 @@ export function TransactionModal({
           },
         },
         [
-          // TABS
           el(
             "div",
             { className: "fusion-tabs-row" },
             ["invoice", "payment", "credit"].map((type) => {
               const radioId = `radio-type-${type}`;
+              const isSelected = selectedType === type;
               return el(
                 "label",
                 {
-                  className: `fusion-tab ${selectedType === type ? "active" : ""}`,
+                  className: `fusion-tab ${isSelected ? "active" : ""}`,
                   htmlFor: radioId,
                 },
                 [
@@ -558,7 +552,7 @@ export function TransactionModal({
                     type: "radio",
                     name: "type",
                     value: type,
-                    checked: selectedType === type,
+                    checked: isSelected,
                     onchange: (e) => {
                       selectedType = e.target.value;
                       document
@@ -586,7 +580,6 @@ export function TransactionModal({
             }),
           ),
 
-          // ATM INPUT
           el("div", { className: "atm-wrapper-clean" }, [
             el("input", {
               id: "hero-atm-input",
@@ -600,18 +593,15 @@ export function TransactionModal({
               onkeydown: (e) => {
                 if (e.key === "Backspace") {
                   e.preventDefault();
-                  if (centsBuffer.length > 0) {
+                  if (centsBuffer.length > 0)
                     centsBuffer = centsBuffer.slice(0, -1);
-                    if (centsBuffer === "") centsBuffer = "0";
-                    e.target.value = formatATMDisplay(centsBuffer);
-                  }
+                  if (centsBuffer === "") centsBuffer = "0";
+                  e.target.value = formatATMDisplay(centsBuffer);
                 }
               },
               oninput: (e) => {
-                const inputVal = e.target.value;
-                const rawNums = inputVal.replace(/\D/g, "");
-                if (rawNums) centsBuffer = parseInt(rawNums, 10).toString();
-                else centsBuffer = "0";
+                const rawNums = e.target.value.replace(/\D/g, "");
+                centsBuffer = rawNums ? parseInt(rawNums, 10).toString() : "0";
                 e.target.value = formatATMDisplay(centsBuffer);
               },
             }),
@@ -620,13 +610,11 @@ export function TransactionModal({
             ]),
           ]),
 
-          // ITEMS AREA
           el("div", {
             id: "items-list-wrapper",
             className: "rect-items-section",
           }),
 
-          // LOWER GRID
           el("div", { className: "rect-lower-grid" }, [
             el("div", { className: "calendar-panel" }, [
               el("div", { className: "cal-nav-row" }, [
@@ -653,15 +641,10 @@ export function TransactionModal({
                 className: "cal-container",
               }),
             ]),
-
-            // TEXTAREA - CORREGIDO
             el("div", { className: "concept-panel" }, [
               el(
                 "label",
-                { 
-                  className: "fusion-label", 
-                  htmlFor: "tx-concept-area" 
-                },
+                { className: "fusion-label", htmlFor: "tx-concept-area" },
                 "CONCEPTO / NOTA",
               ),
               el("textarea", {
@@ -669,15 +652,10 @@ export function TransactionModal({
                 className: "fusion-textarea",
                 placeholder: "Detalle opcional...",
                 rows: 4,
-                oninput: (e) => {
-                  // Sincronizar el valor en tiempo real si es necesario
-                  e.target.value = e.target.value;
-                },
               }),
             ]),
           ]),
 
-          // FOOTER
           el("div", { className: "fusion-footer" }, [
             el(
               "button",
@@ -715,16 +693,13 @@ export function TransactionModal({
   );
 
   setTimeout(() => {
-    // Inicializar el textarea con el valor inicial si existe
     const conceptInput = document.getElementById("tx-concept-area");
-    if (conceptInput && initialData?.concept) {
+    if (conceptInput && initialData?.concept)
       conceptInput.value = initialData.concept;
-    }
-
+    initItemsState();
     renderItemsList();
     renderCalendar();
     updateTheme(selectedType);
-    
     if (!isEdit) {
       const input = document.getElementById("hero-atm-input");
       if (input) input.focus();
@@ -735,7 +710,6 @@ export function TransactionModal({
     if (e.key === "Escape") onClose();
   };
   document.addEventListener("keydown", handleEsc);
-  
   const originalClose = onClose;
   onClose = () => {
     document.removeEventListener("keydown", handleEsc);
