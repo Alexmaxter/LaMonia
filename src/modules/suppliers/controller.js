@@ -41,9 +41,12 @@ export const SupplierController = () => {
     // 1. Limpieza inicial
     container.innerHTML = "";
 
-    // 2. Leemos la URL
+    // 2. Leemos la URL de forma robusta
     const hash = window.location.hash;
-    const [base, id] = hash.split("/");
+    // Eliminamos query params (?...) si existen y dividimos por /
+    const cleanHash = hash.split("?")[0];
+    const parts = cleanHash.split("/");
+    const id = parts[1] ? parts[1].trim() : null;
 
     try {
       if (id) {
@@ -56,8 +59,14 @@ export const SupplierController = () => {
 
         // Si el proveedor no existe
         if (!supplier) {
-          console.warn("Proveedor no encontrado, volviendo al listado.");
-          window.location.hash = "#suppliers";
+          console.warn("Proveedor no encontrado con ID:", id);
+          hideLoader();
+          // En lugar de redirigir inmediatamente, mostramos error para evitar bucles si el ID es erróneo
+          container.innerHTML = `<div class="error-state">
+            <h3>Proveedor no encontrado</h3>
+            <p>El proveedor solicitado no existe o fue eliminado.</p>
+            <button onclick="window.location.hash='#suppliers'" class="btn-primary">Volver al listado</button>
+          </div>`;
           return;
         }
 
@@ -284,6 +293,8 @@ export const SupplierController = () => {
 
             hideLoader();
             modal.remove();
+
+            // Recargamos la vista solo si todo salió bien
             reloadCurrentView(cont);
           } catch (err) {
             hideLoader();

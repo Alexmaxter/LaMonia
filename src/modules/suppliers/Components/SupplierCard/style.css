@@ -82,7 +82,7 @@
 .alias-tag.is-placeholder {
   visibility: hidden;
   pointer-events: none;
-  height: 1em;
+  /* height: 1em;  <-- ELIMINADO para permitir que el contenido invisible defina la altura natural */
 }
 
 /* --- BLOQUE ÚLTIMO MOVIMIENTO (El nuevo protagonista) --- */

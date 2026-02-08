@@ -118,7 +118,11 @@ export function TransactionModal({
     const conceptVal = conceptInput ? conceptInput.value.trim() : "";
     const finalAmount = parseFloat(centsBuffer) / 100;
 
-    if (finalAmount <= 0) {
+    // FIX: Permitir monto 0 si es proveedor de stock
+    // Si NO es stock, mantenemos la validación estricta de monto > 0
+    const isStock = currentSupplier?.type === "stock";
+
+    if (!isStock && finalAmount <= 0) {
       alert("El monto debe ser mayor a cero");
       return;
     }
