@@ -71,6 +71,7 @@ export function TransactionModal({
   movements = [],
   onSave,
   onClose,
+  onDelete = null, // NUEVA PROP para eliminar transacción
 }) {
   const isEdit = !!initialData?.id;
 
@@ -149,6 +150,24 @@ export function TransactionModal({
 
     if (typeof onSave === "function") {
       onSave(payload);
+    }
+  };
+
+  // --- NUEVA FUNCION: Manejar eliminación ---
+  const handleDeleteAction = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!isEdit || !initialData?.id) return;
+
+    const confirmDelete = confirm(
+      "¿Estás seguro de eliminar esta transacción? Esta acción no se puede deshacer.",
+    );
+
+    if (confirmDelete && typeof onDelete === "function") {
+      onDelete(initialData.id);
     }
   };
 
@@ -248,7 +267,7 @@ export function TransactionModal({
     const isStockSupplier = currentSupplier?.type === "stock";
     if (!isStockSupplier) return;
 
-    if (isEdit && initialData.items) {
+    if (isEdit && initialData?.items && initialData.items.length > 0) {
       itemsState = initialData.items.map((i) => ({
         name: getSafeName(i),
         qty: parseFloat(i.quantity || i.qty || 0),
@@ -327,6 +346,7 @@ export function TransactionModal({
       container.appendChild(
         el("div", { className: "empty-stock-msg" }, "No hay ítems registrados"),
       );
+      return;
     }
 
     itemsToShow.forEach((item, idx) => {
@@ -395,85 +415,113 @@ export function TransactionModal({
     }
   };
 
-  // --- CALENDAR ---
+  const updateTheme = (type) => {
+    const input = document.getElementById("hero-atm-input");
+    if (input) {
+      input.classList.remove("col-danger", "col-success");
+      if (type === "invoice") {
+        input.classList.add("col-danger");
+      } else {
+        input.classList.add("col-success");
+      }
+    }
+  };
+
+  // --- CALENDARIO ---
   const renderCalendar = () => {
+    const container = document.getElementById("inline-calendar-container");
     const titleEl = document.getElementById("calendar-month-title");
-    const calContainer = document.getElementById("inline-calendar-container");
-    if (!titleEl || !calContainer) return;
+
+    if (!container || !titleEl) return;
+    container.innerHTML = "";
+
+    const monthNames = [
+      "ENERO",
+      "FEBRERO",
+      "MARZO",
+      "ABRIL",
+      "MAYO",
+      "JUNIO",
+      "JULIO",
+      "AGOSTO",
+      "SEPTIEMBRE",
+      "OCTUBRE",
+      "NOVIEMBRE",
+      "DICIEMBRE",
+    ];
 
     const year = calendarViewDate.getFullYear();
     const month = calendarViewDate.getMonth();
-
-    titleEl.textContent = new Intl.DateTimeFormat("es-AR", {
-      month: "long",
-      year: "numeric",
-    }).format(calendarViewDate);
-    calContainer.innerHTML = "";
+    titleEl.textContent = `${monthNames[month]} ${year}`;
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    ["D", "L", "M", "M", "J", "V", "S"].forEach((d) => {
-      calContainer.appendChild(el("div", { className: "cal-day-header" }, d));
+    const dayHeaders = ["D", "L", "M", "M", "J", "V", "S"];
+    dayHeaders.forEach((d) => {
+      container.appendChild(el("div", { className: "cal-day-header" }, d));
     });
 
     for (let i = 0; i < firstDay; i++) {
-      calContainer.appendChild(el("div", { className: "cal-day-cell empty" }));
+      container.appendChild(el("div", { className: "cal-day-cell empty" }));
     }
 
+    const today = new Date();
     for (let day = 1; day <= daysInMonth; day++) {
-      const cellDate = new Date(year, month, day);
+      const dateObj = new Date(year, month, day);
       const isSelected =
-        cellDate.toDateString() === selectedDate.toDateString();
-      const isToday = cellDate.toDateString() === new Date().toDateString();
+        selectedDate.getDate() === day &&
+        selectedDate.getMonth() === month &&
+        selectedDate.getFullYear() === year;
+      const isToday =
+        today.getDate() === day &&
+        today.getMonth() === month &&
+        today.getFullYear() === year;
 
-      const dayCell = el(
-        "div",
-        {
-          className: `cal-day-cell ${isSelected ? "selected" : ""} ${isToday ? "today" : ""}`,
-          onclick: () => {
-            selectedDate = cellDate;
-            renderCalendar();
+      const cellClasses = ["cal-day-cell"];
+      if (isSelected) cellClasses.push("selected");
+      if (isToday) cellClasses.push("today");
+
+      container.appendChild(
+        el(
+          "div",
+          {
+            className: cellClasses.join(" "),
+            onclick: () => {
+              selectedDate = dateObj;
+              renderCalendar();
+            },
           },
-        },
-        day.toString(),
+          day.toString(),
+        ),
       );
-      calContainer.appendChild(dayCell);
     }
   };
 
-  const changeMonth = (delta) => {
-    calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+  const changeMonth = (offset) => {
+    calendarViewDate = new Date(
+      calendarViewDate.getFullYear(),
+      calendarViewDate.getMonth() + offset,
+      1,
+    );
     renderCalendar();
   };
 
-  // --- UPDATES ---
-  const updateTheme = (type) => {
-    const overlay = document.querySelector(".fusion-overlay");
-    if (overlay) {
-      overlay.classList.remove(
-        "theme-invoice",
-        "theme-payment",
-        "theme-credit",
-      );
-      overlay.classList.add(`theme-${type}`);
-    }
-    // FIX: Actualizar color del input inmediatamente
-    const input = document.getElementById("hero-atm-input");
-    if (input) {
-      input.classList.remove("col-danger", "col-success");
-      // Si es Invoice = Deuda = Rojo (col-danger). Si es Payment = Verde (col-success)
-      if (type === "invoice") input.classList.add("col-danger");
-      else input.classList.add("col-success");
-    }
+  // --- NUEVA FUNCION: Establecer fecha rápida ---
+  const setQuickDate = (daysOffset) => {
+    const newDate = new Date();
+    newDate.setDate(newDate.getDate() + daysOffset);
+    selectedDate = newDate;
+    calendarViewDate = new Date(selectedDate);
+    renderCalendar();
   };
 
-  // --- RENDER ---
+  // --- CONSTRUCCION DEL MODAL ---
   const headerSelector = !supplier
     ? el(
         "select",
         {
-          className: "fusion-select",
+          className: "fusion-select header-select-box",
           onchange: async (e) => {
             const sId = e.target.value;
             currentSupplier = suppliers.find((s) => s.id === sId);
@@ -640,6 +688,33 @@ export function TransactionModal({
                   innerHTML: iconChevronRight,
                 }),
               ]),
+              // NUEVO: Chips de fecha rápida (HOY y AYER)
+              el("div", { className: "quick-date-row" }, [
+                el(
+                  "button",
+                  {
+                    type: "button",
+                    className: "btn-mini-fusion",
+                    onclick: (e) => {
+                      e.preventDefault();
+                      setQuickDate(0); // HOY
+                    },
+                  },
+                  "HOY",
+                ),
+                el(
+                  "button",
+                  {
+                    type: "button",
+                    className: "btn-mini-fusion",
+                    onclick: (e) => {
+                      e.preventDefault();
+                      setQuickDate(-1); // AYER
+                    },
+                  },
+                  "AYER",
+                ),
+              ]),
               el("div", {
                 id: "inline-calendar-container",
                 className: "cal-container",
@@ -661,6 +736,21 @@ export function TransactionModal({
           ]),
 
           el("div", { className: "fusion-footer" }, [
+            // NUEVO: Botón de Eliminar (solo en modo edición con onDelete)
+            ...(isEdit && typeof onDelete === "function"
+              ? [
+                  el(
+                    "button",
+                    {
+                      type: "button",
+                      className: "btn-fusion-delete",
+                      onclick: handleDeleteAction,
+                      innerHTML: iconTrash,
+                    },
+                    "",
+                  ),
+                ]
+              : []),
             el(
               "button",
               {

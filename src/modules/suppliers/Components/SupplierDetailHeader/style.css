@@ -5,18 +5,21 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border: 1px solid #000; /* Marco duro estilo brutalista */
+  border: 2px solid #000; /* Marco duro estilo brutalista */
   width: 100%;
   box-sizing: border-box;
   animation: fadeIn 0.3s ease-out;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -25,21 +28,21 @@
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 700;
-  color: #999;
+  color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   display: block;
 }
 
 /* --- BLOQUE SUPERIOR (Identidad) --- */
 .header-top-block {
-  padding: 24px;
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 1px solid #eee;
-  gap: 16px;
+  border-bottom: 2px solid #000;
+  background: #f8f8f8;
 }
 
 .identity-col {
@@ -48,174 +51,169 @@
 
 .supplier-hero-name {
   font-family: var(--font-sans);
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #000;
-  margin: 0;
-  line-height: 1.1;
-  text-transform: uppercase;
-}
-
-.badge-col {
-  flex-shrink: 0;
-}
-
-.tech-badge {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 6px 10px;
-  border: 1px solid #000;
-  text-transform: uppercase;
-  display: inline-block;
-  letter-spacing: 0.5px;
-}
-.badge-dark {
-  background: #000;
-  color: #fff;
-}
-.badge-light {
-  background: #fff;
-  color: #000;
-}
-
-/* --- BLOQUE MEDIO (Saldo) --- */
-.header-balance-block {
-  padding: 32px 24px;
-  background: #fafafa; /* Fondo técnico sutil */
-  border-bottom: 1px solid #000; /* Línea divisoria fuerte */
-}
-
-.balance-hero-text {
-  font-family: var(--font-mono);
-  font-size: 4rem; /* Tamaño Hero Desktop */
-  font-weight: 700;
-  letter-spacing: -2px;
+  margin: 0 0 8px 0;
   line-height: 1;
-}
-
-.color-debt {
-  color: #d00;
-} /* Rojo técnico */
-.color-ok {
-  color: #090;
-} /* Verde técnico */
-
-/* --- BLOQUE INFERIOR (Grid de Datos) --- */
-.header-data-grid {
-  display: flex;
-  width: 100%;
-}
-
-.data-cell {
-  flex: 1;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  min-width: 0; /* Prevenir desbordes flex */
-}
-
-/* Bordes verticales solo en desktop */
-.border-desktop-left {
-  border-left: 1px solid #eee;
-}
-
-.cell-label {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #bbb;
   text-transform: uppercase;
 }
 
-.cell-content-row {
+.supplier-meta-row {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 
-.cell-value-mono {
+.pill-id,
+.pill-type {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 0.7rem;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
   font-weight: 600;
-  color: #333;
-  letter-spacing: -0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-
-.cell-value-sans {
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 700;
+.pill-type {
+  background: #fff;
   color: #000;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border: 1px solid #000;
 }
 
-.muted {
-  color: #888;
+.contact-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
-.btn-copy-mini {
+.btn-copy-mini,
+.link-contact-mini {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #aaa;
-  padding: 0;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
+  gap: 6px;
+  color: #666;
+  text-decoration: none;
+  padding: 0;
 }
-.btn-copy-mini:hover {
+.btn-copy-mini:hover,
+.link-contact-mini:hover {
   color: #000;
+  text-decoration: underline;
+}
+
+/* --- BLOQUE SALDO (Balance) --- */
+.header-balance-block {
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  background: #fff;
+}
+
+.balance-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.balance-hero-text {
+  font-family: var(--font-sans);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.balance-hero-text.negative {
+  color: #000;
+} /* Deuda es negra en Brutalist */
+.balance-hero-text.positive {
+  color: #008000;
+} /* Favor verde oscuro */
+.balance-hero-text.neutral {
+  color: #999;
+}
+
+/* BOTON SALDAR DEUDA (Nuevo) */
+.btn-settle-debt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #000;
+  color: #fff;
+  border: 2px solid #000;
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+  height: 40px; /* Alineación visual */
+}
+.btn-settle-debt:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px #666;
+}
+.btn-settle-debt:active {
+  transform: translate(0px, 0px);
+  box-shadow: none;
+}
+
+.last-update-box {
+  text-align: right;
+}
+.last-update-date {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 /* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
-  /* 1. Stackear Identidad */
   .header-top-block {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    padding: 16px;
+  }
+  .contact-col {
+    align-items: flex-start;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 8px;
+    border-top: 1px dotted #ccc;
+    padding-top: 8px;
+  }
+
+  .header-balance-block {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
     padding: 20px;
   }
 
-  .supplier-hero-name {
-    font-size: 1.5rem; /* Ajuste nombre */
-  }
-
-  /* 2. Ajustar Saldo */
-  .header-balance-block {
-    padding: 24px 20px;
-  }
-
   .balance-hero-text {
-    font-size: 2.8rem; /* Reducir drásticamente para que entre en pantalla vertical */
-    word-break: break-all; /* Por seguridad si es millonario */
+    font-size: 2.5rem;
   }
 
-  /* 3. Stackear Grid de Datos */
-  .header-data-grid {
-    flex-direction: column;
-  }
-
-  .data-cell {
+  .btn-settle-debt {
     width: 100%;
-    padding: 16px 20px;
-    border-bottom: 1px solid #f0f0f0; /* Separadores horizontales */
+    justify-content: center;
   }
 
-  .data-cell:last-child {
-    border-bottom: none;
-  }
-
-  /* Quitar bordes izquierdos de desktop */
-  .border-desktop-left {
-    border-left: none;
+  .last-update-box {
+    text-align: left;
+    width: 100%;
+    border-top: 2px solid #eee;
+    padding-top: 12px;
   }
 }

@@ -513,3 +513,50 @@
     gap: 16px;
   }
 }
+
+/* --- CHIPS DE FECHA RAPIDA --- */
+.quick-date-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-mini-fusion {
+  flex: 1;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #000;
+  color: #000;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.btn-mini-fusion:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* --- BOTON ELIMINAR TRANSACCION --- */
+.btn-fusion-delete {
+  padding: 14px 16px;
+  background: #fff;
+  border: 2px solid #d32f2f;
+  color: #d32f2f;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+
+.btn-fusion-delete:hover {
+  background: #d32f2f;
+  color: #fff;
+}

@@ -2,7 +2,12 @@ import { el } from "../../../../core/dom.js";
 import "./style.css";
 
 // Cambiado el nombre a SupplierSettingsModal para coincidir con el import del controller
-export function SupplierSettingsModal({ supplier = {}, onClose, onSave }) {
+export function SupplierSettingsModal({
+  supplier = {},
+  onClose,
+  onSave,
+  onDelete = null,
+}) {
   // --- PALETA DE COLORES TECH PASTEL ---
   const TECH_PALETTE = [
     "#FFB3BA",
@@ -32,12 +37,17 @@ export function SupplierSettingsModal({ supplier = {}, onClose, onSave }) {
   let currentType = supplier.type || "monetary";
   let editingIndex = null;
 
+  // Verificar si el proveedor tiene deuda
+  const currentBalance = parseFloat(supplier.balance) || 0;
+  const canDelete = currentBalance === 0;
+
   // --- ICONOS TECH ---
   const iconClose = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
   const iconPlus = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
   const iconEdit = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
   const iconTrash = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
   const iconCheck = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  const iconWarning = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
 
   // --- INPUTS ---
   const nameInput = el("input", {
@@ -201,6 +211,59 @@ export function SupplierSettingsModal({ supplier = {}, onClose, onSave }) {
     });
   };
 
+  // --- NUEVA FUNCION: Manejar eliminación de proveedor ---
+  const handleDeleteSupplier = (e) => {
+    e.preventDefault();
+
+    if (!canDelete) {
+      alert(
+        `No se puede eliminar el proveedor porque tiene un saldo pendiente de $${Math.abs(currentBalance).toLocaleString("es-AR")}`,
+      );
+      return;
+    }
+
+    const confirmDelete = confirm(
+      `¿Estás seguro de eliminar permanentemente a "${supplier.name}"?\n\nEsta acción eliminará:\n• El proveedor\n• Todo su historial de transacciones\n• Configuración de items\n\nESTA ACCIÓN NO SE PUEDE DESHACER.`,
+    );
+
+    if (confirmDelete) {
+      const doubleConfirm = confirm(
+        "ÚLTIMA CONFIRMACIÓN:\n¿Realmente deseas eliminar este proveedor y todo su historial?",
+      );
+
+      if (doubleConfirm && typeof onDelete === "function") {
+        onDelete(supplier.id);
+      }
+    }
+  };
+
+  // --- ZONA DE PELIGRO (solo si existe el proveedor y la función onDelete) ---
+  const dangerZone =
+    supplier.id && typeof onDelete === "function"
+      ? el("div", { className: "danger-zone-section" }, [
+          el("div", { className: "danger-zone-header" }, [
+            el("span", { innerHTML: iconWarning }),
+            el("span", {}, "ZONA DE PELIGRO"),
+          ]),
+          el("div", { className: "danger-zone-content" }, [
+            el(
+              "p",
+              { className: "danger-zone-text" },
+              canDelete
+                ? "Este proveedor no tiene deuda pendiente. Puedes eliminarlo permanentemente."
+                : `No se puede eliminar. Saldo pendiente: $${Math.abs(currentBalance).toLocaleString("es-AR")}`,
+            ),
+            el("button", {
+              type: "button",
+              className: `btn-danger-delete ${canDelete ? "" : "disabled"}`,
+              disabled: !canDelete,
+              onclick: handleDeleteSupplier,
+              innerHTML: iconTrash + " ELIMINAR PROVEEDOR",
+            }),
+          ]),
+        ])
+      : null;
+
   return el(
     "div",
     {
@@ -233,6 +296,9 @@ export function SupplierSettingsModal({ supplier = {}, onClose, onSave }) {
           ]),
 
           catalogSection,
+
+          // NUEVA: Zona de Peligro
+          dangerZone,
 
           el("div", { className: "tech-modal-footer" }, [
             el(
