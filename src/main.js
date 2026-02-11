@@ -35,3 +35,20 @@ new Router(routes, layout.contentContainer);
 if (!window.location.hash || window.location.hash === "#cashflow") {
   window.location.hash = "#suppliers";
 }
+
+import {
+  runMigration,
+  mergeItems,
+} from "./modules/suppliers/utils/RunMigration.js";
+window.runMigration = runMigration;
+console.log(
+  "🔧 MODO MANTENIMIENTO: Escribe 'runMigration()' en la consola para actualizar la DB.",
+);
+window.mergeItems = mergeItems;
+
+console.log(
+  "%c🔧 MODO MANTENIMIENTO ACTIVO",
+  "color: orange; font-weight: bold;",
+);
+console.log("👉 Usa 'runMigration()' para arreglar IDs faltantes.");
+console.log('👉 Usa \'mergeItems("Viejo", "Nuevo")\' para unir duplicados.');

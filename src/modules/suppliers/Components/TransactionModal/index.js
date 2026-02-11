@@ -14,17 +14,31 @@ const getSafeColor = (item) => {
   return item.color || "#ddd";
 };
 
-// Helper interno para calcular pendientes
+// --- LOGICA DE CÁLCULO DE PENDIENTES (CORREGIDA PARA IDs) ---
 const calculatePendingFromHistory = (movements, defaultItems = []) => {
-  const totals = {};
+  const totals = {}; // Key: ID (preferible) o NOMBRE (fallback)
 
-  // 1. Cargar items por defecto
+  // 1. Mapa de items por defecto para búsqueda rápida
+  const catalogById = {};
+  const catalogByName = {};
+
   if (defaultItems && Array.isArray(defaultItems)) {
     defaultItems.forEach((d) => {
+      // Usamos el ID si existe, o un placeholder si no (aunque deberían tenerlo)
+      const id = d.id || `temp_${d.name}`;
       const name = getSafeName(d).trim().toUpperCase();
-      if (name) {
-        totals[name] = { qty: 0, color: getSafeColor(d), isDefault: true };
-      }
+
+      const itemData = {
+        qty: 0,
+        color: getSafeColor(d),
+        isDefault: true,
+        id: id,
+        name: d.name, // Nombre original display
+      };
+
+      totals[id] = itemData;
+      catalogById[id] = id;
+      if (name) catalogByName[name] = id; // Puntero para recuperar items viejos por nombre
     });
   }
 
@@ -36,27 +50,51 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
 
       if (m.items && Array.isArray(m.items)) {
         m.items.forEach((item) => {
-          const name = getSafeName(item).trim().toUpperCase();
+          const rawName = getSafeName(item).trim().toUpperCase();
           const qty = parseFloat(item.quantity || item.qty || 0);
+
+          // --- ESTRATEGIA DE VINCULACIÓN ---
+          let targetId = item.id; // 1. Intento directo por ID
+
+          // 2. Si no tiene ID (legacy), buscamos por nombre en el catálogo actual
+          if (!targetId && rawName && catalogByName[rawName]) {
+            targetId = catalogByName[rawName];
+          }
+
+          // 3. Si sigue sin ID, es un item huérfano o legacy sin coincidencia. Usamos el nombre como ID.
+          if (!targetId) {
+            targetId = rawName;
+          }
+
+          // Si no existe en acumuladores, lo creamos
+          if (!totals[targetId]) {
+            totals[targetId] = {
+              qty: 0,
+              color: getSafeColor(item),
+              id: item.id || null,
+              name: getSafeName(item),
+            };
+          }
+
+          // Actualizar color si encontramos uno mejor
           let color = getSafeColor(item);
+          if (color !== "#ddd") totals[targetId].color = color;
 
-          if (color === "#ddd" && totals[name]?.color) {
-            color = totals[name].color;
-          }
-
-          if (name) {
-            if (!totals[name]) totals[name] = { qty: 0, color: color };
-            totals[name].qty += isEntry ? qty : -qty;
-            if (color !== "#ddd") totals[name].color = color;
-          }
+          // Sumar/Restar Stock
+          totals[targetId].qty += isEntry ? qty : -qty;
         });
       }
     });
   }
 
+  // Filtrar resultados
   const result = {};
   Object.keys(totals).forEach((key) => {
-    if (totals[key].qty > 0.01 || totals[key].isDefault) {
+    if (
+      totals[key].qty > 0.01 ||
+      totals[key].qty < -0.01 ||
+      totals[key].isDefault
+    ) {
       result[key] = totals[key];
     }
   });
@@ -138,6 +176,7 @@ export function TransactionModal({
       items: itemsState
         .filter((i) => i.qty > 0)
         .map((i) => ({
+          id: i.id || null, // <--- GUARDAMOS EL ID AQUI
           name: i.name.trim(),
           quantity: parseFloat(i.qty),
           color: i.color || "#ddd",
@@ -269,6 +308,7 @@ export function TransactionModal({
 
     if (isEdit && initialData?.items && initialData.items.length > 0) {
       itemsState = initialData.items.map((i) => ({
+        id: i.id || null, // <--- RECUPERAMOS EL ID
         name: getSafeName(i),
         qty: parseFloat(i.quantity || i.qty || 0),
         color: getSafeColor(i),
@@ -282,9 +322,11 @@ export function TransactionModal({
       currentSupplier?.defaultItems,
     );
 
-    itemsState = Object.entries(debtMap)
-      .map(([name, data]) => ({
-        name: name,
+    // Convertimos el map de objetos a array
+    itemsState = Object.values(debtMap)
+      .map((data) => ({
+        id: data.id, // <--- MANTENEMOS EL ID
+        name: data.name,
         qty: 0,
         max: selectedType === "payment" ? data.qty : undefined,
         color: data.color || "#ddd",
@@ -296,17 +338,35 @@ export function TransactionModal({
   const addCustomItem = () => {
     const customName = prompt("Nombre del ítem personalizado:");
     if (!customName || !customName.trim()) return;
-    const exists = itemsState.find(
-      (i) => i.name.toUpperCase() === customName.trim().toUpperCase(),
-    );
+
+    const normalized = customName.trim().toUpperCase();
+
+    const exists = itemsState.find((i) => i.name.toUpperCase() === normalized);
     if (exists) {
       alert("Ya existe un ítem con ese nombre");
       return;
     }
+
+    // INTENTO DE VINCULACIÓN AUTOMÁTICA
+    // Si el usuario escribe "Harina" y existe en el catálogo, le asignamos su ID
+    let linkedId = null;
+    let linkedColor = "#ddd";
+
+    if (currentSupplier?.defaultItems) {
+      const match = currentSupplier.defaultItems.find(
+        (d) => d.name.toUpperCase() === normalized,
+      );
+      if (match) {
+        linkedId = match.id;
+        linkedColor = match.color || "#ddd";
+      }
+    }
+
     itemsState.push({
+      id: linkedId, // <--- ASIGNAMOS ID SI COINCIDE
       name: customName.trim(),
       qty: 0,
-      color: "#ddd",
+      color: linkedColor,
       isLocked: false,
     });
     renderItemsList();
@@ -354,7 +414,7 @@ export function TransactionModal({
       const itemRow = el("div", { className: "item-row-strip" }, [
         el("div", {
           className: "item-color-dot",
-          style: { backgroundColor: item.color },
+          style: `background-color: ${item.color}`,
         }),
         el("div", { className: "item-col-grow item-text-locked" }, [
           el("span", { className: "text-main" }, item.name),

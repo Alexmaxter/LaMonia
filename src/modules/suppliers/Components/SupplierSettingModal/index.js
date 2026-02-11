@@ -26,12 +26,21 @@ export function SupplierSettingsModal({
   const getRandomColor = () =>
     TECH_PALETTE[Math.floor(Math.random() * TECH_PALETTE.length)];
 
+  // --- GENERADOR DE IDs UNICOS (NUEVO) ---
+  const generateId = () =>
+    Date.now().toString(36) + Math.random().toString(36).substr(2);
+
   // --- ESTADO LOCAL ---
-  // Normalizamos los items para que sean siempre objetos {name, color}
+  // Normalizamos los items para que sean siempre objetos {id, name, color}
+  // IMPORTANTE: Aquí asignamos IDs a los items viejos que no lo tengan
   let currentItems = (supplier.defaultItems || []).map((item) => {
     if (typeof item === "string")
-      return { name: item, color: getRandomColor() };
-    return { name: item.name, color: item.color || getRandomColor() };
+      return { id: generateId(), name: item, color: getRandomColor() };
+    return {
+      id: item.id || generateId(), // Si ya tiene ID lo conserva, si no, se crea uno
+      name: item.name,
+      color: item.color || getRandomColor(),
+    };
   });
 
   let currentType = supplier.type || "monetary";
@@ -172,7 +181,12 @@ export function SupplierSettingsModal({
         val &&
         !currentItems.some((i) => i.name.toUpperCase() === val.toUpperCase())
       ) {
-        currentItems.push({ name: val, color: getRandomColor() });
+        // AHORA CREAMOS EL ITEM CON UN ID
+        currentItems.push({
+          id: generateId(),
+          name: val,
+          color: getRandomColor(),
+        });
         newItemInput.value = "";
         renderItems();
       }
