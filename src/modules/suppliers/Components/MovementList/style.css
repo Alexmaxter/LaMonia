@@ -6,6 +6,7 @@
   flex-direction: column;
   width: 100%;
   gap: 20px;
+  padding-bottom: 80px; /* Espacio extra para el snackbar flotante */
 }
 .movements-list-stack {
   display: flex;
@@ -19,7 +20,7 @@
   flex-direction: column;
   width: 100%;
   gap: 0;
-  padding-bottom: 40px;
+  padding-bottom: 80px; /* Espacio extra para el snackbar */
 }
 .day-block-group {
   display: flex;
@@ -84,6 +85,7 @@
 /* --- TARJETA DE MOVIMIENTO (Común para ambos modos) --- */
 .tech-movement-card {
   display: flex;
+  align-items: stretch; /* Cambio clave: estirar para columnas completas */
   background: #fff;
   border: 2px solid #000;
   min-height: 70px;
@@ -100,10 +102,12 @@
   box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
 }
 
+/* STATUS BAR (Barra lateral de color) */
 .mov-status-bar {
   width: 6px;
   flex-shrink: 0;
   border-right: 1px solid #000;
+  /* El color lo inyecta la clase padre (.type-invoice, etc) */
 }
 .type-invoice .mov-status-bar {
   background: #ff0000;
@@ -115,6 +119,60 @@
   background: #1565c0;
 }
 
+/* --- NUEVO: COLUMNA DE SELECCIÓN (Checkbox) --- */
+/* Reemplaza a .selection-area y .card-checkbox-wrapper antiguos */
+.selection-col {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #000; /* Borde duro acorde al estilo */
+  background-color: #fafafa;
+  transition: background-color 0.2s;
+}
+.selection-col:hover {
+  background-color: #eee;
+}
+
+/* El "Checkbox" personalizado (Cuadrado Brutalista) */
+.select-square {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #000; /* Borde negro fuerte */
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+
+.select-square svg {
+  width: 16px;
+  height: 16px;
+  display: none; /* Oculto por defecto */
+  color: #fff; /* Check blanco sobre fondo negro */
+}
+
+/* ESTADO SELECCIONADO */
+.tech-movement-card.row-selected {
+  background-color: #f0f0f0; /* Gris suave */
+  /* En el diseño original la tarjeta tiene borde negro, así que no necesitamos agregar border-left extra */
+}
+
+.tech-movement-card.row-selected .select-square {
+  background-color: #000; /* Relleno negro */
+}
+
+.tech-movement-card.row-selected .select-square svg {
+  display: block; /* Mostrar check */
+}
+/* Al seleccionar, oscurecemos la barra de estado también para indicar "activo" */
+.tech-movement-card.row-selected .mov-status-bar {
+  filter: brightness(0.6);
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
 .mov-content {
   flex: 1;
   display: flex;

@@ -15,10 +15,69 @@ export function SupplierDetailView({
   onEditMovement,
   onDeleteMovement,
   onOpenSettings,
-  onSettleDebt, // <--- NUEVA PROP RECIBIDA
+  onSettleDebt,
 }) {
   let isVisible = initialIsVisible;
+
+  // Elementos DOM que necesitan actualizarse
   let debtValueDisplay = null;
+  let contentContainer = el("div", { className: "detail-content-wrapper" });
+  let stockStatsContainer = null; // Contenedor para panel de stock si existe
+
+  // --- NUEVO: ESTADO DE SELECCIÓN ---
+  const selectedInvoices = new Set();
+  let selectedTotal = 0;
+
+  // --- NUEVO: SNACKBAR FLOTANTE ---
+  const snackbarCount = el(
+    "span",
+    { className: "snackbar-count" },
+    "0 SELECCIONADOS",
+  );
+  const snackbarTotal = el("span", { className: "snackbar-total" }, "$0");
+
+  const snackbar = el("div", { className: "selection-snackbar" }, [
+    el("div", { className: "snackbar-info" }, [snackbarCount, snackbarTotal]),
+    el(
+      "button",
+      {
+        className: "btn-snackbar-pay",
+        onclick: () => {
+          if (selectedInvoices.size > 0 && onSettleDebt) {
+            onSettleDebt(
+              selectedTotal,
+              `Pago de ${selectedInvoices.size} boletas seleccionadas`,
+            );
+          }
+        },
+      },
+      "PAGAR",
+    ),
+  ]);
+
+  const updateSnackbar = () => {
+    if (selectedInvoices.size > 0) {
+      snackbar.classList.add("active");
+      snackbarCount.textContent = `${selectedInvoices.size} SELECCIONADO${selectedInvoices.size > 1 ? "S" : ""}`;
+      snackbarTotal.textContent = SupplierModel.formatAmount(
+        selectedTotal,
+        true,
+      );
+    } else {
+      snackbar.classList.remove("active");
+    }
+  };
+
+  const handleSelection = (id, amount, isChecked) => {
+    if (isChecked) {
+      selectedInvoices.add(id);
+      selectedTotal += amount;
+    } else {
+      selectedInvoices.delete(id);
+      selectedTotal -= amount;
+    }
+    updateSnackbar();
+  };
 
   // --- ICONOS ---
   const iconBack = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
@@ -28,9 +87,119 @@ export function SupplierDetailView({
   const iconPlus = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
   const iconFile = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
   const iconCopy = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="0" ry="0"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-  const iconCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`; // Icono nuevo
+  const iconCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-  // --- HANDLERS ---
+  const findColorInSettings = (itemName) => {
+    if (!supplier.defaultItems || !Array.isArray(supplier.defaultItems))
+      return "#ffffff";
+    const match = supplier.defaultItems.find((i) => {
+      const name = typeof i === "string" ? i : i.name;
+      return name && name.toUpperCase() === itemName.toUpperCase();
+    });
+    if (match && typeof match === "object" && match.color) return match.color;
+    return "#ffffff";
+  };
+
+  // --- LÓGICA DE RENDERIZADO ---
+  const recalculateAndRender = (currentMovements, currentBalance) => {
+    let runningBalance = parseFloat(currentBalance) || 0;
+    let runningStock = {};
+
+    if (supplier.type === "stock") {
+      currentMovements.forEach((m) => {
+        if (m.items && Array.isArray(m.items)) {
+          const isEntry = m.type === "invoice";
+          const isExit = m.type === "payment" || m.type === "credit";
+          m.items.forEach((i) => {
+            const name = i.name.trim().toUpperCase();
+            const qty = parseFloat(i.quantity || 0);
+            if (!runningStock[name]) runningStock[name] = 0;
+            if (isEntry) runningStock[name] += qty;
+            else if (isExit) runningStock[name] -= qty;
+          });
+        }
+      });
+    }
+
+    const movementsWithBalance = currentMovements.map((m) => {
+      const snapshotBalance = runningBalance;
+      const amount = parseFloat(m.amount) || 0;
+      if (m.type === "invoice") runningBalance -= amount;
+      else runningBalance += amount;
+
+      let snapshotStock = null;
+      let enrichedItems = [];
+
+      if (supplier.type === "stock") {
+        snapshotStock = { ...runningStock };
+
+        if (m.items && Array.isArray(m.items)) {
+          const isEntry = m.type === "invoice";
+          const isExit = m.type === "payment" || m.type === "credit";
+
+          enrichedItems = m.items.map((item) => {
+            const finalColor = item.color || findColorInSettings(item.name);
+            return { ...item, color: finalColor };
+          });
+
+          m.items.forEach((i) => {
+            const name = i.name.trim().toUpperCase();
+            const qty = parseFloat(i.quantity || 0);
+            if (runningStock[name] !== undefined) {
+              if (isEntry) runningStock[name] -= qty;
+              else if (isExit) runningStock[name] += qty;
+            }
+          });
+        }
+      } else {
+        enrichedItems = m.items || [];
+      }
+
+      return {
+        ...m,
+        items: enrichedItems,
+        partialBalance: snapshotBalance,
+        stockBalance: snapshotStock,
+      };
+    });
+
+    contentContainer.innerHTML = "";
+
+    // Componente de Lista
+    const listComponent = MovementList({
+      movements: movementsWithBalance,
+      isVisible,
+      onEdit: onEditMovement,
+      onDelete: onDeleteMovement,
+      isStockView: supplier.type === "stock",
+      onSelectionChange: handleSelection,
+    });
+
+    if (supplier.type === "stock" && movementsWithBalance.length > 0) {
+      // === LAYOUT 2 COLUMNAS (STOCK) ===
+      const gridLayout = el("div", { className: "detail-grid-layout" });
+
+      // Columna 1: Panel de Reporte
+      const stockPanel = StockStatsPanel({ movements: movementsWithBalance });
+      if (stockPanel) gridLayout.appendChild(stockPanel);
+
+      // Columna 2: Lista de Movimientos
+      const listWrapper = el(
+        "div",
+        { className: "grid-list-column" },
+        listComponent,
+      );
+      gridLayout.appendChild(listWrapper);
+
+      contentContainer.appendChild(gridLayout);
+    } else {
+      // === LAYOUT 1 COLUMNA (MONETARIO O VACÍO) ===
+      contentContainer.appendChild(listComponent);
+    }
+
+    return movementsWithBalance;
+  };
+
   const handleToggle = (e) => {
     const newState = onToggleVisibility();
     isVisible = newState;
@@ -42,7 +211,7 @@ export function SupplierDetailView({
         isVisible,
       );
     }
-    renderList();
+    recalculateAndRender(movements, supplier.balance);
   };
 
   const copyAlias = (e) => {
@@ -55,111 +224,26 @@ export function SupplierDetailView({
     }, 1000);
   };
 
-  // --- HELPER DE COLOR (RETROCOMPATIBILIDAD) ---
-  const findColorInSettings = (itemName) => {
-    if (!supplier.defaultItems || !Array.isArray(supplier.defaultItems))
-      return "#ffffff";
-    const match = supplier.defaultItems.find((i) => {
-      const name = typeof i === "string" ? i : i.name;
-      return name && name.toUpperCase() === itemName.toUpperCase();
-    });
-    if (match && typeof match === "object" && match.color) return match.color;
-    return "#ffffff";
-  };
-
-  // --- 1. CALCULADORA DE SALDOS ---
-  let runningBalance = parseFloat(supplier.balance) || 0;
-  let runningStock = {};
-
-  // Calcular stock actual total
-  if (supplier.type === "stock") {
-    movements.forEach((m) => {
-      if (m.items && Array.isArray(m.items)) {
-        const isEntry = m.type === "invoice";
-        const isExit = m.type === "payment" || m.type === "credit";
-        m.items.forEach((i) => {
-          const name = i.name.trim().toUpperCase();
-          const qty = parseFloat(i.quantity || 0);
-          if (!runningStock[name]) runningStock[name] = 0;
-          if (isEntry) runningStock[name] += qty;
-          else if (isExit) runningStock[name] -= qty;
-        });
-      }
-    });
-  }
-
-  // --- MAPEO DE MOVIMIENTOS CON COLOR INYECTADO ---
-  const movementsWithBalance = movements.map((m) => {
-    // 1. Dinero
-    const snapshotBalance = runningBalance;
-    const amount = parseFloat(m.amount) || 0;
-    if (m.type === "invoice") runningBalance -= amount;
-    else runningBalance += amount;
-
-    // 2. Stock y Colores
-    let snapshotStock = null;
-    let enrichedItems = []; // Items con color asegurado
-
-    if (supplier.type === "stock") {
-      snapshotStock = { ...runningStock };
-
-      if (m.items && Array.isArray(m.items)) {
-        const isEntry = m.type === "invoice";
-        const isExit = m.type === "payment" || m.type === "credit";
-
-        enrichedItems = m.items.map((item) => {
-          // Si el item ya tiene color (nuevo), lo usa. Si no (viejo), lo busca en settings.
-          const finalColor = item.color || findColorInSettings(item.name);
-          return { ...item, color: finalColor };
-        });
-
-        // Revertir historial
-        m.items.forEach((i) => {
-          const name = i.name.trim().toUpperCase();
-          const qty = parseFloat(i.quantity || 0);
-          if (runningStock[name] !== undefined) {
-            if (isEntry) runningStock[name] -= qty;
-            else if (isExit) runningStock[name] += qty;
-          }
-        });
-      }
-    } else {
-      // Si no es stock, igual preservamos items si hubiera
-      enrichedItems = m.items || [];
-    }
-
-    return {
-      ...m,
-      items: enrichedItems, // Pasamos items enriquecidos con color
-      partialBalance: snapshotBalance,
-      stockBalance: snapshotStock,
-    };
-  });
-
-  // --- UI COMPONENTS ---
+  // --- UI HEADER ---
   debtValueDisplay = el(
     "div",
     { className: "header-debt-value" },
     SupplierModel.formatAmount(supplier.balance, isVisible),
   );
 
-  // BOTÓN SALDAR DEUDA (NUEVO)
   const isDebt = supplier.balance > 0;
-  const settleBtn = isDebt
-    ? el(
-        "button",
-        {
-          className: "btn-settle-mini", // Definir esta clase en CSS
-          style:
-            "margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700;",
-          onclick: (e) => {
-            e.stopPropagation();
-            if (onSettleDebt) onSettleDebt();
-          },
-        },
-        [el("span", { innerHTML: iconCheck }), "SALDAR"],
-      )
-    : null;
+  const settleTotalBtn = el(
+    "button",
+    {
+      className: "btn-settle-mini",
+      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: ${isDebt ? "flex" : "none"}`,
+      onclick: (e) => {
+        e.stopPropagation();
+        if (onSettleDebt) onSettleDebt(null, "Cancelación total");
+      },
+    },
+    [el("span", { innerHTML: iconCheck }), "SALDAR TOTAL"],
+  );
 
   const headerPanel = el("div", { className: "tech-panel-header-detail" }, [
     el("div", { className: "tech-header-top" }, [
@@ -187,10 +271,9 @@ export function SupplierDetailView({
             innerHTML: isVisible ? iconEye : iconEyeOff,
           }),
         ]),
-        // Contenedor flexible para saldo y botón
         el("div", { style: "display: flex; align-items: center;" }, [
           debtValueDisplay,
-          settleBtn, // Insertamos el botón aquí
+          settleTotalBtn,
         ]),
       ]),
     ]),
@@ -234,30 +317,31 @@ export function SupplierDetailView({
     ]),
   ]);
 
-  const contentContainer = el("div", { className: "detail-content-wrapper" });
+  // Ejecución Inicial
+  recalculateAndRender(movements, supplier.balance);
 
-  const renderList = () => {
-    contentContainer.innerHTML = "";
-    if (supplier.type === "stock" && movementsWithBalance.length > 0) {
-      const stockPanel = StockStatsPanel({ movements: movementsWithBalance });
-      if (stockPanel) contentContainer.appendChild(stockPanel);
-    }
-
-    contentContainer.appendChild(
-      MovementList({
-        movements: movementsWithBalance,
-        isVisible,
-        onEdit: onEditMovement,
-        onDelete: onDeleteMovement,
-        isStockView: supplier.type === "stock",
-      }),
-    );
-  };
-
-  renderList();
-
-  return el("div", { className: "supplier-detail-view" }, [
+  const view = el("div", { className: "supplier-detail-view" }, [
     headerPanel,
     contentContainer,
+    snackbar, // <--- Snackbar Flotante
   ]);
+
+  view.updateState = (newBalance, newMovements) => {
+    supplier.balance = newBalance;
+    movements = newMovements;
+    debtValueDisplay.textContent = SupplierModel.formatAmount(
+      newBalance,
+      isVisible,
+    );
+
+    // Resetear selección
+    selectedInvoices.clear();
+    selectedTotal = 0;
+    updateSnackbar();
+
+    settleTotalBtn.style.display = newBalance > 0 ? "flex" : "none";
+    recalculateAndRender(newMovements, newBalance);
+  };
+
+  return view;
 }

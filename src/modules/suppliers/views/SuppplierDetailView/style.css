@@ -1,252 +1,435 @@
-/* src/modules/suppliers/views/SuppplierDetailView/style.css */
+/* =========================================
+   VISTA DETALLE PROVEEDOR (Brutalist / Tech Style)
+   ========================================= */
 
 .supplier-detail-view {
   display: flex;
   flex-direction: column;
-  min-height: 100%; /* Usamos min-height en lugar de height fijo */
-  background: #f4f4f4;
-  /* IMPORTANTE: Quitamos overflow hidden para permitir scroll del navegador */
+  height: 100%;
+  background-color: #ffffff;
+  position: relative;
 }
 
-/* HEADER STICKY */
+/* --- HEADER PANEL --- */
 .tech-panel-header-detail {
-  background: #fff;
-  border-bottom: 2px solid #000;
-  padding: 16px;
+  padding: 24px 32px 20px 32px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #000000; /* Borde duro */
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  position: sticky;
-  top: 0;
-  z-index: 100; /* Debe estar por encima del panel lateral */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  gap: 20px;
 }
 
-/* ... (Estilos internos del Header se mantienen IGUAL) ... */
+/* Fila Superior: Título y Deuda */
 .tech-header-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
 }
+
+/* Grupo Izquierdo: Back + Título */
 .left-group {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 16px;
 }
+
 .btn-back-arrow {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 0; /* Cuadrado perfecto */
+  cursor: pointer;
+  transition:
+    transform 0.1s,
+    background-color 0.1s;
+  color: #000;
+}
+
+.btn-back-arrow:hover {
+  background-color: #f0f0f0;
+}
+
+.btn-back-arrow:active {
+  transform: translate(2px, 2px); /* Click físico */
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  color: #000;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+.supplier-type-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  width: fit-content;
+  border: 1px solid #000;
+}
+
+/* Grupo Derecho: Deuda */
+.tech-debt-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.debt-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.debt-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-icon-toggle {
   background: none;
   border: none;
   cursor: pointer;
   padding: 4px;
   display: flex;
-}
-.btn-back-arrow:hover {
-  color: #555;
-  transform: translateX(-2px);
-}
-.title-block {
-  display: flex;
-  flex-direction: column;
-}
-.page-title {
-  margin: 0;
-  font-family: var(--font-sans, sans-serif);
-  font-weight: 900;
-  font-size: 1.4rem;
-  text-transform: uppercase;
-  line-height: 1;
-}
-.supplier-type-badge {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.7rem;
-  background: #000;
-  color: #fff;
-  padding: 2px 6px;
-  width: fit-content;
-  margin-top: 4px;
-  font-weight: 700;
-}
-.tech-debt-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-.debt-label-row {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
+  color: #999;
+  transition: color 0.2s;
 }
-.debt-label {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.7rem;
-  color: #888;
-  font-weight: 700;
+
+.btn-icon-toggle:hover {
+  color: #000;
 }
-.btn-icon-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  color: #888;
-}
+
 .header-debt-value {
-  font-family: var(--font-mono, monospace);
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 900;
   color: #000;
   line-height: 1;
   letter-spacing: -1px;
 }
+
+.btn-settle-mini {
+  /* Estilos base para el botón de header (si aparece) */
+  font-family: inherit;
+  transition:
+    transform 0.1s,
+    background-color 0.2s;
+  white-space: nowrap;
+  border-radius: 0 !important; /* Cuadrado */
+}
+
+.btn-settle-mini:hover {
+  background-color: #333 !important;
+}
+
+.btn-settle-mini:active {
+  transform: translateY(2px);
+}
+
+/* --- FILA DE CONTROLES INFERIOR --- */
 .tech-controls-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-top: 8px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
 }
+
 .info-mini-container {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
+
+.no-alias {
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+  font-family: monospace;
+}
+
 .alias-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: #f0f0f0;
-  border: 1px solid #ccc;
-  padding: 6px 10px;
+  gap: 8px;
+  background: #f4f4f4;
+  border: 1px solid #000;
+  padding: 6px 12px;
+  border-radius: 0; /* Cuadrado */
   cursor: pointer;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.8rem;
-  transition: all 0.2s;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #000;
+  transition: all 0.1s;
 }
+
 .alias-chip:hover {
-  border-color: #000;
-  background: #fff;
+  background: #e0e0e0;
 }
-.alias-text {
-  font-weight: 700;
-  color: #444;
-}
-.no-alias {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
-  color: #999;
-  font-style: italic;
-}
+
+/* Botones de Acción */
 .tech-actions-container {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
+
 .btn-secondary,
-.btn-primary,
 .btn-secondary-icon {
+  height: 36px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  font-family: var(--font-sans, sans-serif);
-  font-weight: 800;
-  font-size: 0.85rem;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-.btn-secondary-icon {
-  padding: 10px;
-  background: #fff;
-  border: 1px solid #000;
-}
-.btn-secondary {
+  justify-content: center;
   background: #fff;
   border: 1px solid #000;
   color: #000;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.1s;
+  border-radius: 0; /* Cuadrado */
 }
+
+.btn-secondary-icon {
+  padding: 0;
+  width: 36px;
+}
+
+.btn-secondary:hover,
+.btn-secondary-icon:hover {
+  background: #f0f0f0;
+}
+
 .btn-primary {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #000;
   border: 1px solid #000;
   color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.1s;
+  border-radius: 0; /* Cuadrado */
 }
-.btn-secondary:hover,
-.btn-secondary-icon:hover {
-  background: #f4f4f4;
-}
+
 .btn-primary:hover {
   background: #333;
 }
 
-/* ----------------------------------------------------------- */
-/* --- CONTENEDOR PRINCIPAL (LAYOUT) --- */
-/* ----------------------------------------------------------- */
+.btn-primary:active,
+.btn-secondary:active {
+  transform: translate(2px, 2px); /* Click Físico */
+}
 
+/* --- CONTENIDO SCROLLABLE --- */
 .detail-content-wrapper {
-  padding: 16px;
-  /* Quitamos overflow-y auto para que use el scroll del body */
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  overflow-y: auto;
+  padding: 20px 32px;
+  background-color: #f9f9f9;
+  position: relative;
+}
+
+/* =========================================
+   GRID LAYOUT (Solo para Stock)
+   ========================================= */
+
+.detail-grid-layout {
+  display: grid;
+  /* Columna 1 (Reporte): 340px fijo
+     Columna 2 (Lista): 1fr (El resto del espacio) 
+  */
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start; /* Alineación superior, evita estirar alturas */
   width: 100%;
 }
 
-/* --- MODO ESCRITORIO (PC) --- */
-@media (min-width: 1024px) {
-  .detail-content-wrapper {
-    display: grid;
-    /* Divide: 40% Reporte - 60% Lista (Ajustable a gusto) */
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 40px;
-    padding: 32px 40px; /* Padding generoso */
-    max-width: 100%; /* Usa todo el ancho disponible */
-    box-sizing: border-box;
-    align-items: start; /* Vital para que el sticky no se estire */
-  }
+.grid-list-column {
+  min-width: 0; /* Truco CSS Grid para evitar desbordes en contenido flexible */
+}
 
-  /* Si NO hay reporte (solo hay 1 hijo), la lista ocupa todo */
-  .detail-content-wrapper > :only-child {
-    grid-column: span 2;
-  }
+/* =========================================
+   SNACKBAR FLOTANTE (ESTILO BRUTALISTA)
+   ========================================= */
 
-  /* PANEL DE STOCK FIJO */
-  .stock-manifest-panel {
-    position: sticky;
-    /* Ajustamos 'top' considerando la altura aprox del header (160px) + margen */
-    top: 180px;
-    z-index: 10;
-    align-self: start; /* Evita que el panel se estire a lo alto de la lista */
-    margin-bottom: 0;
+.selection-snackbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(150%); /* Oculto inicialmente */
+
+  /* ESTÉTICA TÉCNICA */
+  background: #000000; /* Negro total */
+  color: #ffffff;
+  border: 2px solid #000; /* Borde sólido */
+
+  padding: 16px 24px;
+  border-radius: 0; /* Cero curvas */
+
+  /* Sombra dura (Hard Shadow) típica del brutalismo */
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  z-index: 1000;
+  min-width: 360px;
+  max-width: 90vw;
+
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1); /* Transición rápida y seca */
+}
+
+.selection-snackbar.active {
+  transform: translateX(-50%) translateY(0); /* Visible */
+}
+
+.snackbar-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.snackbar-count {
+  font-family: monospace; /* Toque técnico */
+  font-size: 0.75rem;
+  color: #ccc;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.snackbar-total {
+  font-size: 1.25rem;
+  font-weight: 800; /* Extra bold */
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.btn-snackbar-pay {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #ffffff; /* Borde blanco para definir si el fondo cambia */
+  height: 42px;
+  padding: 0 24px;
+  border-radius: 0; /* Botón cuadrado */
+
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  transition: all 0.1s;
+}
+
+.btn-snackbar-pay:hover {
+  background-color: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+.btn-snackbar-pay:active {
+  transform: translate(2px, 2px); /* Click físico */
+  box-shadow: none;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  /* En tablets o pantallas medianas, volvemos a una columna */
+  .detail-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 }
 
-/* MOBILE ADJUSTMENTS */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .tech-panel-header-detail {
-    padding: 12px;
-    gap: 12px;
+    padding: 16px;
+    gap: 16px;
   }
-  .page-title {
-    font-size: 1.2rem;
-  }
-  .header-debt-value {
-    font-size: 1.5rem;
-  }
-  .tech-controls-row {
+
+  .tech-header-top {
     flex-direction: column;
     align-items: stretch;
+    gap: 20px;
+  }
+
+  .tech-debt-group {
+    align-items: flex-start;
+    margin-top: -10px;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .tech-controls-row {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
   }
-  .info-mini-container {
-    justify-content: center;
-  }
+
   .tech-actions-container {
+    width: 100%;
     justify-content: space-between;
   }
-  .btn-secondary,
+
   .btn-primary {
     flex: 1;
-    justify-content: center;
-    padding: 12px;
+  }
+
+  .detail-content-wrapper {
+    padding: 16px;
+  }
+
+  /* Ajuste Snackbar en móvil */
+  .selection-snackbar {
+    bottom: 0; /* Pegado abajo en móvil */
+    left: 0;
+    transform: translateY(100%);
+    width: 100%;
+    max-width: 100%;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 20px 24px 24px 24px; /* Más padding abajo para áreas seguras */
+    box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .selection-snackbar.active {
+    transform: translateY(0);
   }
 }

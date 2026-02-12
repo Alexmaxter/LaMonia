@@ -15,6 +15,15 @@ import { ConfirmationModal } from "./Components/ConfirmationModal/index.js";
 import { StockReportModal } from "./Components/StockReportModal/index.js";
 import { SupplierSettingsModal } from "./Components/SupplierSettingModal/index.js";
 
+// --- HELPER: Calcular Valor Signado ---
+// Invoice (Deuda) = Positivo
+// Payment (Pago) = Negativo
+const getSignedAmount = (type, amount) => {
+  const t = (type || "").toLowerCase();
+  const a = parseFloat(amount || 0);
+  return t === "invoice" || t === "boleta" ? a : -a;
+};
+
 export const SupplierController = () => {
   // Estado local del controlador
   let isVisible = SupplierModel.getVisibility();
@@ -77,13 +86,18 @@ export const SupplierController = () => {
           "desc",
         );
 
-        // Pre-procesamiento de saldos
+        // Pre-procesamiento de saldos (Visualización)
+        // Usamos el saldo guardado en DB como punto de partida si queremos ser precisos,
+        // o recalculamos al vuelo para el historial visual.
+        // Aquí mantenemos tu lógica visual de "Running Balance" inverso.
         let runningBalance = parseFloat(supplier.balance) || 0;
         const movementsWithBalance = rawMovements.map((m) => {
           const snapshot = runningBalance;
           const amount = parseFloat(m.amount) || 0;
 
-          if (m.type === "invoice") runningBalance -= amount;
+          // Nota: Esta lógica asume que rawMovements está ordenado DESC (del más nuevo al más viejo)
+          const isDebt = (m.type || "").toLowerCase() === "invoice";
+          if (isDebt) runningBalance -= amount;
           else runningBalance += amount;
 
           return { ...m, partialBalance: snapshot };
@@ -143,9 +157,17 @@ export const SupplierController = () => {
               ),
             onDeleteMovement: (m) => handleDelete(m, supplier, container),
             onOpenSettings: () => handleOpenSettings(supplier, container),
-            // NUEVA: Función para saldar deuda
-            onSettleDebt: () =>
-              handleSettleDebt(supplier, movementsWithBalance, container),
+
+            // --- AQUÍ ESTÁ EL CAMBIO CLAVE PARA QUE FUNCIONE EL SNACKBAR ---
+            // Pasamos los argumentos (amount, note) que vienen de la vista al controlador
+            onSettleDebt: (amount, note) =>
+              handleSettleDebt(
+                supplier,
+                movementsWithBalance,
+                container,
+                amount,
+                note,
+              ),
           }),
         );
       } else {
@@ -241,45 +263,76 @@ export const SupplierController = () => {
         initialData,
         movements: activeMovements,
         onClose: () => modal.remove(),
+
+        // --- LOGICA OPTIMIZADA CON REACTIVIDAD MANUAL ---
         onSave: async (transactionData) => {
           try {
             showLoader("Guardando transacción...");
 
+            // 1. Calcular Delta y Guardar Transacción
+            let balanceDelta = 0;
+            const newSigned = getSignedAmount(
+              transactionData.type,
+              transactionData.amount,
+            );
+
             if (transactionData.id) {
+              // MODO EDICIÓN
+              const oldTx = await FirebaseDB.getById(
+                "supplier_transactions",
+                transactionData.id,
+              );
+              const oldSigned = oldTx
+                ? getSignedAmount(oldTx.type, oldTx.amount)
+                : 0;
+              balanceDelta = newSigned - oldSigned;
+
               await FirebaseDB.update(
                 "supplier_transactions",
                 transactionData.id,
                 transactionData,
               );
             } else {
-              const payload = {
-                ...transactionData,
-                createdAt: new Date(),
-              };
+              // MODO CREACIÓN
+              balanceDelta = newSigned;
+              const payload = { ...transactionData, createdAt: new Date() };
               await FirebaseDB.add("supplier_transactions", payload);
             }
 
-            const allMovs = await FirebaseDB.getByFilter(
-              "supplier_transactions",
-              "supplierId",
+            // 2. Actualizar Proveedor (Suma Delta)
+            const freshSupplier = await FirebaseDB.getById(
+              "suppliers",
               transactionData.supplierId,
             );
-
-            let newBalance = 0;
-            allMovs.forEach((m) => {
-              const amt = parseFloat(m.amount) || 0;
-              if (m.type === "invoice") newBalance += amt;
-              else newBalance -= amt;
-            });
+            const currentBalance = parseFloat(freshSupplier.balance || 0);
+            const finalBalance = currentBalance + balanceDelta;
 
             await FirebaseDB.update("suppliers", transactionData.supplierId, {
-              balance: newBalance,
+              balance: finalBalance,
               lastTransactionDate: new Date(),
             });
 
             hideLoader();
             modal.remove();
-            reloadCurrentView(cont);
+
+            // --- INTENTO DE REACTIVIDAD QUIRÚRGICA ---
+            const currentView = cont.querySelector(".supplier-detail-view");
+            if (currentView && typeof currentView.updateState === "function") {
+              // A. Obtenemos movimientos frescos
+              const freshMovements = await FirebaseDB.getByFilter(
+                "supplier_transactions",
+                "supplierId",
+                supplier.id,
+                "date",
+                "desc",
+              );
+
+              // B. Actualizamos la vista sin recargar
+              currentView.updateState(finalBalance, freshMovements);
+            } else {
+              // Fallback: Recarga completa
+              reloadCurrentView(cont);
+            }
           } catch (err) {
             hideLoader();
             console.error(err);
@@ -288,7 +341,11 @@ export const SupplierController = () => {
         },
         onDelete: initialData?.id
           ? async (transactionId) => {
-              await handleDelete({ id: transactionId }, supplier, cont);
+              await handleDelete(
+                { id: transactionId, ...initialData },
+                supplier,
+                cont,
+              );
               modal.remove();
             }
           : null,
@@ -299,33 +356,53 @@ export const SupplierController = () => {
     async function handleDelete(m, supplier, cont) {
       const confirm = ConfirmationModal({
         title: "¿Eliminar registro?",
-        message: "Esta acción recalculará el saldo automáticamente.",
+        message: "Esta acción actualizará el saldo automáticamente.",
         onConfirm: async () => {
           try {
             showLoader("Eliminando...");
 
-            await FirebaseDB.delete("supplier_transactions", m.id);
-
-            const allMovs = await FirebaseDB.getByFilter(
-              "supplier_transactions",
-              "supplierId",
-              supplier.id,
+            // 1. Obtener datos antes de borrar
+            const txToDelete =
+              m.amount !== undefined
+                ? m
+                : await FirebaseDB.getById("supplier_transactions", m.id);
+            const signedAmount = getSignedAmount(
+              txToDelete.type,
+              txToDelete.amount,
             );
 
-            let newBalance = 0;
-            allMovs.forEach((mov) => {
-              const amt = parseFloat(mov.amount) || 0;
-              if (mov.type === "invoice") newBalance += amt;
-              else newBalance -= amt;
-            });
+            // 2. Borrar
+            await FirebaseDB.delete("supplier_transactions", m.id);
+
+            // 3. Ajustar Saldo
+            const freshSupplier = await FirebaseDB.getById(
+              "suppliers",
+              supplier.id,
+            );
+            const currentBalance = parseFloat(freshSupplier.balance || 0);
+            const finalBalance = currentBalance - signedAmount;
 
             await FirebaseDB.update("suppliers", supplier.id, {
-              balance: newBalance,
+              balance: finalBalance,
             });
 
             hideLoader();
             confirm.remove();
-            reloadCurrentView(cont);
+
+            // --- REACTIVIDAD QUIRÚRGICA ---
+            const currentView = cont.querySelector(".supplier-detail-view");
+            if (currentView && typeof currentView.updateState === "function") {
+              const freshMovements = await FirebaseDB.getByFilter(
+                "supplier_transactions",
+                "supplierId",
+                supplier.id,
+                "date",
+                "desc",
+              );
+              currentView.updateState(finalBalance, freshMovements);
+            } else {
+              reloadCurrentView(cont);
+            }
           } catch (e) {
             hideLoader();
             alert("Error al eliminar: " + e.message);
@@ -352,11 +429,7 @@ export const SupplierController = () => {
             hideLoader();
             modal.remove();
 
-            // --- CORRECCIÓN CRÍTICA AQUÍ ---
-            // 1. Aseguramos el ID (si ref es objeto usa .id, si es string usa ref)
             const newId = ref.id ? ref.id : ref;
-
-            // 2. Corregimos la ruta: quitamos la '/' sobrante -> #suppliers/ID
             window.location.hash = `#suppliers/${newId}`;
           } catch (e) {
             hideLoader();
@@ -374,7 +447,55 @@ export const SupplierController = () => {
         onSave: async (updatedData) => {
           try {
             showLoader("Actualizando...");
-            await FirebaseDB.update("suppliers", supplier.id, updatedData);
+
+            // --- Lógica de IDs y Renombres ---
+            const { renames, ...cleanData } = updatedData;
+
+            await FirebaseDB.update("suppliers", supplier.id, cleanData);
+
+            // Procesar renombres (items viejos)
+            if (renames && renames.length > 0) {
+              const transactions = await FirebaseDB.getByFilter(
+                "supplier_transactions",
+                "supplierId",
+                supplier.id,
+              );
+
+              for (const tx of transactions) {
+                let changed = false;
+                let newItems = tx.items;
+                let newItemName = tx.itemName;
+
+                // Caso Legacy (itemName string)
+                const simpleRename = renames.find(
+                  (r) => r.from === tx.itemName,
+                );
+                if (simpleRename) {
+                  newItemName = simpleRename.to;
+                  changed = true;
+                }
+
+                // Caso Nuevo (items array)
+                if (tx.items && Array.isArray(tx.items)) {
+                  newItems = tx.items.map((i) => {
+                    const match = renames.find((r) => r.from === i.name);
+                    if (match) {
+                      changed = true;
+                      return { ...i, name: match.to };
+                    }
+                    return i;
+                  });
+                }
+
+                if (changed) {
+                  await FirebaseDB.update("supplier_transactions", tx.id, {
+                    itemName: newItemName,
+                    items: newItems,
+                  });
+                }
+              }
+            }
+
             hideLoader();
             modal.remove();
             reloadCurrentView(cont);
@@ -393,6 +514,7 @@ export const SupplierController = () => {
               supplierId,
             );
 
+            // Borrado en serie (lento pero seguro en cliente)
             for (const tx of transactions) {
               await FirebaseDB.delete("supplier_transactions", tx.id);
             }
@@ -411,21 +533,33 @@ export const SupplierController = () => {
       document.body.appendChild(modal);
     }
 
-    async function handleSettleDebt(supplier, movements, cont) {
+    // --- FUNCIÓN CORREGIDA PARA ACEPTAR ARGUMENTOS ---
+    async function handleSettleDebt(
+      supplier,
+      movements,
+      cont,
+      amountOverride = null, // <--- Nuevo Param
+      noteOverride = null, // <--- Nuevo Param
+    ) {
       const totalDebt = parseFloat(supplier.balance) || 0;
 
-      if (totalDebt <= 0) {
+      // Si no hay deuda y tampoco nos pasaron un monto forzado, avisamos
+      if (totalDebt <= 0 && amountOverride === null) {
         alert("Este proveedor no tiene deuda pendiente.");
         return;
       }
+
+      // Si nos pasaron un monto (desde el Snackbar), lo usamos. Si no, usamos toda la deuda.
+      const finalAmount = amountOverride !== null ? amountOverride : totalDebt;
+      const finalNote = noteOverride || "Cancelación total de deuda";
 
       const modal = TransactionModal({
         supplier,
         initialData: {
           type: "payment",
-          amount: totalDebt,
+          amount: finalAmount, // <--- Usamos el monto correcto
           date: new Date().toISOString().split("T")[0],
-          observation: "Cancelación total de deuda",
+          observation: finalNote, // <--- Usamos la nota correcta
         },
         movements: movements,
         onClose: () => modal.remove(),
@@ -439,27 +573,37 @@ export const SupplierController = () => {
             };
             await FirebaseDB.add("supplier_transactions", payload);
 
-            const allMovs = await FirebaseDB.getByFilter(
-              "supplier_transactions",
-              "supplierId",
+            // Actualización Incremental
+            const freshSupplier = await FirebaseDB.getById(
+              "suppliers",
               transactionData.supplierId,
             );
-
-            let newBalance = 0;
-            allMovs.forEach((m) => {
-              const amt = parseFloat(m.amount) || 0;
-              if (m.type === "invoice") newBalance += amt;
-              else newBalance -= amt;
-            });
+            const currentBalance = parseFloat(freshSupplier.balance || 0);
+            const payAmount = parseFloat(transactionData.amount);
+            const finalBalance = currentBalance - payAmount;
 
             await FirebaseDB.update("suppliers", transactionData.supplierId, {
-              balance: newBalance,
+              balance: finalBalance,
               lastTransactionDate: new Date(),
             });
 
             hideLoader();
             modal.remove();
-            reloadCurrentView(cont);
+
+            // --- REACTIVIDAD QUIRÚRGICA ---
+            const currentView = cont.querySelector(".supplier-detail-view");
+            if (currentView && typeof currentView.updateState === "function") {
+              const freshMovements = await FirebaseDB.getByFilter(
+                "supplier_transactions",
+                "supplierId",
+                supplier.id,
+                "date",
+                "desc",
+              );
+              currentView.updateState(finalBalance, freshMovements);
+            } else {
+              reloadCurrentView(cont);
+            }
           } catch (err) {
             hideLoader();
             console.error(err);
@@ -477,30 +621,26 @@ export const SupplierController = () => {
         onSave: async (data) => {
           try {
             showLoader("Guardando...");
+
             const payload = { ...data, createdAt: new Date() };
             await FirebaseDB.add("supplier_transactions", payload);
 
-            const allMovs = await FirebaseDB.getByFilter(
-              "supplier_transactions",
-              "supplierId",
+            // Actualización Incremental
+            const signedAmount = getSignedAmount(data.type, data.amount);
+            const freshSupplier = await FirebaseDB.getById(
+              "suppliers",
               data.supplierId,
             );
-
-            let newBalance = 0;
-            allMovs.forEach((m) => {
-              const amt = parseFloat(m.amount) || 0;
-              if (m.type === "invoice") newBalance += amt;
-              else newBalance -= amt;
-            });
+            const currentBalance = parseFloat(freshSupplier.balance || 0);
 
             await FirebaseDB.update("suppliers", data.supplierId, {
-              balance: newBalance,
+              balance: currentBalance + signedAmount,
               lastTransactionDate: new Date(),
             });
 
             hideLoader();
             modal.remove();
-            reloadCurrentView(cont);
+            reloadCurrentView(cont); // Aquí mantenemos recarga completa por ser global
           } catch (e) {
             hideLoader();
             alert("Error: " + e.message);

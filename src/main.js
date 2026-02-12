@@ -35,7 +35,11 @@ new Router(routes, layout.contentContainer);
 if (!window.location.hash || window.location.hash === "#cashflow") {
   window.location.hash = "#suppliers";
 }
-
+import { recalcAllBalances } from "./modules/suppliers/utils/recalcBalance.js";
+window.recalc = recalcAllBalances;
+console.log(
+  "   - recalc()        : Recalcular saldos de todos los proveedores",
+); // <--- Nuevo
 import {
   runMigration,
   mergeItems,
