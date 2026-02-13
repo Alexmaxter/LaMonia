@@ -1,7 +1,6 @@
 /* =========================================
    VISTA DETALLE PROVEEDOR (Brutalist / Tech Style)
    ========================================= */
-
 .supplier-detail-view {
   display: flex;
   flex-direction: column;
@@ -10,17 +9,15 @@
   position: relative;
 }
 
-/* --- HEADER PANEL --- */
+/* HEADER */
 .tech-panel-header-detail {
   padding: 24px 32px 20px 32px;
   background-color: #ffffff;
-  border-bottom: 2px solid #000000; /* Borde duro */
+  border-bottom: 2px solid #000000;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-
-/* Fila Superior: Título y Deuda */
 .tech-header-top {
   display: flex;
   justify-content: space-between;
@@ -28,8 +25,6 @@
   flex-wrap: wrap;
   gap: 16px;
 }
-
-/* Grupo Izquierdo: Back + Título */
 .left-group {
   display: flex;
   align-items: flex-start;
@@ -44,20 +39,18 @@
   justify-content: center;
   border: 2px solid #000;
   background: #fff;
-  border-radius: 0; /* Cuadrado perfecto */
+  border-radius: 0;
   cursor: pointer;
   transition:
     transform 0.1s,
     background-color 0.1s;
   color: #000;
 }
-
 .btn-back-arrow:hover {
   background-color: #f0f0f0;
 }
-
 .btn-back-arrow:active {
-  transform: translate(2px, 2px); /* Click físico */
+  transform: translate(2px, 2px);
 }
 
 .title-block {
@@ -65,7 +58,6 @@
   flex-direction: column;
   gap: 4px;
 }
-
 .page-title {
   font-size: 1.75rem;
   font-weight: 800;
@@ -75,7 +67,6 @@
   text-transform: uppercase;
   letter-spacing: -0.5px;
 }
-
 .supplier-type-badge {
   display: inline-block;
   font-size: 0.7rem;
@@ -88,20 +79,17 @@
   border: 1px solid #000;
 }
 
-/* Grupo Derecho: Deuda */
 .tech-debt-group {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
 }
-
 .debt-label-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .debt-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -109,7 +97,6 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
 .btn-icon-toggle {
   background: none;
   border: none;
@@ -120,11 +107,9 @@
   color: #999;
   transition: color 0.2s;
 }
-
 .btn-icon-toggle:hover {
   color: #000;
 }
-
 .header-debt-value {
   font-size: 2rem;
   font-weight: 900;
@@ -134,24 +119,20 @@
 }
 
 .btn-settle-mini {
-  /* Estilos base para el botón de header (si aparece) */
   font-family: inherit;
   transition:
     transform 0.1s,
     background-color 0.2s;
   white-space: nowrap;
-  border-radius: 0 !important; /* Cuadrado */
+  border-radius: 0 !important;
 }
-
 .btn-settle-mini:hover {
   background-color: #333 !important;
 }
-
 .btn-settle-mini:active {
   transform: translateY(2px);
 }
 
-/* --- FILA DE CONTROLES INFERIOR --- */
 .tech-controls-row {
   display: flex;
   justify-content: space-between;
@@ -160,19 +141,16 @@
   flex-wrap: wrap;
   gap: 16px;
 }
-
 .info-mini-container {
   display: flex;
   align-items: center;
 }
-
 .no-alias {
   font-size: 0.85rem;
   color: #999;
   font-style: italic;
   font-family: monospace;
 }
-
 .alias-chip {
   display: flex;
   align-items: center;
@@ -180,24 +158,21 @@
   background: #f4f4f4;
   border: 1px solid #000;
   padding: 6px 12px;
-  border-radius: 0; /* Cuadrado */
+  border-radius: 0;
   cursor: pointer;
   font-family: monospace;
   font-size: 0.9rem;
   color: #000;
   transition: all 0.1s;
 }
-
 .alias-chip:hover {
   background: #e0e0e0;
 }
 
-/* Botones de Acción */
 .tech-actions-container {
   display: flex;
   gap: 10px;
 }
-
 .btn-secondary,
 .btn-secondary-icon {
   height: 36px;
@@ -213,19 +188,16 @@
   cursor: pointer;
   text-transform: uppercase;
   transition: all 0.1s;
-  border-radius: 0; /* Cuadrado */
+  border-radius: 0;
 }
-
 .btn-secondary-icon {
   padding: 0;
   width: 36px;
 }
-
 .btn-secondary:hover,
 .btn-secondary-icon:hover {
   background: #f0f0f0;
 }
-
 .btn-primary {
   height: 36px;
   display: flex;
@@ -241,19 +213,16 @@
   cursor: pointer;
   text-transform: uppercase;
   transition: all 0.1s;
-  border-radius: 0; /* Cuadrado */
+  border-radius: 0;
 }
-
 .btn-primary:hover {
   background: #333;
 }
-
 .btn-primary:active,
 .btn-secondary:active {
-  transform: translate(2px, 2px); /* Click Físico */
+  transform: translate(2px, 2px);
 }
 
-/* --- CONTENIDO SCROLLABLE --- */
 .detail-content-wrapper {
   flex: 1;
   overflow-y: auto;
@@ -262,46 +231,30 @@
   position: relative;
 }
 
-/* =========================================
-   GRID LAYOUT (Solo para Stock)
-   ========================================= */
-
+/* GRID LAYOUT (Stock) */
 .detail-grid-layout {
   display: grid;
-  /* Columna 1 (Reporte): 340px fijo
-     Columna 2 (Lista): 1fr (El resto del espacio) 
-  */
   grid-template-columns: 340px 1fr;
   gap: 24px;
-  align-items: start; /* Alineación superior, evita estirar alturas */
+  align-items: start;
   width: 100%;
 }
-
 .grid-list-column {
-  min-width: 0; /* Truco CSS Grid para evitar desbordes en contenido flexible */
+  min-width: 0;
 }
 
-/* =========================================
-   SNACKBAR FLOTANTE (ESTILO BRUTALISTA)
-   ========================================= */
-
+/* SNACKBAR FLOTANTE */
 .selection-snackbar {
   position: fixed;
   bottom: 24px;
   left: 50%;
-  transform: translateX(-50%) translateY(150%); /* Oculto inicialmente */
-
-  /* ESTÉTICA TÉCNICA */
-  background: #000000; /* Negro total */
+  transform: translateX(-50%) translateY(150%);
+  background: #000000;
   color: #ffffff;
-  border: 2px solid #000; /* Borde sólido */
-
+  border: 2px solid #000;
   padding: 16px 24px;
-  border-radius: 0; /* Cero curvas */
-
-  /* Sombra dura (Hard Shadow) típica del brutalismo */
+  border-radius: 0;
   box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -309,126 +262,102 @@
   z-index: 1000;
   min-width: 360px;
   max-width: 90vw;
-
-  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1); /* Transición rápida y seca */
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
 }
-
 .selection-snackbar.active {
-  transform: translateX(-50%) translateY(0); /* Visible */
+  transform: translateX(-50%) translateY(0);
 }
-
 .snackbar-info {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 2px;
 }
-
 .snackbar-count {
-  font-family: monospace; /* Toque técnico */
+  font-family: monospace;
   font-size: 0.75rem;
   color: #ccc;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-
 .snackbar-total {
   font-size: 1.25rem;
-  font-weight: 800; /* Extra bold */
+  font-weight: 800;
   letter-spacing: -0.5px;
   line-height: 1;
 }
-
 .btn-snackbar-pay {
   background: #ffffff;
   color: #000000;
-  border: 2px solid #ffffff; /* Borde blanco para definir si el fondo cambia */
+  border: 2px solid #ffffff;
   height: 42px;
   padding: 0 24px;
-  border-radius: 0; /* Botón cuadrado */
-
+  border-radius: 0;
   font-weight: 800;
   font-size: 0.9rem;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-
   transition: all 0.1s;
 }
-
 .btn-snackbar-pay:hover {
   background-color: #e0e0e0;
   border-color: #e0e0e0;
 }
-
 .btn-snackbar-pay:active {
-  transform: translate(2px, 2px); /* Click físico */
+  transform: translate(2px, 2px);
   box-shadow: none;
 }
 
-/* --- RESPONSIVE --- */
+/* RESPONSIVE */
 @media (max-width: 1024px) {
-  /* En tablets o pantallas medianas, volvemos a una columna */
   .detail-grid-layout {
     grid-template-columns: 1fr;
     gap: 20px;
   }
 }
-
 @media (max-width: 768px) {
   .tech-panel-header-detail {
     padding: 16px;
     gap: 16px;
   }
-
   .tech-header-top {
     flex-direction: column;
     align-items: stretch;
     gap: 20px;
   }
-
   .tech-debt-group {
     align-items: flex-start;
     margin-top: -10px;
   }
-
   .page-title {
     font-size: 1.5rem;
   }
-
   .tech-controls-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-
   .tech-actions-container {
     width: 100%;
     justify-content: space-between;
   }
-
   .btn-primary {
     flex: 1;
   }
-
   .detail-content-wrapper {
     padding: 16px;
   }
-
-  /* Ajuste Snackbar en móvil */
   .selection-snackbar {
-    bottom: 0; /* Pegado abajo en móvil */
+    bottom: 0;
     left: 0;
     transform: translateY(100%);
     width: 100%;
     max-width: 100%;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    padding: 20px 24px 24px 24px; /* Más padding abajo para áreas seguras */
+    border: none;
+    padding: 20px 24px 24px 24px;
     box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.1);
   }
-
   .selection-snackbar.active {
     transform: translateY(0);
   }

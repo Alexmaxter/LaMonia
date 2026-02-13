@@ -14,17 +14,14 @@ const getSafeColor = (item) => {
   return item.color || "#ddd";
 };
 
-// --- LOGICA DE CÁLCULO DE PENDIENTES (CORREGIDA PARA IDs) ---
+// --- LOGICA DE CÁLCULO DE PENDIENTES ---
 const calculatePendingFromHistory = (movements, defaultItems = []) => {
-  const totals = {}; // Key: ID (preferible) o NOMBRE (fallback)
-
-  // 1. Mapa de items por defecto para búsqueda rápida
+  const totals = {};
   const catalogById = {};
   const catalogByName = {};
 
   if (defaultItems && Array.isArray(defaultItems)) {
     defaultItems.forEach((d) => {
-      // Usamos el ID si existe, o un placeholder si no (aunque deberían tenerlo)
       const id = d.id || `temp_${d.name}`;
       const name = getSafeName(d).trim().toUpperCase();
 
@@ -33,16 +30,15 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
         color: getSafeColor(d),
         isDefault: true,
         id: id,
-        name: d.name, // Nombre original display
+        name: d.name,
       };
 
       totals[id] = itemData;
       catalogById[id] = id;
-      if (name) catalogByName[name] = id; // Puntero para recuperar items viejos por nombre
+      if (name) catalogByName[name] = id;
     });
   }
 
-  // 2. Procesar historial
   if (movements && Array.isArray(movements)) {
     movements.forEach((m) => {
       const type = m.type ? m.type.toLowerCase().trim() : "";
@@ -53,20 +49,14 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
           const rawName = getSafeName(item).trim().toUpperCase();
           const qty = parseFloat(item.quantity || item.qty || 0);
 
-          // --- ESTRATEGIA DE VINCULACIÓN ---
-          let targetId = item.id; // 1. Intento directo por ID
-
-          // 2. Si no tiene ID (legacy), buscamos por nombre en el catálogo actual
+          let targetId = item.id;
           if (!targetId && rawName && catalogByName[rawName]) {
             targetId = catalogByName[rawName];
           }
-
-          // 3. Si sigue sin ID, es un item huérfano o legacy sin coincidencia. Usamos el nombre como ID.
           if (!targetId) {
             targetId = rawName;
           }
 
-          // Si no existe en acumuladores, lo creamos
           if (!totals[targetId]) {
             totals[targetId] = {
               qty: 0,
@@ -76,18 +66,15 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
             };
           }
 
-          // Actualizar color si encontramos uno mejor
           let color = getSafeColor(item);
           if (color !== "#ddd") totals[targetId].color = color;
 
-          // Sumar/Restar Stock
           totals[targetId].qty += isEntry ? qty : -qty;
         });
       }
     });
   }
 
-  // Filtrar resultados
   const result = {};
   Object.keys(totals).forEach((key) => {
     if (
@@ -101,6 +88,36 @@ const calculatePendingFromHistory = (movements, defaultItems = []) => {
   return result;
 };
 
+// --- INYECCIÓN DE ESTILOS PARA EL BADGE DEL MODAL ---
+const injectModalBadgeStyles = () => {
+  const styleId = "modal-badge-styles";
+  if (document.getElementById(styleId)) return;
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+        .modal-status-badge {
+            font-family: monospace;
+            font-weight: 800;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border: 1px solid #000;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .modal-status-badge.pending { background: #ff1744; color: #fff; border-color: #d50000; }
+        .modal-status-badge.partial { background: #ffc400; color: #000; border-color: #000; }
+        .modal-status-badge.paid { 
+            background: #00e676; 
+            color: #004d40; 
+            border-color: #004d40; 
+            text-decoration: line-through;
+        }
+    `;
+  document.head.appendChild(style);
+};
+
 // --- COMPONENTE PRINCIPAL ---
 export function TransactionModal({
   supplier = null,
@@ -109,18 +126,21 @@ export function TransactionModal({
   movements = [],
   onSave,
   onClose,
-  onDelete = null, // NUEVA PROP para eliminar transacción
+  onDelete = null,
 }) {
+  // Aseguramos estilos
+  injectModalBadgeStyles();
+
   const isEdit = !!initialData?.id;
 
   // ICONOS
   const iconClose = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-  const iconTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+  const iconTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
   const iconPlus = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
   const iconChevronLeft = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>`;
   const iconChevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
 
-  // ESTADO - Aseguramos minúsculas desde el inicio
+  // ESTADO
   let currentSupplier = supplier;
   let selectedType = initialData?.type
     ? initialData.type.toLowerCase()
@@ -141,6 +161,13 @@ export function TransactionModal({
     : new Date();
   let calendarViewDate = new Date(selectedDate);
 
+  // --- LÓGICA DE ESTADO (BADGE) ---
+  const status = initialData?.status || "pending";
+  const isPaid = status === "paid";
+  const isPartial = status === "partial";
+  const statusClass = isPaid ? "paid" : isPartial ? "partial" : "pending";
+  const statusLabel = isPaid ? "PAGADO" : isPartial ? "PARCIAL" : "PENDIENTE";
+
   // --- LOGICA DE GUARDADO ---
   const handleSaveAction = (e) => {
     if (e) {
@@ -157,8 +184,6 @@ export function TransactionModal({
     const conceptVal = conceptInput ? conceptInput.value.trim() : "";
     const finalAmount = parseFloat(centsBuffer) / 100;
 
-    // FIX: Permitir monto 0 si es proveedor de stock
-    // Si NO es stock, mantenemos la validación estricta de monto > 0
     const isStock = currentSupplier?.type === "stock";
 
     if (!isStock && finalAmount <= 0) {
@@ -170,13 +195,15 @@ export function TransactionModal({
       supplierId: currentSupplier?.id,
       amount: finalAmount,
       concept: conceptVal,
-      // FIX: Forzamos minúsculas al guardar
       type: selectedType.toLowerCase(),
       date: selectedDate,
+      // Mantenemos el estado existente si es edición, sino pending
+      status: initialData?.status || "pending",
+      paidAmount: initialData?.paidAmount || 0,
       items: itemsState
         .filter((i) => i.qty > 0)
         .map((i) => ({
-          id: i.id || null, // <--- GUARDAMOS EL ID AQUI
+          id: i.id || null,
           name: i.name.trim(),
           quantity: parseFloat(i.qty),
           color: i.color || "#ddd",
@@ -192,7 +219,6 @@ export function TransactionModal({
     }
   };
 
-  // --- NUEVA FUNCION: Manejar eliminación ---
   const handleDeleteAction = (e) => {
     if (e) {
       e.preventDefault();
@@ -308,7 +334,7 @@ export function TransactionModal({
 
     if (isEdit && initialData?.items && initialData.items.length > 0) {
       itemsState = initialData.items.map((i) => ({
-        id: i.id || null, // <--- RECUPERAMOS EL ID
+        id: i.id || null,
         name: getSafeName(i),
         qty: parseFloat(i.quantity || i.qty || 0),
         color: getSafeColor(i),
@@ -322,10 +348,9 @@ export function TransactionModal({
       currentSupplier?.defaultItems,
     );
 
-    // Convertimos el map de objetos a array
     itemsState = Object.values(debtMap)
       .map((data) => ({
-        id: data.id, // <--- MANTENEMOS EL ID
+        id: data.id,
         name: data.name,
         qty: 0,
         max: selectedType === "payment" ? data.qty : undefined,
@@ -347,8 +372,6 @@ export function TransactionModal({
       return;
     }
 
-    // INTENTO DE VINCULACIÓN AUTOMÁTICA
-    // Si el usuario escribe "Harina" y existe en el catálogo, le asignamos su ID
     let linkedId = null;
     let linkedColor = "#ddd";
 
@@ -363,7 +386,7 @@ export function TransactionModal({
     }
 
     itemsState.push({
-      id: linkedId, // <--- ASIGNAMOS ID SI COINCIDE
+      id: linkedId,
       name: customName.trim(),
       qty: 0,
       color: linkedColor,
@@ -567,7 +590,6 @@ export function TransactionModal({
     renderCalendar();
   };
 
-  // --- NUEVA FUNCION: Establecer fecha rápida ---
   const setQuickDate = (daysOffset) => {
     const newDate = new Date();
     newDate.setDate(newDate.getDate() + daysOffset);
@@ -623,9 +645,23 @@ export function TransactionModal({
       el("div", { className: "fusion-header" }, [
         el("div", { className: "header-text-group" }, [
           el(
-            "span",
-            { className: "fusion-subtitle" },
-            isEdit ? "EDITAR REGISTRO" : "NUEVO MOVIMIENTO",
+            "div",
+            { style: "display: flex; align-items: center; gap: 8px;" },
+            [
+              el(
+                "span",
+                { className: "fusion-subtitle" },
+                isEdit ? "EDITAR REGISTRO" : "NUEVO MOVIMIENTO",
+              ),
+              // --- AQUI ESTÁ EL BADGE DE ESTADO ---
+              isEdit
+                ? el(
+                    "span",
+                    { className: `modal-status-badge ${statusClass}` },
+                    statusLabel,
+                  )
+                : null,
+            ],
           ),
           headerSelector,
         ]),
@@ -748,7 +784,6 @@ export function TransactionModal({
                   innerHTML: iconChevronRight,
                 }),
               ]),
-              // NUEVO: Chips de fecha rápida (HOY y AYER)
               el("div", { className: "quick-date-row" }, [
                 el(
                   "button",
@@ -796,7 +831,6 @@ export function TransactionModal({
           ]),
 
           el("div", { className: "fusion-footer" }, [
-            // NUEVO: Botón de Eliminar (solo en modo edición con onDelete)
             ...(isEdit && typeof onDelete === "function"
               ? [
                   el(

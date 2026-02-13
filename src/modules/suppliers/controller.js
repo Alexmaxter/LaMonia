@@ -16,8 +16,6 @@ import { StockReportModal } from "./Components/StockReportModal/index.js";
 import { SupplierSettingsModal } from "./Components/SupplierSettingModal/index.js";
 
 // --- HELPER: Calcular Valor Signado ---
-// Invoice (Deuda) = Positivo
-// Payment (Pago) = Negativo
 const getSignedAmount = (type, amount) => {
   const t = (type || "").toLowerCase();
   const a = parseFloat(amount || 0);
@@ -28,14 +26,12 @@ export const SupplierController = () => {
   // Estado local del controlador
   let isVisible = SupplierModel.getVisibility();
 
-  // Función auxiliar para refrescar la vista actual sin recargar la página
   const reloadCurrentView = (container) => {
     const ctrl = SupplierController();
     ctrl(container);
   };
 
   const toggleAmountsVisibility = (visible) => {
-    // Actualizamos visibilidad en elementos del DOM existentes
     const amountElements = document.querySelectorAll("[data-amount]");
     amountElements.forEach((el) => {
       const amount = parseFloat(el.getAttribute("data-amount"));
@@ -47,12 +43,8 @@ export const SupplierController = () => {
 
   // --- FUNCIÓN PRINCIPAL DEL CONTROLADOR ---
   return async (container) => {
-    // 1. Limpieza inicial
     container.innerHTML = "";
-
-    // 2. Leemos la URL de forma robusta
     const hash = window.location.hash;
-    // Eliminamos query params (?...) si existen y dividimos por /
     const cleanHash = hash.split("?")[0];
     const parts = cleanHash.split("/");
     const id = parts[1] ? parts[1].trim() : null;
@@ -66,9 +58,7 @@ export const SupplierController = () => {
 
         const supplier = await FirebaseDB.getById("suppliers", id);
 
-        // Si el proveedor no existe
         if (!supplier) {
-          console.warn("Proveedor no encontrado con ID:", id);
           hideLoader();
           container.innerHTML = `<div class="error-state">
             <h3>Proveedor no encontrado</h3>
@@ -86,26 +76,17 @@ export const SupplierController = () => {
           "desc",
         );
 
-        // Pre-procesamiento de saldos (Visualización)
-        // Usamos el saldo guardado en DB como punto de partida si queremos ser precisos,
-        // o recalculamos al vuelo para el historial visual.
-        // Aquí mantenemos tu lógica visual de "Running Balance" inverso.
         let runningBalance = parseFloat(supplier.balance) || 0;
         const movementsWithBalance = rawMovements.map((m) => {
           const snapshot = runningBalance;
           const amount = parseFloat(m.amount) || 0;
-
-          // Nota: Esta lógica asume que rawMovements está ordenado DESC (del más nuevo al más viejo)
           const isDebt = (m.type || "").toLowerCase() === "invoice";
           if (isDebt) runningBalance -= amount;
           else runningBalance += amount;
-
           return { ...m, partialBalance: snapshot };
         });
 
         hideLoader();
-
-        // Limpieza final antes de pintar
         container.innerHTML = "";
 
         container.appendChild(
@@ -158,16 +139,73 @@ export const SupplierController = () => {
             onDeleteMovement: (m) => handleDelete(m, supplier, container),
             onOpenSettings: () => handleOpenSettings(supplier, container),
 
-            // --- AQUÍ ESTÁ EL CAMBIO CLAVE PARA QUE FUNCIONE EL SNACKBAR ---
-            // Pasamos los argumentos (amount, note) que vienen de la vista al controlador
-            onSettleDebt: (amount, note) =>
+            // --- PAGO FINANCIERO (Checkbox + Snackbar) ---
+            // Afecta Saldo y Estado
+            onSettleDebt: (amount, note, targetIds) =>
               handleSettleDebt(
                 supplier,
                 movementsWithBalance,
                 container,
                 amount,
                 note,
+                targetIds,
               ),
+
+            // --- CONCILIACIÓN ADMINISTRATIVA (Switch) ---
+            // Solo afecta Estado (NO Saldo)
+            onToggleStatus: async (transaction) => {
+              try {
+                // 1. Calcular nuevo estado
+                const currentStatus = transaction.status || "pending";
+                const newStatus = currentStatus === "paid" ? "pending" : "paid";
+
+                // Si marcamos como pagada, ponemos el paidAmount igual al total (visual).
+                // Si marcamos como pendiente, reseteamos a 0.
+                const newPaidAmount =
+                  newStatus === "paid" ? parseFloat(transaction.amount) : 0;
+
+                showLoader("Actualizando estado...");
+
+                // 2. Actualizar transacción en Firebase (SIN TOCAR SALDO DE PROVEEDOR)
+                await FirebaseDB.update(
+                  "supplier_transactions",
+                  transaction.id,
+                  {
+                    status: newStatus,
+                    paidAmount: newPaidAmount,
+                  },
+                );
+
+                // 3. Recargar datos frescos
+                const freshMovements = await FirebaseDB.getByFilter(
+                  "supplier_transactions",
+                  "supplierId",
+                  supplier.id,
+                  "date",
+                  "desc",
+                );
+
+                // 4. Actualizar Vista (Reactivamente)
+                const currentView = container.querySelector(
+                  ".supplier-detail-view",
+                );
+                if (
+                  currentView &&
+                  typeof currentView.updateState === "function"
+                ) {
+                  // Pasamos el supplier.balance original porque NO cambió
+                  currentView.updateState(supplier.balance, freshMovements);
+                } else {
+                  reloadCurrentView(container);
+                }
+
+                hideLoader();
+              } catch (e) {
+                hideLoader();
+                console.error(e);
+                alert("Error al cambiar estado: " + e.message);
+              }
+            },
           }),
         );
       } else {
@@ -177,16 +215,13 @@ export const SupplierController = () => {
         showLoader("Cargando proveedores...");
 
         const rawSuppliers = await FirebaseDB.getAll("suppliers");
-
         const suppliersData = rawSuppliers.map((s) => ({
           ...s,
           balance: parseFloat(s.balance) || 0,
         }));
-
         const totalDebt = suppliersData.reduce((acc, s) => acc + s.balance, 0);
 
         hideLoader();
-
         container.innerHTML = "";
 
         container.appendChild(
@@ -194,28 +229,23 @@ export const SupplierController = () => {
             suppliers: suppliersData,
             totalDebt,
             isVisible,
-
             onSelect: (sId) => {
               window.location.hash = `#suppliers/${sId}`;
             },
-
             onAddQuickTransaction: (s) =>
               showTransactionModal(s, { type: "invoice" }, [], container),
             onNewSupplier: () => handleCreateSupplier(container),
             onGlobalTransaction: () =>
               handleGlobalTransaction(suppliersData, container),
-
             onToggleVisibility: () => {
               isVisible = SupplierModel.toggleVisibility();
               toggleAmountsVisibility(isVisible);
               return isVisible;
             },
-
             onEditTransaction: (tx) => {
               const s = suppliersData.find((sup) => sup.id === tx.supplierId);
               if (s) showTransactionModal(s, tx, [], container);
             },
-
             onDeleteTransaction: (tx) => {
               const s = suppliersData.find((sup) => sup.id === tx.supplierId);
               if (s) handleDelete(tx, s, container);
@@ -263,13 +293,9 @@ export const SupplierController = () => {
         initialData,
         movements: activeMovements,
         onClose: () => modal.remove(),
-
-        // --- LOGICA OPTIMIZADA CON REACTIVIDAD MANUAL ---
         onSave: async (transactionData) => {
           try {
             showLoader("Guardando transacción...");
-
-            // 1. Calcular Delta y Guardar Transacción
             let balanceDelta = 0;
             const newSigned = getSignedAmount(
               transactionData.type,
@@ -277,7 +303,7 @@ export const SupplierController = () => {
             );
 
             if (transactionData.id) {
-              // MODO EDICIÓN
+              // EDICIÓN
               const oldTx = await FirebaseDB.getById(
                 "supplier_transactions",
                 transactionData.id,
@@ -286,20 +312,19 @@ export const SupplierController = () => {
                 ? getSignedAmount(oldTx.type, oldTx.amount)
                 : 0;
               balanceDelta = newSigned - oldSigned;
-
               await FirebaseDB.update(
                 "supplier_transactions",
                 transactionData.id,
                 transactionData,
               );
             } else {
-              // MODO CREACIÓN
+              // CREACIÓN
               balanceDelta = newSigned;
               const payload = { ...transactionData, createdAt: new Date() };
               await FirebaseDB.add("supplier_transactions", payload);
             }
 
-            // 2. Actualizar Proveedor (Suma Delta)
+            // Actualizar Saldo Proveedor
             const freshSupplier = await FirebaseDB.getById(
               "suppliers",
               transactionData.supplierId,
@@ -315,10 +340,9 @@ export const SupplierController = () => {
             hideLoader();
             modal.remove();
 
-            // --- INTENTO DE REACTIVIDAD QUIRÚRGICA ---
+            // Reactividad
             const currentView = cont.querySelector(".supplier-detail-view");
             if (currentView && typeof currentView.updateState === "function") {
-              // A. Obtenemos movimientos frescos
               const freshMovements = await FirebaseDB.getByFilter(
                 "supplier_transactions",
                 "supplierId",
@@ -326,11 +350,8 @@ export const SupplierController = () => {
                 "date",
                 "desc",
               );
-
-              // B. Actualizamos la vista sin recargar
               currentView.updateState(finalBalance, freshMovements);
             } else {
-              // Fallback: Recarga completa
               reloadCurrentView(cont);
             }
           } catch (err) {
@@ -360,8 +381,6 @@ export const SupplierController = () => {
         onConfirm: async () => {
           try {
             showLoader("Eliminando...");
-
-            // 1. Obtener datos antes de borrar
             const txToDelete =
               m.amount !== undefined
                 ? m
@@ -371,10 +390,8 @@ export const SupplierController = () => {
               txToDelete.amount,
             );
 
-            // 2. Borrar
             await FirebaseDB.delete("supplier_transactions", m.id);
 
-            // 3. Ajustar Saldo
             const freshSupplier = await FirebaseDB.getById(
               "suppliers",
               supplier.id,
@@ -389,7 +406,6 @@ export const SupplierController = () => {
             hideLoader();
             confirm.remove();
 
-            // --- REACTIVIDAD QUIRÚRGICA ---
             const currentView = cont.querySelector(".supplier-detail-view");
             if (currentView && typeof currentView.updateState === "function") {
               const freshMovements = await FirebaseDB.getByFilter(
@@ -428,7 +444,6 @@ export const SupplierController = () => {
             });
             hideLoader();
             modal.remove();
-
             const newId = ref.id ? ref.id : ref;
             window.location.hash = `#suppliers/${newId}`;
           } catch (e) {
@@ -447,26 +462,20 @@ export const SupplierController = () => {
         onSave: async (updatedData) => {
           try {
             showLoader("Actualizando...");
-
-            // --- Lógica de IDs y Renombres ---
             const { renames, ...cleanData } = updatedData;
-
             await FirebaseDB.update("suppliers", supplier.id, cleanData);
 
-            // Procesar renombres (items viejos)
             if (renames && renames.length > 0) {
               const transactions = await FirebaseDB.getByFilter(
                 "supplier_transactions",
                 "supplierId",
                 supplier.id,
               );
-
               for (const tx of transactions) {
                 let changed = false;
                 let newItems = tx.items;
                 let newItemName = tx.itemName;
 
-                // Caso Legacy (itemName string)
                 const simpleRename = renames.find(
                   (r) => r.from === tx.itemName,
                 );
@@ -475,7 +484,6 @@ export const SupplierController = () => {
                   changed = true;
                 }
 
-                // Caso Nuevo (items array)
                 if (tx.items && Array.isArray(tx.items)) {
                   newItems = tx.items.map((i) => {
                     const match = renames.find((r) => r.from === i.name);
@@ -495,7 +503,6 @@ export const SupplierController = () => {
                 }
               }
             }
-
             hideLoader();
             modal.remove();
             reloadCurrentView(cont);
@@ -507,20 +514,15 @@ export const SupplierController = () => {
         onDelete: async (supplierId) => {
           try {
             showLoader("Eliminando proveedor...");
-
             const transactions = await FirebaseDB.getByFilter(
               "supplier_transactions",
               "supplierId",
               supplierId,
             );
-
-            // Borrado en serie (lento pero seguro en cliente)
             for (const tx of transactions) {
               await FirebaseDB.delete("supplier_transactions", tx.id);
             }
-
             await FirebaseDB.delete("suppliers", supplierId);
-
             hideLoader();
             modal.remove();
             window.location.hash = "#suppliers";
@@ -533,23 +535,22 @@ export const SupplierController = () => {
       document.body.appendChild(modal);
     }
 
-    // --- FUNCIÓN CORREGIDA PARA ACEPTAR ARGUMENTOS ---
+    // --- ALGORITMO DE DISTRIBUCIÓN DE PAGOS (Conciliación Financiera) ---
     async function handleSettleDebt(
       supplier,
       movements,
       cont,
-      amountOverride = null, // <--- Nuevo Param
-      noteOverride = null, // <--- Nuevo Param
+      amountOverride = null,
+      noteOverride = null,
+      targetInvoiceIds = [], // <--- RECIBIMOS LOS IDS
     ) {
       const totalDebt = parseFloat(supplier.balance) || 0;
 
-      // Si no hay deuda y tampoco nos pasaron un monto forzado, avisamos
       if (totalDebt <= 0 && amountOverride === null) {
         alert("Este proveedor no tiene deuda pendiente.");
         return;
       }
 
-      // Si nos pasaron un monto (desde el Snackbar), lo usamos. Si no, usamos toda la deuda.
       const finalAmount = amountOverride !== null ? amountOverride : totalDebt;
       const finalNote = noteOverride || "Cancelación total de deuda";
 
@@ -557,23 +558,21 @@ export const SupplierController = () => {
         supplier,
         initialData: {
           type: "payment",
-          amount: finalAmount, // <--- Usamos el monto correcto
+          amount: finalAmount,
           date: new Date().toISOString().split("T")[0],
-          observation: finalNote, // <--- Usamos la nota correcta
+          observation: finalNote,
         },
         movements: movements,
         onClose: () => modal.remove(),
         onSave: async (transactionData) => {
           try {
-            showLoader("Guardando pago...");
+            showLoader("Procesando pago...");
 
-            const payload = {
-              ...transactionData,
-              createdAt: new Date(),
-            };
+            // 1. GUARDAR EL PAGO (Financiero)
+            const payload = { ...transactionData, createdAt: new Date() };
             await FirebaseDB.add("supplier_transactions", payload);
 
-            // Actualización Incremental
+            // 2. ACTUALIZAR SALDO PROVEEDOR (Financiero)
             const freshSupplier = await FirebaseDB.getById(
               "suppliers",
               transactionData.supplierId,
@@ -587,10 +586,48 @@ export const SupplierController = () => {
               lastTransactionDate: new Date(),
             });
 
+            // 3. ACTUALIZAR ESTADO DE BOLETAS (Administrativo)
+            if (targetInvoiceIds && targetInvoiceIds.length > 0) {
+              let moneyToDistribute = payAmount; // Dinero disponible para repartir
+
+              for (const invId of targetInvoiceIds) {
+                if (moneyToDistribute <= 0) break; // Se acabó la plata
+
+                // Obtenemos la boleta fresca
+                const invoice = await FirebaseDB.getById(
+                  "supplier_transactions",
+                  invId,
+                );
+                if (!invoice) continue;
+
+                const invTotal = parseFloat(invoice.amount || 0);
+                const invPaid = parseFloat(invoice.paidAmount || 0);
+                const invDebt = invTotal - invPaid; // Lo que falta pagar de esta boleta
+
+                if (invDebt <= 0) continue; // Ya estaba pagada
+
+                // Pagamos lo que se pueda: o toda la deuda de esta boleta, o lo que queda en el balde
+                const paymentForThis = Math.min(moneyToDistribute, invDebt);
+
+                const newPaid = invPaid + paymentForThis;
+                // Definimos estado (Tolerancia de $0.1 por decimales)
+                const newStatus =
+                  newPaid >= invTotal - 0.1 ? "paid" : "partial";
+
+                // Actualizamos la boleta en Firebase
+                await FirebaseDB.update("supplier_transactions", invId, {
+                  paidAmount: newPaid,
+                  status: newStatus,
+                });
+
+                moneyToDistribute -= paymentForThis;
+              }
+            }
+
             hideLoader();
             modal.remove();
 
-            // --- REACTIVIDAD QUIRÚRGICA ---
+            // Reactividad
             const currentView = cont.querySelector(".supplier-detail-view");
             if (currentView && typeof currentView.updateState === "function") {
               const freshMovements = await FirebaseDB.getByFilter(
@@ -621,26 +658,21 @@ export const SupplierController = () => {
         onSave: async (data) => {
           try {
             showLoader("Guardando...");
-
             const payload = { ...data, createdAt: new Date() };
             await FirebaseDB.add("supplier_transactions", payload);
-
-            // Actualización Incremental
             const signedAmount = getSignedAmount(data.type, data.amount);
             const freshSupplier = await FirebaseDB.getById(
               "suppliers",
               data.supplierId,
             );
             const currentBalance = parseFloat(freshSupplier.balance || 0);
-
             await FirebaseDB.update("suppliers", data.supplierId, {
               balance: currentBalance + signedAmount,
               lastTransactionDate: new Date(),
             });
-
             hideLoader();
             modal.remove();
-            reloadCurrentView(cont); // Aquí mantenemos recarga completa por ser global
+            reloadCurrentView(cont);
           } catch (e) {
             hideLoader();
             alert("Error: " + e.message);

@@ -15,20 +15,20 @@ export function SupplierDetailView({
   onEditMovement,
   onDeleteMovement,
   onOpenSettings,
-  onSettleDebt,
+  onSettleDebt, // Función Financiera (Crea Pago)
+  onToggleStatus, // Función Administrativa (Switch Estado)
 }) {
   let isVisible = initialIsVisible;
 
-  // Elementos DOM que necesitan actualizarse
+  // Elementos DOM
   let debtValueDisplay = null;
   let contentContainer = el("div", { className: "detail-content-wrapper" });
-  let stockStatsContainer = null; // Contenedor para panel de stock si existe
 
-  // --- NUEVO: ESTADO DE SELECCIÓN ---
+  // --- ESTADO DE SELECCIÓN ---
   const selectedInvoices = new Set();
   let selectedTotal = 0;
 
-  // --- NUEVO: SNACKBAR FLOTANTE ---
+  // --- SNACKBAR FLOTANTE (Solo para Pago Financiero) ---
   const snackbarCount = el(
     "span",
     { className: "snackbar-count" },
@@ -44,9 +44,12 @@ export function SupplierDetailView({
         className: "btn-snackbar-pay",
         onclick: () => {
           if (selectedInvoices.size > 0 && onSettleDebt) {
+            // Convertimos Set a Array para enviarlo al controlador
+            const targetIds = Array.from(selectedInvoices);
             onSettleDebt(
               selectedTotal,
-              `Pago de ${selectedInvoices.size} boletas seleccionadas`,
+              `Pago selección (${selectedInvoices.size})`,
+              targetIds,
             );
           }
         },
@@ -173,6 +176,7 @@ export function SupplierDetailView({
       onDelete: onDeleteMovement,
       isStockView: supplier.type === "stock",
       onSelectionChange: handleSelection,
+      onToggleStatus: onToggleStatus, // <--- Conectamos la función del Switch
     });
 
     if (supplier.type === "stock" && movementsWithBalance.length > 0) {
@@ -236,7 +240,9 @@ export function SupplierDetailView({
     "button",
     {
       className: "btn-settle-mini",
-      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: ${isDebt ? "flex" : "none"}`,
+      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: ${
+        isDebt ? "flex" : "none"
+      }`,
       onclick: (e) => {
         e.stopPropagation();
         if (onSettleDebt) onSettleDebt(null, "Cancelación total");
@@ -323,7 +329,7 @@ export function SupplierDetailView({
   const view = el("div", { className: "supplier-detail-view" }, [
     headerPanel,
     contentContainer,
-    snackbar, // <--- Snackbar Flotante
+    snackbar,
   ]);
 
   view.updateState = (newBalance, newMovements) => {

@@ -22,8 +22,9 @@ export function MovementList({
   isStockView = false,
   groupByDay = false,
   onSelectionChange,
+  onToggleStatus, // <--- Función para cambiar estado (badge)
 }) {
-  const iconTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+  const iconTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
   const iconCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
   const typeLabels = { invoice: "BOLETA", payment: "PAGO", credit: "NOTA" };
 
@@ -34,18 +35,38 @@ export function MovementList({
     const typeClass = `type-${m.type || "invoice"}`;
     const isDebt = m.type === "invoice" || m.type === "boleta";
 
-    // --- UI DE SELECCIÓN (Checkbox) ---
-    const selectionCircle = isDebt
+    // --- LÓGICA DE ESTADO ---
+    const status = m.status || "pending";
+    const isPaid = status === "paid";
+    const isPartial = status === "partial";
+
+    // Cálculos para parciales
+    const totalAmount = parseFloat(m.amount || 0);
+    const paidAmount = parseFloat(m.paidAmount || 0);
+    const remaining = totalAmount - paidAmount;
+
+    // --- 1. COLUMNA SELECCIÓN (Checkbox para Lotes) ---
+    const selectionElement = isDebt
       ? el(
           "div",
           {
-            className: "selection-col", // Clase renombrada para mejor semántica
+            className: "selection-col",
             onclick: (e) => {
               e.stopPropagation();
               const card = e.currentTarget.closest(".tech-movement-card");
               const isSelected = card.classList.toggle("row-selected");
+
+              // Si seleccionamos para pagar, calculamos cuánto falta
+              // Si ya está visualmente pagada, el monto a pagar financiero es 0 (o lo que decida el controller)
+              // Pero aquí enviamos la data cruda.
+              const amountToPay = isPaid
+                ? 0
+                : isPartial
+                  ? remaining
+                  : totalAmount;
+
               if (onSelectionChange) {
-                onSelectionChange(m.id, parseFloat(m.amount || 0), isSelected);
+                onSelectionChange(m.id, amountToPay, isSelected);
               }
             },
           },
@@ -56,6 +77,26 @@ export function MovementList({
               el("span", { innerHTML: iconCheck }),
             ),
           ],
+        )
+      : null;
+
+    // --- 2. BADGE INTERACTIVO (Conciliación Visual) ---
+    const statusBadgeElement = isDebt
+      ? el(
+          "button",
+          {
+            // Clases dinámicas para colores (Rojo, Amarillo, Verde)
+            className: `status-btn-badge ${isPaid ? "is-paid" : isPartial ? "is-partial" : "is-pending"}`,
+            title: isPaid
+              ? "Click para marcar como PENDIENTE"
+              : "Click para marcar como PAGADA (Visual)",
+            onclick: (e) => {
+              e.stopPropagation(); // Evita abrir el modal de edición
+              if (onToggleStatus) onToggleStatus(m);
+            },
+          },
+          // Texto del botón
+          isPaid ? "PAGADO" : isPartial ? "PARCIAL" : "PEND",
         )
       : null;
 
@@ -104,22 +145,21 @@ export function MovementList({
       );
     }
 
-    // --- RENDER CARD (ESTRUCTURA CORREGIDA) ---
-    // Orden: 1. Barra Status | 2. Checkbox (si hay) | 3. Contenido
+    // --- RENDER CARD ---
     return el(
       "div",
       {
-        className: `tech-movement-card ${typeClass}`,
+        className: `tech-movement-card ${typeClass} ${isPaid ? "card-paid" : ""}`,
         onclick: () => onEdit && onEdit(m),
       },
       [
-        // 1. La barra de color siempre primero (izquierda absoluta)
+        // Barra lateral de color (Tipo)
         el("div", { className: "mov-status-bar" }),
 
-        // 2. El checkbox (si corresponde), pegado a la barra
-        selectionCircle,
+        // Checkbox selección
+        selectionElement,
 
-        // 3. El contenido principal
+        // Contenido Principal
         el("div", { className: "mov-content" }, [
           !groupByDay
             ? el("div", { className: "mov-date-col" }, [
@@ -154,16 +194,30 @@ export function MovementList({
               : null,
           ]),
 
+          // Columna Dinero
           el("div", { className: "mov-money-col" }, [
             shouldShowMoney
               ? el(
                   "span",
                   {
                     className: `amount-main ${isDebt ? "val-invoice" : "val-payment"}`,
+                    // Tachado visual si está pagada
+                    style: isPaid
+                      ? "text-decoration: line-through; opacity: 0.5;"
+                      : "",
                   },
                   SupplierModel.formatAmount(m.amount, isVisible),
                 )
               : el("span", { className: "amount-placeholder" }, "-"),
+
+            // Badge informativo de "Resta pagar" (solo visual)
+            isDebt && isPartial && remaining > 0
+              ? el(
+                  "span",
+                  { className: "badge-partial-status" },
+                  `RESTA: $${remaining.toLocaleString()}`,
+                )
+              : null,
 
             shouldShowMoney && m.partialBalance !== undefined
               ? el("div", { className: "balance-partial" }, [
@@ -177,14 +231,26 @@ export function MovementList({
               : null,
           ]),
 
-          el("button", {
-            className: "btn-row-del",
-            onclick: (e) => {
-              e.stopPropagation();
-              onDelete && onDelete(m);
+          // Columna Acciones (Badge Estado + Borrar)
+          el(
+            "div",
+            {
+              className: "actions-col",
+              style:
+                "display:flex; flex-direction:column; align-items:center; gap:8px; margin-left:8px;",
             },
-            innerHTML: iconTrash,
-          }),
+            [
+              statusBadgeElement, // <--- EL BOTÓN DE ESTADO (PEND/PARCIAL/PAGADO)
+              el("button", {
+                className: "btn-row-del",
+                onclick: (e) => {
+                  e.stopPropagation();
+                  onDelete && onDelete(m);
+                },
+                innerHTML: iconTrash,
+              }),
+            ],
+          ),
         ]),
       ],
     );

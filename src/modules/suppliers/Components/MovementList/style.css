@@ -6,7 +6,7 @@
   flex-direction: column;
   width: 100%;
   gap: 20px;
-  padding-bottom: 80px; /* Espacio extra para el snackbar flotante */
+  padding-bottom: 80px;
 }
 .movements-list-stack {
   display: flex;
@@ -20,7 +20,7 @@
   flex-direction: column;
   width: 100%;
   gap: 0;
-  padding-bottom: 80px; /* Espacio extra para el snackbar */
+  padding-bottom: 80px;
 }
 .day-block-group {
   display: flex;
@@ -33,12 +33,12 @@
   padding: 0 4px;
 }
 
-/* STICKY HEADER (Solo Modo Actividad) */
+/* STICKY HEADER */
 .day-sticky-header {
   position: sticky;
   top: -1px;
   z-index: 90;
-  background: #f4f4f4; /* Mismo que el fondo de la app */
+  background: #f4f4f4;
   border-bottom: 2px solid #000;
   border-top: 2px solid #000;
   padding: 8px 16px;
@@ -82,10 +82,10 @@
   color: #008800;
 }
 
-/* --- TARJETA DE MOVIMIENTO (Común para ambos modos) --- */
+/* --- TARJETA DE MOVIMIENTO --- */
 .tech-movement-card {
   display: flex;
-  align-items: stretch; /* Cambio clave: estirar para columnas completas */
+  align-items: stretch;
   background: #fff;
   border: 2px solid #000;
   min-height: 70px;
@@ -102,12 +102,11 @@
   box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
 }
 
-/* STATUS BAR (Barra lateral de color) */
+/* STATUS BAR */
 .mov-status-bar {
   width: 6px;
   flex-shrink: 0;
   border-right: 1px solid #000;
-  /* El color lo inyecta la clase padre (.type-invoice, etc) */
 }
 .type-invoice .mov-status-bar {
   background: #ff0000;
@@ -119,15 +118,14 @@
   background: #1565c0;
 }
 
-/* --- NUEVO: COLUMNA DE SELECCIÓN (Checkbox) --- */
-/* Reemplaza a .selection-area y .card-checkbox-wrapper antiguos */
+/* --- COLUMNA DE SELECCIÓN --- */
 .selection-col {
   width: 48px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 1px solid #000; /* Borde duro acorde al estilo */
+  border-right: 1px solid #000;
   background-color: #fafafa;
   transition: background-color 0.2s;
 }
@@ -135,44 +133,37 @@
   background-color: #eee;
 }
 
-/* El "Checkbox" personalizado (Cuadrado Brutalista) */
 .select-square {
   width: 20px;
   height: 20px;
-  border: 2px solid #000; /* Borde negro fuerte */
+  border: 2px solid #000;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.1s;
 }
-
 .select-square svg {
   width: 16px;
   height: 16px;
-  display: none; /* Oculto por defecto */
-  color: #fff; /* Check blanco sobre fondo negro */
+  display: none;
+  color: #fff;
 }
 
-/* ESTADO SELECCIONADO */
 .tech-movement-card.row-selected {
-  background-color: #f0f0f0; /* Gris suave */
-  /* En el diseño original la tarjeta tiene borde negro, así que no necesitamos agregar border-left extra */
+  background-color: #f0f0f0;
 }
-
 .tech-movement-card.row-selected .select-square {
-  background-color: #000; /* Relleno negro */
+  background-color: #000;
 }
-
 .tech-movement-card.row-selected .select-square svg {
-  display: block; /* Mostrar check */
+  display: block;
 }
-/* Al seleccionar, oscurecemos la barra de estado también para indicar "activo" */
 .tech-movement-card.row-selected .mov-status-bar {
   filter: brightness(0.6);
 }
 
-/* --- CONTENIDO PRINCIPAL --- */
+/* --- CONTENIDO --- */
 .mov-content {
   flex: 1;
   display: flex;
@@ -181,8 +172,6 @@
   gap: 12px;
   overflow: hidden;
 }
-
-/* COLUMNA FECHA INTERNA (Solo se ve en Modo Detalle) */
 .mov-date-col {
   display: flex;
   flex-direction: column;
@@ -204,7 +193,6 @@
   color: #000;
 }
 
-/* INFO */
 .mov-info-col {
   flex: 1;
   display: flex;
@@ -228,8 +216,6 @@
   flex-shrink: 0;
   text-transform: uppercase;
 }
-
-/* Nombre Proveedor Bold */
 .supplier-name-bold {
   font-family: var(--font-sans, sans-serif);
   font-size: 1.1rem;
@@ -239,7 +225,6 @@
   letter-spacing: -0.5px;
   border-bottom: 2px solid transparent;
 }
-
 .desc-text {
   font-family: var(--font-sans, sans-serif);
   font-size: 1rem;
@@ -257,7 +242,6 @@
   margin-top: 2px;
 }
 
-/* PILLS */
 .items-pills-row {
   display: flex;
   gap: 6px;
@@ -292,7 +276,6 @@
   margin-left: 2px;
 }
 
-/* MONEY */
 .mov-money-col {
   display: flex;
   flex-direction: column;
@@ -334,4 +317,111 @@
 }
 .btn-row-del:hover {
   color: #000;
+}
+
+/* ========================================================
+   ESTILOS NUEVOS (SISTEMA HÍBRIDO & BADGES)
+   ======================================================== */
+
+/* Boleta Pagada: Visualmente "apagada" en el cuerpo, pero viva en el badge */
+.tech-movement-card.card-paid {
+  background-color: #f9f9f9;
+  border-color: #ddd;
+  opacity: 0.9; /* Menos opacidad para que se lea el badge verde */
+}
+.tech-movement-card.card-paid:hover {
+  background-color: #f9f9f9;
+  box-shadow: none;
+  transform: none;
+}
+.tech-movement-card.card-paid .mov-status-bar {
+  background-color: #ccc !important;
+  border-right-color: #ccc;
+}
+
+/* Indicador de check fijo para selección */
+.paid-indicator {
+  background-color: #eee;
+  border-color: #ccc;
+  cursor: default;
+}
+.paid-indicator svg {
+  display: block;
+  color: #999;
+}
+
+/* Bloqueo de columna */
+.selection-col.locked {
+  cursor: default;
+  background: #f9f9f9;
+  border-right-color: #ddd;
+}
+
+/* Badge Parcial (Estética técnica) */
+.badge-partial-status {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  background-color: #fffde7;
+  color: #f57f17;
+  border: 1px solid #fbc02d;
+  padding: 2px 6px;
+  margin-top: 4px;
+  border-radius: 0;
+  text-transform: uppercase;
+}
+
+/* Ajuste al contenedor de acciones */
+.actions-col {
+  min-width: 60px;
+  justify-content: center;
+}
+
+/* --- BOTÓN BADGE INTERACTIVO (Reemplazo del Switch) --- */
+.status-btn-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border: 2px solid #000; /* Borde brutalista siempre */
+  cursor: pointer;
+  min-width: 55px;
+  text-align: center;
+  transition: all 0.1s;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+/* 1. PENDIENTE (Rojo Alerta) */
+.status-btn-badge.is-pending {
+  background-color: #ff1744; /* Rojo vibrante */
+  color: #fff;
+  border-color: #000;
+}
+.status-btn-badge.is-pending:hover {
+  background-color: #d50000;
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* 2. PARCIAL (Amarillo/Naranja Precaución) */
+.status-btn-badge.is-partial {
+  background-color: #ffc400; /* Amarillo anaranjado */
+  color: #000;
+  border-color: #000;
+}
+.status-btn-badge.is-partial:hover {
+  background-color: #ffab00;
+}
+
+/* 3. PAGADA (Verde Éxito) */
+.status-btn-badge.is-paid {
+  background-color: #00e676; /* Verde Brillante */
+  color: #000;
+  border-color: #004d40; /* Borde verde oscuro */
+  text-decoration: none; /* Quitamos tachado para que se vea limpio */
+}
+.status-btn-badge.is-paid:hover {
+  background-color: #69f0ae;
 }
