@@ -1,12 +1,14 @@
 /**
- * SupplierStore - Fuente de verdad para el módulo de proveedores
+ * SupplierStore
+ * Gestor de estado simple (Patrón Singleton)
+ * Sirve para compartir datos entre el controlador y las vistas sin prop-drilling excesivo.
  */
 class SupplierStore {
   constructor() {
     this.state = {
-      suppliers: [],
-      currentSupplier: null,
-      movements: [],
+      suppliers: [], // Lista de proveedores (Vista Lista)
+      currentSupplier: null, // Proveedor seleccionado (Vista Detalle)
+      transactions: [], // Movimientos del proveedor seleccionado
       loading: false,
       error: null,
     };
@@ -14,34 +16,57 @@ class SupplierStore {
   }
 
   /**
-   * Suscribe un componente a los cambios del estado
-   * @param {Function} callback
-   * @returns {Function} Función para desuscribirse
+   * Suscribirse a cambios (Patrón Observador)
+   * Útil si quieres que un componente se repinte solo cuando cambia el store.
    */
-  subscribe(callback) {
-    this.listeners.push(callback);
-    // Retornamos una función para limpiar la suscripción
+  subscribe(listener) {
+    this.listeners.push(listener);
+    // Retorna función para desuscribirse
     return () => {
-      this.listeners = this.listeners.filter((l) => l !== callback);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
   /**
-   * Actualiza el estado y notifica a los suscriptores
-   * @param {Object} newState
+   * Notificar a todos los oyentes
    */
-  setState(newState) {
-    this.state = { ...this.state, ...newState };
+  notify() {
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+
+  // --- ACTIONS (Setters) ---
+
+  setSuppliers(suppliers) {
+    this.state.suppliers = suppliers;
     this.notify();
   }
+
+  setCurrentSupplier(supplier) {
+    this.state.currentSupplier = supplier;
+    this.notify();
+  }
+
+  setTransactions(transactions) {
+    this.state.transactions = transactions;
+    this.notify();
+  }
+
+  setLoading(isLoading) {
+    this.state.loading = isLoading;
+    this.notify();
+  }
+
+  setError(error) {
+    this.state.error = error;
+    this.notify();
+  }
+
+  // --- GETTERS ---
 
   getState() {
     return this.state;
   }
-
-  notify() {
-    this.listeners.forEach((callback) => callback(this.state));
-  }
 }
 
+// Exportamos una INSTANCIA única (Singleton)
 export const supplierStore = new SupplierStore();

@@ -3,7 +3,8 @@ import { mount } from "./core/dom.js";
 import { MainLayout } from "./app/layout/MainLayout/index.js";
 import { Router } from "./core/router.js";
 import { SupplierController } from "./modules/suppliers/controller.js";
-
+import "./modules/suppliers/utils/AuditGenerator.js";
+import "./modules/suppliers/utils/LedgerFix.js";
 console.log("🚀 [Main] Inicializando aplicación...");
 
 // 1. Iniciar el layout limpio
@@ -35,24 +36,13 @@ new Router(routes, layout.contentContainer);
 if (!window.location.hash || window.location.hash === "#cashflow") {
   window.location.hash = "#suppliers";
 }
-import { recalcAllBalances } from "./modules/suppliers/utils/recalcBalance.js";
-window.recalc = recalcAllBalances;
-console.log(
-  "   - recalc()        : Recalcular saldos de todos los proveedores",
-); // <--- Nuevo
-import {
-  runMigration,
-  mergeItems,
-} from "./modules/suppliers/utils/RunMigration.js";
-window.runMigration = runMigration;
-console.log(
-  "🔧 MODO MANTENIMIENTO: Escribe 'runMigration()' en la consola para actualizar la DB.",
-);
-window.mergeItems = mergeItems;
+// --- CÓDIGO TEMPORAL PARA MIGRACIÓN ---
+import { runMigration } from "./modules/suppliers/utils/RunMigration.js";
+
+// Hacemos la función global para poder llamarla desde la consola del navegador
+window.runMigrationSystem = runMigration;
 
 console.log(
-  "%c🔧 MODO MANTENIMIENTO ACTIVO",
-  "color: orange; font-weight: bold;",
+  "🔧 SISTEMA: Para correr la migración, escribe 'runMigrationSystem()' en la consola.",
 );
-console.log("👉 Usa 'runMigration()' para arreglar IDs faltantes.");
-console.log('👉 Usa \'mergeItems("Viejo", "Nuevo")\' para unir duplicados.');
+// --------------------------------------

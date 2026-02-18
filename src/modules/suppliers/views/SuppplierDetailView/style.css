@@ -362,3 +362,92 @@
     transform: translateY(0);
   }
 }
+/* =========================================
+   ESTILO BRUTALISTA - FILTROS
+   ========================================= */
+
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-bottom: 3px solid #000; /* Línea divisoria gruesa */
+  overflow-x: auto;
+  white-space: nowrap;
+
+  /* Ocultar scrollbar pero mantener funcionalidad */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filters-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  /* Caja */
+  background-color: #fff;
+  border: 2px solid #000;
+  padding: 8px 16px;
+
+  /* Tipografía */
+  color: #000;
+  font-family:
+    "Courier New", Courier, monospace, sans-serif; /* O la fuente de tu proyecto */
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  /* Sombra Dura (La clave del Brutalismo) */
+  box-shadow: 4px 4px 0px #000;
+
+  /* Comportamiento */
+  cursor: pointer;
+  transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Transición rápida y seca */
+  flex-shrink: 0;
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+/* Hover: El botón se levanta un poco más */
+.filter-pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000;
+  background-color: #fdfdfd;
+}
+
+/* Active (Seleccionado): Inversión de color o estilo "hundido" */
+.filter-pill.active {
+  background-color: #000;
+  color: #fff;
+  border-color: #000;
+
+  /* Efecto de "botón presionado" */
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2); /* Sombra residual muy pequeña */
+}
+
+/* Active Hover: Mantener estado */
+.filter-pill.active:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Variaciones de Color (Opcional, si quieres que cada filtro tenga su "personalidad" brutalista) --- */
+
+/* Si quieres que "Pagos" se ponga verde neón al activarse, usa esto: */
+
+.filter-pill:nth-child(3).active {
+  background-color: #00aa00;
+  color: #000;
+}
+.filter-pill:nth-child(2).active {
+  background-color: #ff0000;
+  color: #fff;
+}
+.filter-pill:nth-child(4).active {
+  background-color: #1565c0;
+  color: #fff;
+}

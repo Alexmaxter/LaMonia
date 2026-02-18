@@ -1,150 +1,150 @@
-import { FirebaseDB } from "../../../core/firebase/db.js";
+import { db } from "../../../core/firebase/db.js";
+import {
+  collection,
+  getDocs,
+  writeBatch,
+  query,
+  where,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
-// Generador de IDs simple
-const generateId = () =>
-  Date.now().toString(36) + Math.random().toString(36).substr(2);
-
-// --- HERRAMIENTA 1: MIGRACIÓN INICIAL ---
+// ==========================================
+// 1. SINCRONIZADOR MATEMÁTICO (Versión con Alertas)
+// ==========================================
 export const runMigration = async () => {
-  // ... (Esta parte ya no es crítica si ya tienen IDs, pero la dejamos por seguridad)
-  console.log(
-    "Para fusionar items, usa: mergeItems('Nombre Viejo', 'Nombre Nuevo')",
+  // ALERTA INICIAL: Si no ves esto, el script no se está ejecutando.
+  alert(
+    "⏳ INICIANDO AUDITORÍA...\nEsto puede tardar unos segundos. Por favor espera el mensaje de finalización.",
   );
-};
-
-// --- HERRAMIENTA 2: FUSIONAR ITEMS DUPLICADOS (MEJORADA) ---
-export const mergeItems = async (badName, goodName) => {
-  // Limpieza agresiva de los nombres ingresados
-  const bad = badName ? badName.toString().trim().toUpperCase() : "";
-  const good = goodName ? goodName.toString().trim().toUpperCase() : "";
-
-  if (!bad || !good || bad === good)
-    return alert("Error: Debes poner dos nombres diferentes.");
-
-  const confirmMerge = confirm(
-    `⚠ CONFIRMACIÓN DE FUSIÓN ⚠\n\nVAS A FUSIONAR:\n"${badName}"  --->  "${goodName}"\n\n1. Todas las compras de "${badName}" pasarán a ser de "${goodName}".\n2. "${badName}" se borrará de la lista.\n\n¿Estás seguro?`,
-  );
-  if (!confirmMerge) return;
-
   console.clear();
-  console.log(
-    `%c🔄 INTENTANDO FUSIONAR: "${bad}" -> "${good}"...`,
-    "color: orange; font-weight: bold; font-size: 14px;",
-  );
+  console.log("🚀 [AUDITORÍA] Iniciando...");
 
   try {
-    const suppliers = await FirebaseDB.getAll("suppliers");
-    let found = false;
+    const suppliersSnapshot = await getDocs(collection(db, "suppliers"));
+    const batch = writeBatch(db);
+    let updatesCount = 0;
 
-    for (const supplier of suppliers) {
-      if (!supplier.defaultItems) continue;
+    // Tipos de transacciones
+    const debtTypes = ["invoice", "boleta", "purchase", "compra", "debit"];
+    const creditTypes = ["payment", "pago", "credit"];
 
-      // BUSQUEDA RELAJADA (ignora espacios y mayúsculas)
-      const badItemIndex = supplier.defaultItems.findIndex(
-        (i) => (i.name || "").trim().toUpperCase() === bad,
+    console.log(`📋 Procesando ${suppliersSnapshot.size} proveedores...`);
+
+    // Usamos un bucle for...of para asegurar secuencialidad
+    for (const supplierDoc of suppliersSnapshot.docs) {
+      const supplierId = supplierDoc.id;
+      const supplierData = supplierDoc.data();
+      const supplierName = supplierData.name || "Sin Nombre";
+
+      // Consultar historial
+      const q = query(
+        collection(db, "supplier_transactions"),
+        where("supplierId", "==", supplierId),
       );
-      const goodItem = supplier.defaultItems.find(
-        (i) => (i.name || "").trim().toUpperCase() === good,
-      );
+      const transactionsSnap = await getDocs(q);
 
-      // Solo actuamos si encontramos al menos el item BUENO o el item MALO
-      if (goodItem) {
-        // ID del bueno
-        const goodId = goodItem.id;
+      let calculatedDebt = 0;
+      let calculatedPayments = 0;
 
-        // ID del malo (si existe en la lista)
-        let badId = null;
-        if (badItemIndex !== -1) {
-          badId = supplier.defaultItems[badItemIndex].id;
-          console.log(
-            `✅ Encontrado item duplicado en proveedor "${supplier.name}". ID Malo: ${badId}`,
-          );
-        } else {
-          console.log(
-            `ℹ️ El item viejo "${badName}" no está en la lista de configuración de "${supplier.name}", pero buscaré en sus transacciones antiguas por nombre.`,
-          );
+      transactionsSnap.docs.forEach((t) => {
+        const data = t.data();
+        const amount = Number(data.amount) || 0;
+        const type = (data.type || "").toLowerCase().trim();
+
+        if (debtTypes.includes(type)) {
+          calculatedDebt += amount;
+        } else if (creditTypes.includes(type)) {
+          calculatedPayments += amount;
         }
+      });
 
-        // 2. MUDAR EL HISTORIAL (Transacciones)
-        const transactions = await FirebaseDB.getByFilter(
-          "supplier_transactions",
-          "supplierId",
-          supplier.id,
+      // Cálculo final
+      const realBalance =
+        Math.round((calculatedDebt - calculatedPayments) * 100) / 100;
+      const storedBalance = Number(supplierData.balance) || 0;
+
+      // Detección de error
+      if (storedBalance !== realBalance) {
+        console.log(
+          `🔴 CORRIGIENDO: ${supplierName} | Guardado: $${storedBalance} -> Real: $${realBalance}`,
         );
-        let txUpdated = 0;
-
-        for (const tx of transactions) {
-          if (!tx.items) continue;
-          let changed = false;
-
-          const newItems = tx.items.map((item) => {
-            // Limpiamos el nombre del item en la transacción para comparar
-            const itemNameClean = (item.name || "").trim().toUpperCase();
-
-            // Coincidencia por ID (si lo tenemos) o por Nombre
-            const matchById = badId && item.id === badId;
-            const matchByName = itemNameClean === bad;
-
-            if (matchById || matchByName) {
-              changed = true;
-              return {
-                ...item,
-                id: goodId, // Ponemos el ID del nuevo
-                name: goodItem.name, // Ponemos el Nombre del nuevo (tal cual está en config)
-                color: goodItem.color, // Ponemos el Color del nuevo
-              };
-            }
-            return item;
-          });
-
-          if (changed) {
-            await FirebaseDB.update("supplier_transactions", tx.id, {
-              items: newItems,
-            });
-            txUpdated++;
-          }
-        }
-
-        if (txUpdated > 0) {
-          console.log(
-            `   ↳ 📝 Se corrigieron ${txUpdated} transacciones antiguas.`,
-          );
-          found = true;
-        }
-
-        // 3. BORRAR EL ITEM VIEJO DE LA CONFIGURACIÓN (Si existía)
-        if (badItemIndex !== -1) {
-          const newDefaultItems = [...supplier.defaultItems];
-          newDefaultItems.splice(badItemIndex, 1); // Lo sacamos del array
-
-          await FirebaseDB.update("suppliers", supplier.id, {
-            defaultItems: newDefaultItems,
-          });
-          console.log(`   ↳ 🗑️ Item "${badName}" ELIMINADO de la lista.`);
-          found = true;
-        }
+        batch.update(supplierDoc.ref, {
+          balance: realBalance,
+          lastUpdated: new Date(), // Usamos new Date() para evitar problemas de importación
+        });
+        updatesCount++;
       }
     }
 
-    if (found) {
-      console.log(
-        "%c✅ PROCESO FINALIZADO CON ÉXITO",
-        "color: #00ff00; font-weight: bold; font-size: 16px;",
-      );
+    if (updatesCount > 0) {
+      await batch.commit();
+      console.log("✅ TERMINADO.");
       alert(
-        `¡Listo! Se han unificado los datos.\n\n⚠️ MUY IMPORTANTE: RECARGA LA PÁGINA (F5) AHORA MISMO para ver los cambios.`,
+        `✅ FINALIZADO.\nSe corrigieron ${updatesCount} proveedores que tenían saldos erróneos.`,
       );
     } else {
-      console.warn("⚠️ No se encontraron coincidencias.");
-      console.log(
-        `Busqué items llamados "${bad}" y "${good}" pero no los hallé juntos o no hay transacciones.`,
-      );
+      console.log("✅ TERMINADO.");
       alert(
-        "No se encontraron items con esos nombres exactos. Revisa la consola (F12) para ver detalles.",
+        "✅ FINALIZADO.\nTodos los saldos ya estaban correctos. No se hicieron cambios.",
       );
     }
-  } catch (e) {
-    console.error(e);
-    alert("Error crítico. Revisa la consola.");
+  } catch (error) {
+    console.error("❌ ERROR:", error);
+    alert("❌ Ocurrió un error:\n" + error.message);
   }
 };
+
+// ==========================================
+// 2. REPARADOR MANUAL (fixBalance)
+// ==========================================
+export const fixBalance = async (supplierId, realBalance) => {
+  try {
+    const confirmacion = confirm(
+      `¿Seguro que quieres forzar el saldo del proveedor a $${realBalance}?`,
+    );
+    if (!confirmacion) return;
+
+    console.log(`🔧 Reparando proveedor ${supplierId}...`);
+
+    const supplierRef = doc(db, "suppliers", supplierId);
+    const supplierSnap = await getDoc(supplierRef);
+
+    if (!supplierSnap.exists()) return alert("Proveedor no encontrado");
+
+    const currentBalance = parseFloat(supplierSnap.data().balance || 0);
+    const difference = realBalance - currentBalance;
+
+    if (Math.abs(difference) < 1) return alert("El saldo ya es correcto.");
+
+    const type = difference > 0 ? "invoice" : "payment";
+
+    await addDoc(collection(db, "supplier_transactions"), {
+      supplierId: supplierId,
+      type: type,
+      amount: Math.abs(difference),
+      paidAmount: 0,
+      description: "🔄 Ajuste Manual de Saldo",
+      status: "paid",
+      date: new Date(),
+      createdAt: new Date(),
+    });
+
+    await updateDoc(supplierRef, {
+      balance: realBalance,
+      lastUpdated: new Date(),
+    });
+
+    alert(`✅ LISTO. Saldo actualizado a $${realBalance}. Recarga la página.`);
+  } catch (error) {
+    console.error(error);
+    alert("Error: " + error.message);
+  }
+};
+
+// Exponer globalmente
+window.runMigrationSystem = runMigration;
+window.fixBalance = fixBalance;

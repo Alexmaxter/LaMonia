@@ -9,6 +9,24 @@ const getSafeName = (item) => {
   return item.name || item.description || item.desc || "";
 };
 
+// --- HELPER CRÍTICO: Obtener fecha local (Fix Zona Horaria) ---
+const getLocalDateObject = (inputDate) => {
+  if (!inputDate) return new Date(); // Si es null, devuelve AHORA
+
+  // 1. Si es Timestamp de Firebase
+  if (inputDate.toDate) return inputDate.toDate();
+
+  // 2. Si es string (ej: "2026-02-18"), forzamos mediodía para evitar resta de horario
+  if (typeof inputDate === "string" && inputDate.includes("-")) {
+    const dateString = inputDate.includes("T")
+      ? inputDate
+      : `${inputDate}T12:00:00`;
+    return new Date(dateString);
+  }
+
+  // 3. Date normal
+  return new Date(inputDate);
+};
 const getSafeColor = (item) => {
   if (!item || typeof item === "string") return "#ddd";
   return item.color || "#ddd";
@@ -154,11 +172,7 @@ export function TransactionModal({
       : "0";
 
   let itemsState = [];
-  let selectedDate = initialData?.date
-    ? initialData.date.toDate
-      ? initialData.date.toDate()
-      : new Date(initialData.date)
-    : new Date();
+  let selectedDate = getLocalDateObject(initialData?.date);
   let calendarViewDate = new Date(selectedDate);
 
   // --- LÓGICA DE ESTADO (BADGE) ---

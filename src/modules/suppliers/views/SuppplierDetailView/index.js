@@ -15,20 +15,25 @@ export function SupplierDetailView({
   onEditMovement,
   onDeleteMovement,
   onOpenSettings,
-  onSettleDebt, // Función Financiera (Crea Pago)
-  onToggleStatus, // Función Administrativa (Switch Estado)
+  onSettleDebt,
+  onToggleStatus,
+
+  // Nuevos Props para Filtros
+  onFilterChange,
+  currentFilter = "all",
 }) {
   let isVisible = initialIsVisible;
 
   // Elementos DOM
   let debtValueDisplay = null;
   let contentContainer = el("div", { className: "detail-content-wrapper" });
+  let filtersBar = null; // Referencia para actualizar clases activa
 
   // --- ESTADO DE SELECCIÓN ---
   const selectedInvoices = new Set();
   let selectedTotal = 0;
 
-  // --- SNACKBAR FLOTANTE (Solo para Pago Financiero) ---
+  // --- SNACKBAR FLOTANTE ---
   const snackbarCount = el(
     "span",
     { className: "snackbar-count" },
@@ -44,7 +49,6 @@ export function SupplierDetailView({
         className: "btn-snackbar-pay",
         onclick: () => {
           if (selectedInvoices.size > 0 && onSettleDebt) {
-            // Convertimos Set a Array para enviarlo al controlador
             const targetIds = Array.from(selectedInvoices);
             onSettleDebt(
               selectedTotal,
@@ -108,6 +112,7 @@ export function SupplierDetailView({
     let runningBalance = parseFloat(currentBalance) || 0;
     let runningStock = {};
 
+    // 1. Cálculo de Stock (Independiente del Ledger Monetario)
     if (supplier.type === "stock") {
       currentMovements.forEach((m) => {
         if (m.items && Array.isArray(m.items)) {
@@ -124,18 +129,30 @@ export function SupplierDetailView({
       });
     }
 
+    // 2. Mapeo de Movimientos
     const movementsWithBalance = currentMovements.map((m) => {
-      const snapshotBalance = runningBalance;
-      const amount = parseFloat(m.amount) || 0;
-      if (m.type === "invoice") runningBalance -= amount;
-      else runningBalance += amount;
+      // FIX CLAVE: Si ya viene con el saldo Ledger (partialBalance) del Controller, USARLO.
+      // Si no, usar la lógica antigua (runningBalance).
+      // Esto permite que al filtrar, el saldo visual no se rompa.
+      let snapshotBalance = 0;
+
+      if (m.partialBalance !== undefined && m.partialBalance !== null) {
+        snapshotBalance = m.partialBalance;
+        // Si estamos en modo fallback, actualizamos runningBalance solo como referencia
+        // pero NO afectamos el renderizado final
+      } else {
+        // Lógica Fallback (Solo si no hay Ledger)
+        snapshotBalance = runningBalance;
+        const amount = parseFloat(m.amount) || 0;
+        if (m.type === "invoice") runningBalance -= amount;
+        else runningBalance += amount;
+      }
 
       let snapshotStock = null;
       let enrichedItems = [];
 
       if (supplier.type === "stock") {
         snapshotStock = { ...runningStock };
-
         if (m.items && Array.isArray(m.items)) {
           const isEntry = m.type === "invoice";
           const isExit = m.type === "payment" || m.type === "credit";
@@ -161,14 +178,13 @@ export function SupplierDetailView({
       return {
         ...m,
         items: enrichedItems,
-        partialBalance: snapshotBalance,
+        partialBalance: snapshotBalance, // Usamos el valor seguro
         stockBalance: snapshotStock,
       };
     });
 
     contentContainer.innerHTML = "";
 
-    // Componente de Lista
     const listComponent = MovementList({
       movements: movementsWithBalance,
       isVisible,
@@ -176,28 +192,21 @@ export function SupplierDetailView({
       onDelete: onDeleteMovement,
       isStockView: supplier.type === "stock",
       onSelectionChange: handleSelection,
-      onToggleStatus: onToggleStatus, // <--- Conectamos la función del Switch
+      onToggleStatus: onToggleStatus,
     });
 
     if (supplier.type === "stock" && movementsWithBalance.length > 0) {
-      // === LAYOUT 2 COLUMNAS (STOCK) ===
       const gridLayout = el("div", { className: "detail-grid-layout" });
-
-      // Columna 1: Panel de Reporte
       const stockPanel = StockStatsPanel({ movements: movementsWithBalance });
       if (stockPanel) gridLayout.appendChild(stockPanel);
-
-      // Columna 2: Lista de Movimientos
       const listWrapper = el(
         "div",
         { className: "grid-list-column" },
         listComponent,
       );
       gridLayout.appendChild(listWrapper);
-
       contentContainer.appendChild(gridLayout);
     } else {
-      // === LAYOUT 1 COLUMNA (MONETARIO O VACÍO) ===
       contentContainer.appendChild(listComponent);
     }
 
@@ -240,9 +249,7 @@ export function SupplierDetailView({
     "button",
     {
       className: "btn-settle-mini",
-      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: ${
-        isDebt ? "flex" : "none"
-      }`,
+      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: ${isDebt ? "flex" : "none"}`,
       onclick: (e) => {
         e.stopPropagation();
         if (onSettleDebt) onSettleDebt(null, "Cancelación total");
@@ -323,29 +330,65 @@ export function SupplierDetailView({
     ]),
   ]);
 
+  // --- NUEVO: BARRA DE FILTROS ---
+  const renderFilterPill = (label, value) => {
+    const isActive = currentFilter === value;
+    return el(
+      "button",
+      {
+        className: `filter-pill ${isActive ? "active" : ""}`,
+        onclick: () => onFilterChange && onFilterChange(value),
+      },
+      label,
+    );
+  };
+
+  filtersBar = el("div", { className: "filters-bar" }, [
+    renderFilterPill("Todos", "all"),
+    renderFilterPill("Boletas", "invoice"),
+    renderFilterPill("Pagos", "payment"),
+    renderFilterPill("Notas", "note"),
+  ]);
+
   // Ejecución Inicial
   recalculateAndRender(movements, supplier.balance);
 
   const view = el("div", { className: "supplier-detail-view" }, [
     headerPanel,
+    filtersBar, // <-- Insertamos la barra aquí
     contentContainer,
     snackbar,
   ]);
 
-  view.updateState = (newBalance, newMovements) => {
+  // Actualización desde el Controller
+  view.updateState = (newBalance, newMovements, newFilter) => {
     supplier.balance = newBalance;
     movements = newMovements;
+
+    // Actualizar Saldo Header
     debtValueDisplay.textContent = SupplierModel.formatAmount(
       newBalance,
       isVisible,
     );
+    settleTotalBtn.style.display = newBalance > 0 ? "flex" : "none";
 
-    // Resetear selección
+    // Actualizar Filtros Activos
+    if (newFilter) {
+      currentFilter = newFilter;
+      // Re-renderizamos los botones para mover la clase 'active'
+      filtersBar.innerHTML = "";
+      filtersBar.appendChild(renderFilterPill("Todos", "all"));
+      filtersBar.appendChild(renderFilterPill("Boletas", "invoice"));
+      filtersBar.appendChild(renderFilterPill("Pagos", "payment"));
+      filtersBar.appendChild(renderFilterPill("Notas", "note"));
+    }
+
+    // Reset selección
     selectedInvoices.clear();
     selectedTotal = 0;
     updateSnackbar();
 
-    settleTotalBtn.style.display = newBalance > 0 ? "flex" : "none";
+    // Re-renderizar lista
     recalculateAndRender(newMovements, newBalance);
   };
 

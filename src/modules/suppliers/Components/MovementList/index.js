@@ -22,80 +22,97 @@ export function MovementList({
   isStockView = false,
   groupByDay = false,
   onSelectionChange,
-  onToggleStatus, // <--- Función para cambiar estado (badge)
+  onToggleStatus,
+  selectedIds = new Set(),
 }) {
   const iconTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
   const iconCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-  const typeLabels = { invoice: "BOLETA", payment: "PAGO", credit: "NOTA" };
+
+  const typeLabels = {
+    invoice: "BOLETA",
+    boleta: "BOLETA",
+    purchase: "COMPRA",
+    compra: "COMPRA",
+    payment: "PAGO",
+    credit: "NOTA",
+  };
 
   const renderCard = (m) => {
-    const date = m.date?.seconds
-      ? new Date(m.date.seconds * 1000)
-      : new Date(m.date);
-    const typeClass = `type-${m.type || "invoice"}`;
-    const isDebt = m.type === "invoice" || m.type === "boleta";
+    // Normalización de fechas
+    let date;
+    if (m.date && m.date.seconds) {
+      date = new Date(m.date.seconds * 1000);
+    } else if (m.date) {
+      date = new Date(m.date);
+    } else {
+      date = new Date();
+    }
 
-    // --- LÓGICA DE ESTADO ---
+    const type = (m.type || "").toLowerCase();
+    const typeClass = `type-${type === "invoice" ? "invoice" : "payment"}`;
+    const isDebt = ["invoice", "boleta", "purchase", "compra"].includes(type);
+
     const status = m.status || "pending";
     const isPaid = status === "paid";
     const isPartial = status === "partial";
 
-    // Cálculos para parciales
     const totalAmount = parseFloat(m.amount || 0);
     const paidAmount = parseFloat(m.paidAmount || 0);
     const remaining = totalAmount - paidAmount;
 
-    // --- 1. COLUMNA SELECCIÓN (Checkbox para Lotes) ---
-    const selectionElement = isDebt
-      ? el(
-          "div",
-          {
-            className: "selection-col",
-            onclick: (e) => {
-              e.stopPropagation();
-              const card = e.currentTarget.closest(".tech-movement-card");
-              const isSelected = card.classList.toggle("row-selected");
+    // Estado inicial (si venimos de un re-render)
+    const isRowSelected = selectedIds.has(m.id);
 
-              // Si seleccionamos para pagar, calculamos cuánto falta
-              // Si ya está visualmente pagada, el monto a pagar financiero es 0 (o lo que decida el controller)
-              // Pero aquí enviamos la data cruda.
-              const amountToPay = isPaid
-                ? 0
-                : isPartial
-                  ? remaining
-                  : totalAmount;
+    // --- COLUMNA SELECCIÓN ---
+    const selectionElement =
+      isDebt && !isPaid
+        ? el(
+            "div",
+            {
+              className: "selection-col",
+              onclick: (e) => {
+                e.stopPropagation();
 
-              if (onSelectionChange) {
-                onSelectionChange(m.id, amountToPay, isSelected);
-              }
+                // 1. Obtenemos la tarjeta del DOM
+                const card = e.currentTarget.closest(".tech-movement-card");
+
+                // 2. CORRECCIÓN: Usamos toggle. Esto devuelve true si se añadió, false si se quitó.
+                // Esto asegura que el estado visual y lógico siempre coincidan.
+                const isNowSelected = card.classList.toggle("row-selected");
+
+                // 3. Calcular monto
+                const amountToPay = isPartial ? remaining : totalAmount;
+
+                // 4. Notificar al padre el NUEVO estado real
+                if (onSelectionChange) {
+                  onSelectionChange(m.id, amountToPay, isNowSelected);
+                }
+              },
             },
-          },
-          [
-            el(
-              "div",
-              { className: "select-square" },
-              el("span", { innerHTML: iconCheck }),
-            ),
-          ],
-        )
-      : null;
+            [
+              el(
+                "div",
+                { className: "select-square" },
+                el("span", { innerHTML: iconCheck }),
+              ),
+            ],
+          )
+        : null;
 
-    // --- 2. BADGE INTERACTIVO (Conciliación Visual) ---
+    // --- BADGE INTERACTIVO ---
     const statusBadgeElement = isDebt
       ? el(
           "button",
           {
-            // Clases dinámicas para colores (Rojo, Amarillo, Verde)
             className: `status-btn-badge ${isPaid ? "is-paid" : isPartial ? "is-partial" : "is-pending"}`,
             title: isPaid
               ? "Click para marcar como PENDIENTE"
-              : "Click para marcar como PAGADA (Visual)",
+              : "Click para marcar como PAGADA",
             onclick: (e) => {
-              e.stopPropagation(); // Evita abrir el modal de edición
+              e.stopPropagation();
               if (onToggleStatus) onToggleStatus(m);
             },
           },
-          // Texto del botón
           isPaid ? "PAGADO" : isPartial ? "PARCIAL" : "PEND",
         )
       : null;
@@ -149,17 +166,13 @@ export function MovementList({
     return el(
       "div",
       {
-        className: `tech-movement-card ${typeClass} ${isPaid ? "card-paid" : ""}`,
+        // Añadimos la clase si viene seleccionado desde props
+        className: `tech-movement-card ${typeClass} ${isPaid ? "card-paid" : ""} ${isRowSelected ? "row-selected" : ""}`,
         onclick: () => onEdit && onEdit(m),
       },
       [
-        // Barra lateral de color (Tipo)
         el("div", { className: "mov-status-bar" }),
-
-        // Checkbox selección
         selectionElement,
-
-        // Contenido Principal
         el("div", { className: "mov-content" }, [
           !groupByDay
             ? el("div", { className: "mov-date-col" }, [
@@ -173,7 +186,7 @@ export function MovementList({
               el(
                 "span",
                 { className: "type-badge" },
-                typeLabels[m.type] || "MOV",
+                typeLabels[type] || "MOV",
               ),
               showSupplierName && m.supplierName
                 ? el(
@@ -194,14 +207,12 @@ export function MovementList({
               : null,
           ]),
 
-          // Columna Dinero
           el("div", { className: "mov-money-col" }, [
             shouldShowMoney
               ? el(
                   "span",
                   {
                     className: `amount-main ${isDebt ? "val-invoice" : "val-payment"}`,
-                    // Tachado visual si está pagada
                     style: isPaid
                       ? "text-decoration: line-through; opacity: 0.5;"
                       : "",
@@ -210,7 +221,6 @@ export function MovementList({
                 )
               : el("span", { className: "amount-placeholder" }, "-"),
 
-            // Badge informativo de "Resta pagar" (solo visual)
             isDebt && isPartial && remaining > 0
               ? el(
                   "span",
@@ -231,7 +241,6 @@ export function MovementList({
               : null,
           ]),
 
-          // Columna Acciones (Badge Estado + Borrar)
           el(
             "div",
             {
@@ -240,7 +249,7 @@ export function MovementList({
                 "display:flex; flex-direction:column; align-items:center; gap:8px; margin-left:8px;",
             },
             [
-              statusBadgeElement, // <--- EL BOTÓN DE ESTADO (PEND/PARCIAL/PAGADO)
+              statusBadgeElement,
               el("button", {
                 className: "btn-row-del",
                 onclick: (e) => {
@@ -262,15 +271,22 @@ export function MovementList({
   if (groupByDay) {
     const groupedByDay = {};
     movements.forEach((m) => {
-      const d = m.date?.seconds
-        ? new Date(m.date.seconds * 1000)
-        : new Date(m.date);
+      let d;
+      if (m.date && m.date.seconds) d = new Date(m.date.seconds * 1000);
+      else if (m.date) d = new Date(m.date);
+      else d = new Date();
+
       const k = d.toISOString().split("T")[0];
       if (!groupedByDay[k])
         groupedByDay[k] = { date: d, items: [], debt: 0, pay: 0 };
+
       const amt = parseFloat(m.amount) || 0;
-      if (m.type === "invoice") groupedByDay[k].debt += amt;
+      const t = (m.type || "").toLowerCase();
+
+      if (["invoice", "boleta", "purchase", "compra"].includes(t))
+        groupedByDay[k].debt += amt;
       else groupedByDay[k].pay += amt;
+
       groupedByDay[k].items.push(m);
     });
 
