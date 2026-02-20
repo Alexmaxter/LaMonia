@@ -2,36 +2,36 @@ import { el } from "../../../../core/dom.js";
 import { SupplierModel } from "../../model.js";
 import { MovementList } from "../../Components/MovementList/index.js";
 import { StockStatsPanel } from "../../Components/StockStatskPanel/index.js";
+import { supplierStore } from "../../SupplierStore.js";
+import {
+  UI_FILTERS,
+  TRANSACTION_GROUPS,
+} from "../../../../shared/constants/index.js";
 import "./style.css";
 
 export function SupplierDetailView({
   supplier,
-  movements,
-  isVisible: initialIsVisible,
   onGenerateReport,
   onBack,
-  onToggleVisibility,
   onAddMovement,
   onEditMovement,
   onDeleteMovement,
   onOpenSettings,
   onSettleDebt,
   onToggleStatus,
-
-  // Nuevos Props para Filtros
-  onFilterChange,
-  currentFilter = "all",
 }) {
-  let isVisible = initialIsVisible;
-
-  // Elementos DOM
-  let debtValueDisplay = null;
-  let contentContainer = el("div", { className: "detail-content-wrapper" });
-  let filtersBar = null; // Referencia para actualizar clases activa
-
-  // --- ESTADO DE SELECCIÓN ---
+  // =========================================================
+  // ESTADO LOCAL DE SELECCIÓN (Checkbox)
+  // =========================================================
   const selectedInvoices = new Set();
   let selectedTotal = 0;
+
+  // =========================================================
+  // ELEMENTOS DOM BASE
+  // =========================================================
+  let contentContainer = el("div", { className: "detail-content-wrapper" });
+  let filtersBar = el("div", { className: "filters-bar" });
+  let debtValueDisplay = el("div", { className: "header-debt-value" });
 
   // --- SNACKBAR FLOTANTE ---
   const snackbarCount = el(
@@ -62,13 +62,13 @@ export function SupplierDetailView({
     ),
   ]);
 
-  const updateSnackbar = () => {
+  const updateSnackbar = (isVisible) => {
     if (selectedInvoices.size > 0) {
       snackbar.classList.add("active");
       snackbarCount.textContent = `${selectedInvoices.size} SELECCIONADO${selectedInvoices.size > 1 ? "S" : ""}`;
       snackbarTotal.textContent = SupplierModel.formatAmount(
         selectedTotal,
-        true,
+        isVisible,
       );
     } else {
       snackbar.classList.remove("active");
@@ -83,7 +83,8 @@ export function SupplierDetailView({
       selectedInvoices.delete(id);
       selectedTotal -= amount;
     }
-    updateSnackbar();
+    const state = supplierStore.getState();
+    updateSnackbar(state.amountsVisible);
   };
 
   // --- ICONOS ---
@@ -107,126 +108,6 @@ export function SupplierDetailView({
     return "#ffffff";
   };
 
-  // --- LÓGICA DE RENDERIZADO ---
-  const recalculateAndRender = (currentMovements, currentBalance) => {
-    let runningBalance = parseFloat(currentBalance) || 0;
-    let runningStock = {};
-
-    // 1. Cálculo de Stock (Independiente del Ledger Monetario)
-    if (supplier.type === "stock") {
-      currentMovements.forEach((m) => {
-        if (m.items && Array.isArray(m.items)) {
-          const isEntry = m.type === "invoice";
-          const isExit = m.type === "payment" || m.type === "credit";
-          m.items.forEach((i) => {
-            const name = i.name.trim().toUpperCase();
-            const qty = parseFloat(i.quantity || 0);
-            if (!runningStock[name]) runningStock[name] = 0;
-            if (isEntry) runningStock[name] += qty;
-            else if (isExit) runningStock[name] -= qty;
-          });
-        }
-      });
-    }
-
-    // 2. Mapeo de Movimientos
-    const movementsWithBalance = currentMovements.map((m) => {
-      // FIX CLAVE: Si ya viene con el saldo Ledger (partialBalance) del Controller, USARLO.
-      // Si no, usar la lógica antigua (runningBalance).
-      // Esto permite que al filtrar, el saldo visual no se rompa.
-      let snapshotBalance = 0;
-
-      if (m.partialBalance !== undefined && m.partialBalance !== null) {
-        snapshotBalance = m.partialBalance;
-        // Si estamos en modo fallback, actualizamos runningBalance solo como referencia
-        // pero NO afectamos el renderizado final
-      } else {
-        // Lógica Fallback (Solo si no hay Ledger)
-        snapshotBalance = runningBalance;
-        const amount = parseFloat(m.amount) || 0;
-        if (m.type === "invoice") runningBalance -= amount;
-        else runningBalance += amount;
-      }
-
-      let snapshotStock = null;
-      let enrichedItems = [];
-
-      if (supplier.type === "stock") {
-        snapshotStock = { ...runningStock };
-        if (m.items && Array.isArray(m.items)) {
-          const isEntry = m.type === "invoice";
-          const isExit = m.type === "payment" || m.type === "credit";
-
-          enrichedItems = m.items.map((item) => {
-            const finalColor = item.color || findColorInSettings(item.name);
-            return { ...item, color: finalColor };
-          });
-
-          m.items.forEach((i) => {
-            const name = i.name.trim().toUpperCase();
-            const qty = parseFloat(i.quantity || 0);
-            if (runningStock[name] !== undefined) {
-              if (isEntry) runningStock[name] -= qty;
-              else if (isExit) runningStock[name] += qty;
-            }
-          });
-        }
-      } else {
-        enrichedItems = m.items || [];
-      }
-
-      return {
-        ...m,
-        items: enrichedItems,
-        partialBalance: snapshotBalance, // Usamos el valor seguro
-        stockBalance: snapshotStock,
-      };
-    });
-
-    contentContainer.innerHTML = "";
-
-    const listComponent = MovementList({
-      movements: movementsWithBalance,
-      isVisible,
-      onEdit: onEditMovement,
-      onDelete: onDeleteMovement,
-      isStockView: supplier.type === "stock",
-      onSelectionChange: handleSelection,
-      onToggleStatus: onToggleStatus,
-    });
-
-    if (supplier.type === "stock" && movementsWithBalance.length > 0) {
-      const gridLayout = el("div", { className: "detail-grid-layout" });
-      const stockPanel = StockStatsPanel({ movements: movementsWithBalance });
-      if (stockPanel) gridLayout.appendChild(stockPanel);
-      const listWrapper = el(
-        "div",
-        { className: "grid-list-column" },
-        listComponent,
-      );
-      gridLayout.appendChild(listWrapper);
-      contentContainer.appendChild(gridLayout);
-    } else {
-      contentContainer.appendChild(listComponent);
-    }
-
-    return movementsWithBalance;
-  };
-
-  const handleToggle = (e) => {
-    const newState = onToggleVisibility();
-    isVisible = newState;
-    if (e && e.currentTarget)
-      e.currentTarget.innerHTML = newState ? iconEye : iconEyeOff;
-    if (debtValueDisplay) {
-      debtValueDisplay.textContent = SupplierModel.formatAmount(
-        supplier.balance,
-        isVisible,
-      );
-    }
-    recalculateAndRender(movements, supplier.balance);
-  };
-
   const copyAlias = (e) => {
     if (!supplier.alias) return;
     navigator.clipboard.writeText(supplier.alias);
@@ -237,19 +118,15 @@ export function SupplierDetailView({
     }, 1000);
   };
 
-  // --- UI HEADER ---
-  debtValueDisplay = el(
-    "div",
-    { className: "header-debt-value" },
-    SupplierModel.formatAmount(supplier.balance, isVisible),
-  );
+  // =========================================================
+  // UI HEADER (Botones estáticos)
+  // =========================================================
 
-  const isDebt = supplier.balance > 0;
   const settleTotalBtn = el(
     "button",
     {
       className: "btn-settle-mini",
-      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: ${isDebt ? "flex" : "none"}`,
+      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: none`,
       onclick: (e) => {
         e.stopPropagation();
         if (onSettleDebt) onSettleDebt(null, "Cancelación total");
@@ -257,6 +134,11 @@ export function SupplierDetailView({
     },
     [el("span", { innerHTML: iconCheck }), "SALDAR TOTAL"],
   );
+
+  const toggleVisibilityBtn = el("button", {
+    className: "btn-icon-toggle",
+    onclick: () => supplierStore.toggleAmountsVisibility(),
+  });
 
   const headerPanel = el("div", { className: "tech-panel-header-detail" }, [
     el("div", { className: "tech-header-top" }, [
@@ -278,11 +160,7 @@ export function SupplierDetailView({
       el("div", { className: "tech-debt-group" }, [
         el("div", { className: "debt-label-row" }, [
           el("span", { className: "debt-label" }, "SALDO ACTUAL"),
-          el("button", {
-            className: "btn-icon-toggle",
-            onclick: handleToggle,
-            innerHTML: isVisible ? iconEye : iconEyeOff,
-          }),
+          toggleVisibilityBtn,
         ]),
         el("div", { style: "display: flex; align-items: center;" }, [
           debtValueDisplay,
@@ -312,7 +190,7 @@ export function SupplierDetailView({
           "button",
           {
             className: "btn-secondary-icon",
-            onclick: onOpenSettings,
+            onclick: () => onOpenSettings(supplier),
             title: "Configurar",
           },
           el("span", { innerHTML: iconSettings }),
@@ -330,67 +208,166 @@ export function SupplierDetailView({
     ]),
   ]);
 
-  // --- NUEVO: BARRA DE FILTROS ---
-  const renderFilterPill = (label, value) => {
-    const isActive = currentFilter === value;
-    return el(
-      "button",
-      {
-        className: `filter-pill ${isActive ? "active" : ""}`,
-        onclick: () => onFilterChange && onFilterChange(value),
-      },
-      label,
+  // =========================================================
+  // LOGICA REACTIVA (Escucha al Store)
+  // =========================================================
+
+  const updateUI = (state) => {
+    // 1. Ocultar/Mostrar Saldos Globales
+    toggleVisibilityBtn.innerHTML = state.amountsVisible ? iconEye : iconEyeOff;
+    const currentBalance = parseFloat(
+      state.currentSupplier?.balance ?? supplier.balance ?? 0,
     );
+
+    debtValueDisplay.textContent = SupplierModel.formatAmount(
+      currentBalance,
+      state.amountsVisible,
+    );
+    settleTotalBtn.style.display = currentBalance > 0 ? "flex" : "none";
+
+    updateSnackbar(state.amountsVisible);
+
+    // 2. Renderizar Píldoras de Filtro
+    const renderFilterPill = (label, filterValue) => {
+      const isActive = state.activeFilter === filterValue;
+      return el(
+        "button",
+        {
+          className: `filter-pill ${isActive ? "active" : ""}`,
+          onclick: () => supplierStore.setFilter(filterValue),
+        },
+        label,
+      );
+    };
+
+    filtersBar.innerHTML = "";
+    filtersBar.appendChild(renderFilterPill("Todos", UI_FILTERS.ALL));
+    filtersBar.appendChild(renderFilterPill("Boletas", UI_FILTERS.INVOICES));
+    filtersBar.appendChild(renderFilterPill("Pagos", UI_FILTERS.PAYMENTS));
+    filtersBar.appendChild(renderFilterPill("Notas", UI_FILTERS.NOTES));
+
+    // 3. Filtrar Movimientos usando las constantes
+    const filteredMovements = state.transactions.filter((m) => {
+      if (state.activeFilter === UI_FILTERS.ALL) return true;
+      const t = (m.type || "").toLowerCase();
+
+      if (state.activeFilter === UI_FILTERS.INVOICES)
+        return TRANSACTION_GROUPS.DEBTS.includes(t);
+      if (state.activeFilter === UI_FILTERS.PAYMENTS)
+        return TRANSACTION_GROUPS.PAYMENTS.includes(t);
+      if (state.activeFilter === UI_FILTERS.NOTES)
+        return TRANSACTION_GROUPS.NOTES.includes(t);
+      return true;
+    });
+
+    // 4. Calcular Stock e Items (La lógica matemática que tenías)
+    let runningStock = {};
+    if (supplier.type === "stock") {
+      filteredMovements.forEach((m) => {
+        if (m.items && Array.isArray(m.items)) {
+          const isEntry = TRANSACTION_GROUPS.DEBTS.includes(
+            (m.type || "").toLowerCase(),
+          );
+          const isExit = TRANSACTION_GROUPS.PAYMENTS.includes(
+            (m.type || "").toLowerCase(),
+          );
+          m.items.forEach((i) => {
+            const name = i.name.trim().toUpperCase();
+            const qty = parseFloat(i.quantity || 0);
+            if (!runningStock[name]) runningStock[name] = 0;
+            if (isEntry) runningStock[name] += qty;
+            else if (isExit) runningStock[name] -= qty;
+          });
+        }
+      });
+    }
+
+    const movementsWithBalance = filteredMovements.map((m) => {
+      let snapshotStock = null;
+      let enrichedItems = m.items || [];
+
+      if (supplier.type === "stock") {
+        snapshotStock = { ...runningStock };
+        if (m.items && Array.isArray(m.items)) {
+          const isEntry = TRANSACTION_GROUPS.DEBTS.includes(
+            (m.type || "").toLowerCase(),
+          );
+          const isExit = TRANSACTION_GROUPS.PAYMENTS.includes(
+            (m.type || "").toLowerCase(),
+          );
+
+          enrichedItems = m.items.map((item) => {
+            const finalColor = item.color || findColorInSettings(item.name);
+            return { ...item, color: finalColor };
+          });
+
+          m.items.forEach((i) => {
+            const name = i.name.trim().toUpperCase();
+            const qty = parseFloat(i.quantity || 0);
+            if (runningStock[name] !== undefined) {
+              if (isEntry) runningStock[name] -= qty;
+              else if (isExit) runningStock[name] += qty;
+            }
+          });
+        }
+      }
+
+      return {
+        ...m,
+        items: enrichedItems,
+        partialBalance: m.partialBalance, // El balance lo calcula ahora el TransactionCalculator
+        stockBalance: snapshotStock,
+      };
+    });
+
+    // 5. Renderizar Lista y Panel de Stock
+    contentContainer.innerHTML = "";
+    const listComponent = MovementList({
+      movements: movementsWithBalance,
+      isVisible: state.amountsVisible,
+      onEdit: onEditMovement,
+      onDelete: onDeleteMovement,
+      isStockView: supplier.type === "stock",
+      onSelectionChange: handleSelection,
+      onToggleStatus: onToggleStatus,
+    });
+
+    if (supplier.type === "stock" && movementsWithBalance.length > 0) {
+      const gridLayout = el("div", { className: "detail-grid-layout" });
+      const stockPanel = StockStatsPanel({ movements: movementsWithBalance });
+      if (stockPanel) gridLayout.appendChild(stockPanel);
+      const listWrapper = el(
+        "div",
+        { className: "grid-list-column" },
+        listComponent,
+      );
+      gridLayout.appendChild(listWrapper);
+      contentContainer.appendChild(gridLayout);
+    } else {
+      contentContainer.appendChild(listComponent);
+    }
   };
 
-  filtersBar = el("div", { className: "filters-bar" }, [
-    renderFilterPill("Todos", "all"),
-    renderFilterPill("Boletas", "invoice"),
-    renderFilterPill("Pagos", "payment"),
-    renderFilterPill("Notas", "note"),
-  ]);
-
-  // Ejecución Inicial
-  recalculateAndRender(movements, supplier.balance);
+  // =========================================================
+  // SUSCRIPCIÓN Y MONTAJE
+  // =========================================================
 
   const view = el("div", { className: "supplier-detail-view" }, [
     headerPanel,
-    filtersBar, // <-- Insertamos la barra aquí
+    filtersBar,
     contentContainer,
     snackbar,
   ]);
 
-  // Actualización desde el Controller
-  view.updateState = (newBalance, newMovements, newFilter) => {
-    supplier.balance = newBalance;
-    movements = newMovements;
+  const unsubscribe = supplierStore.subscribe(updateUI);
+  updateUI(supplierStore.getState());
 
-    // Actualizar Saldo Header
-    debtValueDisplay.textContent = SupplierModel.formatAmount(
-      newBalance,
-      isVisible,
-    );
-    settleTotalBtn.style.display = newBalance > 0 ? "flex" : "none";
-
-    // Actualizar Filtros Activos
-    if (newFilter) {
-      currentFilter = newFilter;
-      // Re-renderizamos los botones para mover la clase 'active'
-      filtersBar.innerHTML = "";
-      filtersBar.appendChild(renderFilterPill("Todos", "all"));
-      filtersBar.appendChild(renderFilterPill("Boletas", "invoice"));
-      filtersBar.appendChild(renderFilterPill("Pagos", "payment"));
-      filtersBar.appendChild(renderFilterPill("Notas", "note"));
-    }
-
-    // Reset selección
-    selectedInvoices.clear();
-    selectedTotal = 0;
-    updateSnackbar();
-
-    // Re-renderizar lista
-    recalculateAndRender(newMovements, newBalance);
+  view.destroy = () => {
+    unsubscribe();
   };
+
+  // Dummy updateState for backward compatibility with router
+  view.updateState = () => {};
 
   return view;
 }

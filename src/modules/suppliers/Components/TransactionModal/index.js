@@ -11,12 +11,10 @@ const getSafeName = (item) => {
 
 // --- HELPER CRÍTICO: Obtener fecha local (Fix Zona Horaria) ---
 const getLocalDateObject = (inputDate) => {
-  if (!inputDate) return new Date(); // Si es null, devuelve AHORA
+  if (!inputDate) return new Date();
 
-  // 1. Si es Timestamp de Firebase
   if (inputDate.toDate) return inputDate.toDate();
 
-  // 2. Si es string (ej: "2026-02-18"), forzamos mediodía para evitar resta de horario
   if (typeof inputDate === "string" && inputDate.includes("-")) {
     const dateString = inputDate.includes("T")
       ? inputDate
@@ -24,7 +22,6 @@ const getLocalDateObject = (inputDate) => {
     return new Date(dateString);
   }
 
-  // 3. Date normal
   return new Date(inputDate);
 };
 const getSafeColor = (item) => {
@@ -146,14 +143,13 @@ export function TransactionModal({
   onClose,
   onDelete = null,
 }) {
-  // Aseguramos estilos
   injectModalBadgeStyles();
 
   const isEdit = !!initialData?.id;
 
   // ICONOS
   const iconClose = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-  const iconTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+  const iconTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
   const iconPlus = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
   const iconChevronLeft = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>`;
   const iconChevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
@@ -165,7 +161,6 @@ export function TransactionModal({
     : "invoice";
   let localMovements = [...movements];
 
-  // BUFFER DE CENTAVOS
   let centsBuffer =
     initialData && typeof initialData.amount === "number"
       ? Math.round(initialData.amount * 100).toString()
@@ -181,6 +176,25 @@ export function TransactionModal({
   const isPartial = status === "partial";
   const statusClass = isPaid ? "paid" : isPartial ? "partial" : "pending";
   const statusLabel = isPaid ? "PAGADO" : isPartial ? "PARCIAL" : "PENDIENTE";
+
+  // =============================================================
+  // FIX #2: Cleanup centralizado para evitar leak del Escape handler
+  // =============================================================
+  let isDestroyed = false;
+
+  const handleEsc = (e) => {
+    if (e.key === "Escape") closeModal();
+  };
+
+  const closeModal = () => {
+    if (isDestroyed) return; // Evita doble ejecución
+    isDestroyed = true;
+    document.removeEventListener("keydown", handleEsc);
+    onClose();
+  };
+
+  // Registramos el listener una sola vez
+  document.addEventListener("keydown", handleEsc);
 
   // --- LOGICA DE GUARDADO ---
   const handleSaveAction = (e) => {
@@ -211,7 +225,6 @@ export function TransactionModal({
       concept: conceptVal,
       type: selectedType.toLowerCase(),
       date: selectedDate,
-      // Mantenemos el estado existente si es edición, sino pending
       status: initialData?.status || "pending",
       paidAmount: initialData?.paidAmount || 0,
       items: itemsState
@@ -667,7 +680,6 @@ export function TransactionModal({
                 { className: "fusion-subtitle" },
                 isEdit ? "EDITAR REGISTRO" : "NUEVO MOVIMIENTO",
               ),
-              // --- AQUI ESTÁ EL BADGE DE ESTADO ---
               isEdit
                 ? el(
                     "span",
@@ -681,7 +693,7 @@ export function TransactionModal({
         ]),
         el("button", {
           className: "btn-close-fusion",
-          onclick: onClose,
+          onclick: closeModal, // <-- Usa closeModal en lugar de onClose
           innerHTML: iconClose,
         }),
       ]),
@@ -806,7 +818,7 @@ export function TransactionModal({
                     className: "btn-mini-fusion",
                     onclick: (e) => {
                       e.preventDefault();
-                      setQuickDate(0); // HOY
+                      setQuickDate(0);
                     },
                   },
                   "HOY",
@@ -818,7 +830,7 @@ export function TransactionModal({
                     className: "btn-mini-fusion",
                     onclick: (e) => {
                       e.preventDefault();
-                      setQuickDate(-1); // AYER
+                      setQuickDate(-1);
                     },
                   },
                   "AYER",
@@ -864,7 +876,7 @@ export function TransactionModal({
               {
                 type: "button",
                 className: "btn-fusion-cancel",
-                onclick: onClose,
+                onclick: closeModal, // <-- Usa closeModal
               },
               "CANCELAR",
             ),
@@ -888,7 +900,7 @@ export function TransactionModal({
     {
       className: "fusion-overlay mesh-bg",
       onclick: (e) => {
-        if (e.target === overlay) onClose();
+        if (e.target === overlay) closeModal(); // <-- Usa closeModal
       },
     },
     [modalContent],
@@ -907,16 +919,6 @@ export function TransactionModal({
       if (input) input.focus();
     }
   }, 0);
-
-  const handleEsc = (e) => {
-    if (e.key === "Escape") onClose();
-  };
-  document.addEventListener("keydown", handleEsc);
-  const originalClose = onClose;
-  onClose = () => {
-    document.removeEventListener("keydown", handleEsc);
-    originalClose();
-  };
 
   return overlay;
 }

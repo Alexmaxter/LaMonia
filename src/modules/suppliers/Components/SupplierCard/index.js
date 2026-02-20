@@ -1,6 +1,5 @@
 import { el } from "../../../../core/dom.js";
 import { SupplierModel } from "../../model.js";
-import { FirebaseDB } from "../../../../core/firebase/db.js"; // Importamos DB para recalculo
 import "./style.css";
 
 export function SupplierCard({
@@ -10,13 +9,12 @@ export function SupplierCard({
   onAddTransaction,
   lastTransaction,
 }) {
-  // Estado inicial desde props
-  let currentBalance = parseFloat(supplier.balance) || 0;
+  const currentBalance = parseFloat(supplier.balance) || 0;
 
   // --- LÓGICA DE ESTADO VISUAL ---
   const getStatusClass = (bal) => {
-    if (bal > 0.01) return "status-debt"; // Deuda = Rojo
-    if (bal < -0.01) return "status-credit"; // A favor/Pago excesivo = Verde
+    if (bal > 0.01) return "status-debt";
+    if (bal < -0.01) return "status-credit";
     return "status-neutral";
   };
 
@@ -27,7 +25,7 @@ export function SupplierCard({
   const hasAlias = !!supplier.alias;
   const aliasText = hasAlias ? supplier.alias : "PLACEHOLDER";
 
-  // --- BLOQUE ÚLTIMO MOVIMIENTO (TECH STYLE) ---
+  // --- BLOQUE ÚLTIMO MOVIMIENTO ---
   let lastMoveBlock = null;
 
   if (lastTransaction) {
@@ -35,7 +33,6 @@ export function SupplierCard({
       ? new Date(lastTransaction.date.seconds * 1000)
       : new Date(lastTransaction.date);
 
-    // Formato fecha técnico: DD.MM.YY
     const day = dateObj.getDate().toString().padStart(2, "0");
     const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
     const year = dateObj.getFullYear().toString().slice(-2);
@@ -46,7 +43,6 @@ export function SupplierCard({
       isVisible,
     );
 
-    // FIX: Normalización de tipo para color correcto en el último movimiento
     const type = (lastTransaction.type || "").toLowerCase().trim();
     const isTxDebt =
       type === "invoice" || type === "boleta" || type === "deuda";
@@ -72,7 +68,6 @@ export function SupplierCard({
   const card = el(
     "div",
     {
-      // Usamos tus clases originales
       className: `tech-supplier-card ${getStatusClass(currentBalance)}`,
       onclick: onClick,
       "data-id": supplier.id,
@@ -107,7 +102,6 @@ export function SupplierCard({
             el(
               "span",
               {
-                // Clases dinámicas para el color del saldo
                 className: `balance-display ${
                   currentBalance > 0.01
                     ? "color-debt"
@@ -124,7 +118,7 @@ export function SupplierCard({
             className: "btn-square-add",
             onclick: (e) => {
               e.stopPropagation();
-              onAddTransaction(supplier); // Pasamos el supplier para que el modal sepa
+              onAddTransaction(supplier);
             },
             innerHTML: iconPlus,
           }),
@@ -132,60 +126,6 @@ export function SupplierCard({
       ]),
     ],
   );
-
-  // --- LÓGICA DE ACTUALIZACIÓN AUTOMÁTICA (FIX) ---
-  // Esto asegura que si haces un movimiento, la tarjeta se recalcule y se pinte bien
-  // sin esperar a que recargues la página.
-  const fetchActivity = async () => {
-    try {
-      const allMovs = await FirebaseDB.getByFilter(
-        "supplier_transactions",
-        "supplierId",
-        supplier.id,
-      );
-
-      if (!allMovs) return;
-
-      let newBalance = 0;
-      allMovs.forEach((m) => {
-        const amt = parseFloat(m.amount) || 0;
-        const type = (m.type || "").toLowerCase().trim();
-        const isDebt =
-          type === "invoice" || type === "boleta" || type === "deuda";
-
-        // La misma lógica robusta: Invoice suma (+), Pago resta (-)
-        newBalance += isDebt ? amt : -amt;
-      });
-
-      // Actualizar visualmente la tarjeta existente
-      const balanceEl = card.querySelector(".balance-display");
-      if (balanceEl) {
-        balanceEl.textContent = SupplierModel.formatAmount(
-          newBalance,
-          isVisible,
-        );
-
-        // Actualizar color del texto del saldo
-        balanceEl.classList.remove(
-          "color-debt",
-          "color-credit",
-          "color-neutral",
-        );
-        if (newBalance > 0.01) balanceEl.classList.add("color-debt");
-        else if (newBalance < -0.01) balanceEl.classList.add("color-credit");
-        else balanceEl.classList.add("color-neutral");
-      }
-
-      // Actualizar borde de estado (clase principal)
-      card.classList.remove("status-debt", "status-credit", "status-neutral");
-      card.classList.add(getStatusClass(newBalance));
-    } catch (err) {
-      console.error("Error actualizando tarjeta", err);
-    }
-  };
-
-  // Pequeño delay para asegurar que si se monta tras una edición, verifique consistencia
-  setTimeout(fetchActivity, 800);
 
   return card;
 }

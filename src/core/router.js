@@ -33,6 +33,25 @@ export class Router {
 
     if (typeof renderFn === "function") {
       console.log(`✅ Ejecutando controlador para: ${baseRoute}`);
+
+      // =========================================================
+      // 🛡️ PARCHE DE FUGA DE MEMORIA (MEMORY LEAK FIX)
+      // =========================================================
+      // Verificamos si la vista actual tiene un método destroy() y lo ejecutamos
+      if (
+        this.container.firstChild &&
+        typeof this.container.firstChild.destroy === "function"
+      ) {
+        console.log(
+          "🧹 Destruyendo vista anterior y limpiando suscripciones...",
+        );
+        this.container.firstChild.destroy();
+      }
+
+      // Vaciamos el DOM por completo de forma segura
+      this.container.innerHTML = "";
+      // =========================================================
+
       // Pasamos el contenedor para que el módulo dibuje allí
       renderFn(this.container);
     } else {

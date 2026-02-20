@@ -1,35 +1,31 @@
-/**
- * SupplierStore
- * Gestor de estado simple (Patrón Singleton)
- * Sirve para compartir datos entre el controlador y las vistas sin prop-drilling excesivo.
- */
+import { SupplierModel } from "./model.js";
+import { UI_FILTERS } from "../../shared/constants/index.js";
+
 class SupplierStore {
   constructor() {
     this.state = {
-      suppliers: [], // Lista de proveedores (Vista Lista)
-      currentSupplier: null, // Proveedor seleccionado (Vista Detalle)
-      transactions: [], // Movimientos del proveedor seleccionado
+      // Dados puros
+      suppliers: [],
+      currentSupplier: null,
+      transactions: [],
+
+      // Estado da Interface (UI State)
+      amountsVisible: SupplierModel.getVisibility(), // Recupera do localStorage
+      activeFilter: UI_FILTERS.ALL,
+
       loading: false,
       error: null,
     };
     this.listeners = [];
   }
 
-  /**
-   * Suscribirse a cambios (Patrón Observador)
-   * Útil si quieres que un componente se repinte solo cuando cambia el store.
-   */
   subscribe(listener) {
     this.listeners.push(listener);
-    // Retorna función para desuscribirse
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
-  /**
-   * Notificar a todos los oyentes
-   */
   notify() {
     this.listeners.forEach((listener) => listener(this.state));
   }
@@ -51,22 +47,24 @@ class SupplierStore {
     this.notify();
   }
 
-  setLoading(isLoading) {
-    this.state.loading = isLoading;
-    this.notify();
+  // --- ACTIONS PARA A UI ---
+
+  toggleAmountsVisibility() {
+    // CORREÇÃO AQUI: Usamos o método original que inverte e guarda no disco
+    const isVisible = SupplierModel.toggleVisibility();
+    this.state.amountsVisible = isVisible;
+    this.notify(); // Avisa toda a app para redesenhar os números
+    return isVisible;
   }
 
-  setError(error) {
-    this.state.error = error;
+  setFilter(filterType) {
+    this.state.activeFilter = filterType;
     this.notify();
   }
-
-  // --- GETTERS ---
 
   getState() {
     return this.state;
   }
 }
 
-// Exportamos una INSTANCIA única (Singleton)
 export const supplierStore = new SupplierStore();
