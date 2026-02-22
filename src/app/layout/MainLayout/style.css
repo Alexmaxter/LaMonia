@@ -1,43 +1,15 @@
-/* src_v2/app/layout/MainLayout/style.css */
-
-/* Contenedor principal: Ocupa toda la pantalla */
 .main-layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
-  overflow: hidden; /* Evita doble scrollbar en el body */
+  overflow: hidden;
   background-color: var(--bg-app);
-  color: var(--text-main);
 }
 
-/* Área de contenido dinámico */
 .main-content {
-  flex: 1; /* Toma todo el espacio restante */
-  overflow-y: auto; /* Scroll interno solo aquí */
-
-  /* CORRECCIÓN: Eliminamos el padding global para permitir encabezados full-width */
-  padding: 0;
-
+  flex: 1;
+  overflow-y: auto;
+  height: 0;
   position: relative;
-  height: 100%;
-}
-
-/* --- ADAPTACIÓN MÓVIL --- */
-@media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column; /* Cambia a vertical: Menú arriba, Contenido abajo */
-  }
-
-  .main-content {
-    width: 100%;
-
-    /* CORRECCIÓN: Sin padding lateral/superior en móvil tampoco */
-    padding: 0;
-
-    /* IMPORTANTE: Mantenemos padding inferior si hay menú fijo abajo, 
-       sino puedes reducirlo a 0 o 20px según tu diseño */
-    padding-bottom: 80px;
-
-    overflow-y: auto;
-  }
 }

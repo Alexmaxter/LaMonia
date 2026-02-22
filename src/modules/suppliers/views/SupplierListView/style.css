@@ -13,12 +13,11 @@
 .tech-panel-header {
   background: #fff;
   border-bottom: 2px solid #000;
-  padding: 16px 24px 0 24px; /* Padding Desktop */
+  padding: 16px 24px 0 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 
-  /* STICKY CONFIG */
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -26,16 +25,23 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* ============================================================
+   FILA PRINCIPAL: Título | Search | Deuda + Botones
+   Todo en una sola fila horizontal.
+   ============================================================ */
 .tech-header-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  gap: 16px;
 }
 
+/* — Título + badge (izquierda, fijo) — */
 .tech-title-group {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .page-title {
@@ -55,11 +61,28 @@
   font-weight: 700;
   font-size: 0.85rem;
   padding: 2px 6px;
-  border-radius: 0; /* TECH: Sin borde redondeado */
+  border-radius: 0;
+}
+
+/* — Search (centro, crece) — */
+.tech-search-container {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+}
+
+/* — Derecha: deuda + botones juntos — */
+.tech-right-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
 .tech-debt-group {
   text-align: right;
+  /* Ancho fijo para que el search no se mueva al cambiar el monto */
+  min-width: 160px;
 }
 
 .debt-label-row {
@@ -98,46 +121,39 @@
   color: #000;
   line-height: 1;
   letter-spacing: -1px;
+  /* Evita que el texto corto/largo empuje el layout */
+  white-space: nowrap;
+  display: block;
+  text-align: right;
 }
 
-/* --- CONTROLS ROW (DISEÑO INDUSTRIAL) --- */
-.tech-controls-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.tech-search-container {
-  flex: 1;
-  max-width: 400px;
-}
-
+/* — Grupo de botones de acción (Nuevo + Boleta + Configuración) — */
+/* Sin borde ni sombra en el contenedor — cada botón se define solo */
 .tech-actions-container {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  align-items: center;
 }
 
-/* Botones Principales Rediseñados */
 .btn-primary {
   background: #000;
   color: #fff;
   border: 1px solid #000;
   height: 40px;
-  padding: 0 24px;
+  padding: 0 20px;
   font-family: var(--font-mono, monospace);
   font-weight: 700;
   font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   white-space: nowrap;
-  border-radius: 0; /* TECH: Recto */
+  border-radius: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 .btn-primary:hover {
   background: #333;
@@ -148,7 +164,7 @@
   color: #000;
   border: 1px solid #000;
   height: 40px;
-  padding: 0 24px;
+  padding: 0 20px;
   font-family: var(--font-mono, monospace);
   font-weight: 700;
   font-size: 0.8rem;
@@ -156,31 +172,63 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   white-space: nowrap;
-  border-radius: 0; /* TECH: Recto */
+  border-radius: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 .btn-secondary:hover {
   background: #f4f4f4;
 }
 
-/* --- TOOLBAR TABS & FILTERS (DISEÑO INDUSTRIAL) --- */
+/* Botón configuración — idéntico a btn-secondary */
+.btn-settings {
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  height: 40px;
+  padding: 0 20px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+}
+.btn-settings:hover {
+  background: #f4f4f4;
+}
+.btn-settings-icon {
+  display: flex;
+  align-items: center;
+  transition: transform 0.4s ease;
+}
+.btn-settings:hover .btn-settings-icon {
+  transform: rotate(60deg);
+}
+
+/* --- TOOLBAR TABS & FILTERS --- */
 .toolbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 0 16px 0;
   margin-top: 8px;
-  border-top: 1px dashed #ccc; /* Línea técnica */
+  border-top: 1px dashed #ccc;
 }
 
-/* Tabs: Estilo bloque unido */
 .tabs-group {
   display: flex;
-  gap: -1px; /* Superposición de bordes */
+  gap: -1px;
   background: transparent;
   padding: 0;
   border-radius: 0;
@@ -198,25 +246,22 @@
   font-weight: 700;
   color: #999;
   cursor: pointer;
-  border-radius: 0; /* TECH: Recto */
+  border-radius: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: all 0.2s;
   z-index: 0;
 }
-
 .tab-btn:hover {
   border-color: #999;
   color: #000;
   z-index: 1;
 }
-
 .tab-btn.active {
   background: #000;
   color: #fff;
   border-color: #000;
   z-index: 2;
-  box-shadow: none;
 }
 
 .controls-group {
@@ -224,13 +269,12 @@
   gap: 8px;
 }
 
-/* Filtros: Chips Rectangulares */
 .btn-sort,
 .filter-chip {
   background: #fff;
   border: 1px solid #ccc;
   padding: 6px 14px;
-  border-radius: 0; /* TECH: Recto */
+  border-radius: 0;
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   font-weight: 700;
@@ -242,13 +286,11 @@
   text-transform: uppercase;
   transition: all 0.2s;
 }
-
 .btn-sort:hover,
 .filter-chip:hover {
   border-color: #000;
   color: #000;
 }
-
 .btn-sort.active,
 .filter-chip.active {
   background: #000;
@@ -256,7 +298,6 @@
   border-color: #000;
 }
 
-/* Chips de estado específicos */
 .filter-chip[data-type="invoice"].active {
   background: #d32f2f;
   border-color: #d32f2f;
@@ -283,11 +324,11 @@
   height: 200px;
   color: #999;
   font-family: var(--font-mono, monospace);
-  border: 1px dashed #ccc; /* Borde más fino */
+  border: 1px dashed #ccc;
   background: #fafafa;
 }
 
-/* --- ACTIVITY LIST STYLES (Conservados) --- */
+/* --- ACTIVITY LIST --- */
 .activity-list-container {
   display: flex;
   flex-direction: column;
@@ -331,7 +372,13 @@
   font-weight: 700;
 }
 
-/* --- RESPONSIVE (Mantenido igual pero ajustando gaps) --- */
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .tech-search-container {
+    max-width: 260px;
+  }
+}
+
 @media (max-width: 768px) {
   .tech-panel-header {
     position: relative;
@@ -340,38 +387,37 @@
     gap: 12px;
   }
 
+  /* En mobile: título + deuda arriba / search abajo / botones debajo */
   .tech-header-top {
-    flex-direction: row;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
   }
+
+  .tech-title-group {
+    flex-shrink: 0;
+  }
+
+  .tech-right-group {
+    margin-left: auto;
+    gap: 12px;
+  }
+
+  .tech-search-container {
+    width: 100%;
+    max-width: 100%;
+    order: 10; /* va al final del flex-wrap */
+    flex-basis: 100%;
+  }
+
+  .tech-actions-container {
+    box-shadow: none;
+  }
+
   .page-title {
     font-size: 1.25rem;
   }
   .header-debt-value {
     font-size: 1.4rem;
-  }
-
-  .tech-controls-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .tech-search-container {
-    max-width: 100%;
-  }
-
-  .tech-actions-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    justify-content: center;
-    font-size: 0.75rem;
-    padding: 0 8px;
   }
 
   .toolbar-container {
@@ -398,5 +444,16 @@
 
   .content-wrapper {
     padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-secondary span:last-child,
+  .btn-primary span:last-child {
+    display: none; /* solo ícono en pantallas muy chicas */
+  }
+  .btn-secondary,
+  .btn-primary {
+    padding: 0 12px;
   }
 }

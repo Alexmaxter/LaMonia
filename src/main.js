@@ -3,11 +3,17 @@ import { mount } from "./core/dom.js";
 import { MainLayout } from "./app/layout/MainLayout/index.js";
 import { Router } from "./core/router.js";
 import { SupplierController } from "./modules/suppliers/controller.js";
+import { SettingsView } from "./modules/business/views/SettingsView/index.js";
+import { businessStore } from "./modules/business/BusinessStore.js";
+import { BusinessService } from "./modules/business/BusinessService.js";
 import "./modules/suppliers/utils/AuditGenerator.js";
 import "./modules/suppliers/utils/LedgerFix.js";
+
 console.log("🚀 [Main] Inicializando aplicación...");
 
-// 1. Iniciar el layout limpio
+// ============================================================
+// 1. LAYOUT
+// ============================================================
 const layout = MainLayout();
 const root = document.getElementById("app");
 
@@ -16,33 +22,60 @@ if (root) {
   console.log("✅ Layout montado en #app");
 }
 
-// 2. Instanciar el módulo de proveedores
+// ============================================================
+// 2. CARGA INICIAL DEL NEGOCIO
+// Silenciosa, solo para poblar el nombre en el topbar del layout.
+// ============================================================
+BusinessService.get()
+  .then((data) => businessStore.setBusiness(data))
+  .catch(() => businessStore.setBusiness(null));
+
+// ============================================================
+// 3. MÓDULOS
+// ============================================================
 const supplierModule = SupplierController();
 
-// 3. Definir rutas (Solo Proveedores)
+// ============================================================
+// 4. RUTAS
+// ============================================================
 const routes = {
   "#suppliers": (container) => {
     console.log("📍 Ruta: Proveedores");
     supplierModule(container);
-    // ELIMINADO: layout.sidebarAPI.setActive(...) -> Esto causaba el error
+  },
+  "#settings": (container) => {
+    console.log("📍 Ruta: Configuración");
+    const view = SettingsView({
+      onBack: () => {
+        window.history.back();
+        // Fallback si no hay historial
+        setTimeout(() => {
+          if (window.location.hash === "#settings") {
+            window.location.hash = "#suppliers";
+          }
+        }, 100);
+      },
+    });
+    container.appendChild(view);
   },
 };
 
-// 4. Iniciar el Router
+// ============================================================
+// 5. ROUTER
+// ============================================================
 console.log("🛠️ Iniciando Router...");
 new Router(routes, layout.contentContainer);
 
-// 5. Redirección inicial forzada a proveedores
+// Redirección inicial
 if (!window.location.hash || window.location.hash === "#cashflow") {
   window.location.hash = "#suppliers";
 }
-// --- CÓDIGO TEMPORAL PARA MIGRACIÓN ---
+
+// ============================================================
+// 6. HERRAMIENTAS DE MIGRACIÓN (Consola)
+// ============================================================
 import { runMigration } from "./modules/suppliers/utils/RunMigration.js";
-
-// Hacemos la función global para poder llamarla desde la consola del navegador
 window.runMigrationSystem = runMigration;
-
 console.log(
   "🔧 SISTEMA: Para correr la migración, escribe 'runMigrationSystem()' en la consola.",
 );
-// --------------------------------------

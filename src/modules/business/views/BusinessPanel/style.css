@@ -1,0 +1,295 @@
+/* SettingsView/style.css
+   Brutalismo técnico — coherente con SupplierListView.
+*/
+
+.settings-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f4f4f4;
+}
+
+/* ============================================================
+   TOPBAR — mismo lenguaje que tech-panel-header
+   ============================================================ */
+.sv-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fff;
+  border-bottom: 2px solid #000;
+  height: 56px;
+  padding: 0 24px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.sv-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #000;
+  padding: 0 16px;
+  height: 36px;
+  border-radius: 0;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sv-back-btn:hover {
+  background: #f4f4f4;
+}
+
+/* Divisor + título de sección */
+.sv-topbar-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+  margin-left: 20px;
+  border-left: 2px solid #000;
+  height: 32px;
+}
+
+.sv-topbar-eyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #999;
+  line-height: 1;
+}
+
+.sv-topbar-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   BODY: SIDEBAR + PANEL
+   ============================================================ */
+.sv-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sv-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #fff;
+  border-right: 2px solid #000;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sv-sidebar-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #999;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 8px;
+}
+
+.sv-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.sv-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s;
+  border-radius: 0;
+}
+.sv-nav-item:hover {
+  background: #f4f4f4;
+}
+.sv-nav-item.active {
+  background: #000;
+}
+.sv-nav-item.active .sv-nav-label {
+  color: #fff;
+}
+.sv-nav-item.active .sv-nav-icon {
+  color: #fff;
+}
+
+.sv-nav-icon {
+  display: flex;
+  align-items: center;
+  color: #999;
+  flex-shrink: 0;
+}
+.sv-nav-item:hover .sv-nav-icon {
+  color: #000;
+}
+
+.sv-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sv-nav-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.sv-nav-desc {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   ÁREA DE CONTENIDO
+   ============================================================ */
+.sv-panel-area {
+  flex: 1;
+  padding: 40px 48px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.sv-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 40px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #000;
+}
+
+.sv-section-eyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #999;
+}
+
+.sv-section-title {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #000;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ============================================================
+   COMING SOON
+   ============================================================ */
+.sv-coming-soon {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: #999;
+  padding: 40px 0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border: 1px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .sv-topbar {
+    padding: 0 16px;
+    height: 52px;
+  }
+
+  .sv-body {
+    flex-direction: column;
+  }
+
+  .sv-sidebar {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 2px solid #000;
+    padding: 0;
+  }
+
+  .sv-sidebar-label {
+    display: none;
+  }
+
+  .sv-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    border-bottom: none;
+  }
+
+  .sv-nav-item {
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-bottom: none;
+    border-right: 1px solid #e5e5e5;
+  }
+
+  .sv-nav-desc {
+    display: none;
+  }
+
+  .sv-panel-area {
+    padding: 24px 16px;
+  }
+
+  .sv-section-title {
+    font-size: 1.3rem;
+  }
+}

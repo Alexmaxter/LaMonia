@@ -5,7 +5,7 @@ import { FirebaseDB } from "../../../../core/firebase/db.js";
 import { SupplierCard } from "../../Components/SupplierCard/index.js";
 import { SkeletonSupplierCard } from "../../Components/SupplierCard/SkeletonSupplierCard.js";
 import { MovementList } from "../../Components/MovementList/index.js";
-import { supplierStore } from "../../SupplierStore.js"; // <-- NUEVO: Importamos el Store
+import { supplierStore } from "../../SupplierStore.js";
 import "./style.css";
 
 export function SupplierListView({
@@ -16,15 +16,15 @@ export function SupplierListView({
   onEditTransaction,
   onDeleteTransaction,
 }) {
-  // --- ESTADO LOCAL (Solo para la vista) ---
+  // --- ESTADO LOCAL ---
   let currentSort = "name_asc";
-  let activeTab = "directory"; // 'directory' | 'activity'
+  let activeTab = "directory";
   let recentTransactions = [];
-  let currentActivityFilter = "all"; // 'all' | 'invoice' | 'payment'
+  let currentActivityFilter = "all";
   let isLoadingActivity = false;
-  let searchTermText = ""; // Reemplaza a currentFilteredList para que sea reactivo
+  let searchTermText = "";
 
-  // --- ELEMENTOS DOM BASE ---
+  // --- ELEMENTOS DOM ---
   let debtValueDisplay = null;
   let toggleVisibilityBtn = null;
   let badgeCountDisplay = null;
@@ -34,19 +34,18 @@ export function SupplierListView({
   let btnTabActivity = null;
 
   // --- ICONOS ---
-  const iconPlus = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-  const iconGrid = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
-  const iconList = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
-  const iconSortAZ = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5 5 5-5"/><path d="M4 6h7m-7 6h7m-7 6h7m-7 6h7m-7 6h7m-7 6h7m-7 6h7"/></svg>`;
-  const iconSortDown = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>`;
-  const iconSortUp = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6"/><path d="M6 20V10"/><path d="M18 20v-4"/></svg>`;
-  const iconEye = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-  const iconEyeOff = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+  const iconPlus = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+  const iconGrid = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
+  const iconList = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
+  const iconSortAZ = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5 5 5-5"/><path d="M4 6h7m-7 6h7m-7 6h7"/></svg>`;
+  const iconSortDown = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>`;
+  const iconSortUp = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6"/><path d="M6 20V10"/><path d="M18 20v-4"/></svg>`;
+  const iconEye = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  const iconEyeOff = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
 
   // --- DATA FETCHING ---
   const fetchActivity = async () => {
     if (recentTransactions.length > 0 && !isLoadingActivity) return;
-
     isLoadingActivity = true;
     try {
       const data = await FirebaseDB.getByFilter(
@@ -56,34 +55,25 @@ export function SupplierListView({
         "date",
         "desc",
       );
-
       recentTransactions =
         data && Array.isArray(data) ? data.slice(0, 500) : [];
-      triggerRender(); // Reactividad local
+      triggerRender();
     } catch (e) {
       console.error("Error cargando actividad:", e);
     } finally {
       isLoadingActivity = false;
-      triggerRender(); // Reactividad local
+      triggerRender();
     }
   };
 
   const switchTab = (tab) => {
-    // 1. Prevenir ejecuciones innecesarias si el usuario hace clic en la pestaña que ya está activa
     if (activeTab === tab) return;
-
     activeTab = tab;
-
-    // 2. Usar toggle es mucho más limpio que hacer add/remove manualmente
     btnTabDirectory.classList.toggle("active", tab === "directory");
     btnTabActivity.classList.toggle("active", tab === "activity");
-
-    // 3. Control de renderizado optimizado
     if (tab === "activity" && recentTransactions.length === 0) {
-      // Si no hay datos, fetchActivity ya se encarga de poner "Cargando" y hacer triggerRender() por dentro
       fetchActivity();
     } else {
-      // Si ya hay datos o volvimos al directorio, renderizamos normalmente
       triggerRender();
     }
   };
@@ -118,9 +108,7 @@ export function SupplierListView({
     triggerRender();
   };
 
-  const handleToggle = () => {
-    supplierStore.toggleAmountsVisibility(); // Magia Reactiva
-  };
+  const handleToggle = () => supplierStore.toggleAmountsVisibility();
 
   const handleSearch = (term) => {
     searchTermText = term.toLowerCase();
@@ -150,10 +138,10 @@ export function SupplierListView({
         createSortBtn("name_asc", "Nombre", iconSortAZ),
       );
       controlsGroupRight.appendChild(
-        createSortBtn("debt_desc", "Mayor Deuda", iconSortDown),
+        createSortBtn("debt_desc", "Mayor deuda", iconSortDown),
       );
       controlsGroupRight.appendChild(
-        createSortBtn("debt_asc", "Menor Deuda", iconSortUp),
+        createSortBtn("debt_asc", "Menor deuda", iconSortUp),
       );
     } else {
       if (recentTransactions.length > 0) {
@@ -180,7 +168,7 @@ export function SupplierListView({
   };
 
   // =========================================================
-  // LOGICA REACTIVA (La Magia)
+  // LÓGICA REACTIVA
   // =========================================================
 
   const updateHeader = (state) => {
@@ -188,7 +176,6 @@ export function SupplierListView({
       (acc, s) => acc + (parseFloat(s.balance) || 0),
       0,
     );
-
     toggleVisibilityBtn.innerHTML = state.amountsVisible ? iconEye : iconEyeOff;
     debtValueDisplay.textContent = SupplierModel.formatAmount(
       totalDebt,
@@ -201,15 +188,13 @@ export function SupplierListView({
     contentWrapper.innerHTML = "";
     renderToolbarControls();
 
-    // VISTA 1: DIRECTORIO DE PROVEEDORES
     if (activeTab === "directory") {
       const gridContainer = el("div", { className: "suppliers-grid" });
 
-      // Filtramos desde el Store
       const currentFilteredList = state.suppliers.filter(
         (s) =>
           (s.name || "").toLowerCase().includes(searchTermText) ||
-          (s.alias || "").toLowerCase().includes(searchTermText), // También busca por alias!
+          (s.alias || "").toLowerCase().includes(searchTermText),
       );
 
       const sortedList = getSortedData(currentFilteredList);
@@ -238,9 +223,7 @@ export function SupplierListView({
         gridContainer.appendChild(fragment);
       }
       contentWrapper.appendChild(gridContainer);
-    }
-    // VISTA 2: ACTIVIDAD (TIMELINE)
-    else {
+    } else {
       if (isLoadingActivity) {
         contentWrapper.innerHTML = `<div class="empty-state">Buscando movimientos...</div>`;
         return;
@@ -262,7 +245,6 @@ export function SupplierListView({
       const enrichedTransactions = visibleTransactions.map((tx) => {
         const sup = state.suppliers.find((s) => s.id === tx.supplierId);
         let enrichedItems = [];
-
         if (tx.items && Array.isArray(tx.items)) {
           enrichedItems = tx.items.map((item) => {
             let color = item.color;
@@ -306,9 +288,20 @@ export function SupplierListView({
     renderContent(state);
   };
 
-  // --- UI COMPONENTS ESTATICOS ---
+  // =========================================================
+  // CONSTRUCCIÓN DEL HEADER
+  //
+  // NUEVA ESTRUCTURA:
+  //
+  // ┌─────────────────────────────────────────────────────┐
+  // │ FILA 1: [Título + badge] [Search] [Deuda label+monto]│
+  // ├─────────────────────────────────────────────────────┤
+  // │ FILA 2: [Tabs] [Filtros orden] [Btn nuevo + boleta] │
+  // └─────────────────────────────────────────────────────┘
+  // =========================================================
+
   const searchComponent = SearchBox({
-    placeholder: "BUSCAR PROVEEDOR...",
+    placeholder: "Buscar proveedor...",
     onSearch: handleSearch,
     delay: 300,
   });
@@ -333,12 +326,30 @@ export function SupplierListView({
     onclick: handleToggle,
   });
 
-  const headerPanel = el("div", { className: "tech-panel-header" }, [
-    el("div", { className: "tech-header-top" }, [
-      el("div", { className: "tech-title-group" }, [
-        el("h1", { className: "page-title" }, "PROVEEDORES"),
-        badgeCountDisplay,
-      ]),
+  // Ícono engranaje
+  const iconSettings = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+
+  // =========================================================
+  // CONSTRUCCIÓN DEL HEADER
+  //
+  // tech-header-top:  [Título+badge] [Search—crece] [Deuda | Nuevo+Boleta+⚙]
+  // toolbar-container: [Tabs] [Filtros orden]
+  // =========================================================
+
+  // Fila principal
+  const headerTop = el("div", { className: "tech-header-top" }, [
+    // Título + badge
+    el("div", { className: "tech-title-group" }, [
+      el("h1", { className: "page-title" }, "PROVEEDORES"),
+      badgeCountDisplay,
+    ]),
+
+    // Search (centro, crece)
+    el("div", { className: "tech-search-container" }, [searchComponent]),
+
+    // Derecha: deuda + botones juntos
+    el("div", { className: "tech-right-group" }, [
+      // Bloque deuda
       el("div", { className: "tech-debt-group" }, [
         el("div", { className: "debt-label-row" }, [
           el("span", { className: "debt-label" }, "DEUDA TOTAL"),
@@ -346,25 +357,48 @@ export function SupplierListView({
         ]),
         debtValueDisplay,
       ]),
-    ]),
-    el("div", { className: "tech-controls-row" }, [
-      el("div", { className: "tech-search-container" }, [searchComponent]),
+
+      // Botones agrupados: Nuevo | Boleta | ⚙
       el("div", { className: "tech-actions-container" }, [
-        el("button", { className: "btn-primary", onclick: onNewSupplier }, [
+        el("button", { className: "btn-secondary", onclick: onNewSupplier }, [
           el("span", { innerHTML: iconPlus }),
-          "NUEVO PROVEEDOR",
+          "Nuevo",
         ]),
         el(
           "button",
-          { className: "btn-secondary", onclick: onGlobalTransaction },
-          "MOVIMIENTO RÁPIDO",
+          { className: "btn-primary", onclick: onGlobalTransaction },
+          [el("span", { innerHTML: iconPlus }), "Boleta"],
+        ),
+        el(
+          "button",
+          {
+            className: "btn-settings",
+            title: "Configuración",
+            onclick: () => {
+              window.location.hash = "#settings";
+            },
+          },
+          [
+            el("span", {
+              className: "btn-settings-icon",
+              innerHTML: iconSettings,
+            }),
+            "Config.",
+          ],
         ),
       ]),
     ]),
-    el("div", { className: "toolbar-container" }, [
-      el("div", { className: "tabs-group" }, [btnTabDirectory, btnTabActivity]),
-      controlsGroupRight,
-    ]),
+  ]);
+
+  // Toolbar: tabs + filtros
+  const toolbarContainer = el("div", { className: "toolbar-container" }, [
+    el("div", { className: "tabs-group" }, [btnTabDirectory, btnTabActivity]),
+    controlsGroupRight,
+  ]);
+
+  const headerPanel = el("div", { className: "tech-panel-header" }, [
+    headerTop,
+    toolbarContainer,
   ]);
 
   const viewContainer = el("div", { className: "supplier-list-view" }, [
@@ -373,19 +407,14 @@ export function SupplierListView({
   ]);
 
   // =========================================================
-  // SUSCRIPCIÓN Y CICLO DE VIDA (Adiós a los Memory Leaks)
+  // SUSCRIPCIÓN Y CICLO DE VIDA
   // =========================================================
-
   const unsubscribe = supplierStore.subscribe(triggerRender);
 
-  // Renderizado inicial
   triggerRender();
   if (supplierStore.getState().suppliers.length > 0) fetchActivity();
 
-  // Función de limpieza para cuando el router cambie de página
-  viewContainer.destroy = () => {
-    unsubscribe();
-  };
+  viewContainer.destroy = () => unsubscribe();
 
   return viewContainer;
 }
