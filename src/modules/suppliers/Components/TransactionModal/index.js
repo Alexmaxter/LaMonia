@@ -125,14 +125,47 @@ const injectModalBadgeStyles = () => {
         }
         .modal-status-badge.pending { background: #ff1744; color: #fff; border-color: #d50000; }
         .modal-status-badge.partial { background: #ffc400; color: #000; border-color: #000; }
-        .modal-status-badge.paid { 
-            background: #00e676; 
-            color: #004d40; 
-            border-color: #004d40; 
+        .modal-status-badge.paid {
+            background: #00e676;
+            color: #004d40;
+            border-color: #004d40;
             text-decoration: line-through;
+        }
+        .atm-input-field.calc-mode {
+            letter-spacing: 0.05em;
+            opacity: 0.85;
+        }
+        .calc-preview-text {
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #555;
+            margin-top: 4px;
+            display: none;
+            letter-spacing: 0.03em;
         }
     `;
   document.head.appendChild(style);
+};
+
+// --- CALCULADORA: Evalúa expresiones simples con + y - ---
+const parseExpression = (expr) => {
+  if (!expr || !expr.trim()) return null;
+  const clean = expr.trim();
+  if (!/^[\d.,+\-\s]+$/.test(clean)) return null;
+  const tokens = clean.match(/([\d]+(?:[.,]\d+)?|[+\-])/g);
+  if (!tokens || tokens.length === 0) return null;
+  let result = 0;
+  let op = "+";
+  for (const token of tokens) {
+    if (token === "+" || token === "-") {
+      op = token;
+    } else {
+      const num = parseFloat(token.replace(",", ".")) || 0;
+      result = op === "+" ? result + num : result - num;
+    }
+  }
+  return Math.round(result * 100) / 100;
 };
 
 // --- COMPONENTE PRINCIPAL ---
@@ -167,6 +200,10 @@ export function TransactionModal({
     initialData && typeof initialData.amount === "number"
       ? Math.round(initialData.amount * 100).toString()
       : "0";
+
+  // --- ESTADO CALCULADORA ---
+  let calcMode = false;
+  let calcExpression = "";
 
   let itemsState = [];
   let selectedDate = getLocalDateObject(initialData?.date);
@@ -284,6 +321,37 @@ export function TransactionModal({
     if (input) {
       input.value = formatATMDisplay(centsBuffer);
     }
+  };
+
+  const updateCalcPreview = () => {
+    const preview = document.getElementById("calc-preview");
+    if (!preview) return;
+    if (calcMode && calcExpression) {
+      const result = parseExpression(calcExpression);
+      if (result !== null && result > 0) {
+        preview.textContent = `= $ ${result.toLocaleString("es-AR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+        preview.style.display = "block";
+      } else {
+        preview.style.display = "none";
+      }
+    } else {
+      preview.style.display = "none";
+    }
+  };
+
+  const resolveCalcExpression = (input) => {
+    const result = parseExpression(calcExpression);
+    calcMode = false;
+    calcExpression = "";
+    input.classList.remove("calc-mode");
+    if (result !== null && result >= 0) {
+      centsBuffer = Math.round(result * 100).toString();
+    }
+    updateATMInput();
+    updateCalcPreview();
   };
 
   // --- SUGERENCIAS ---
@@ -764,27 +832,75 @@ export function TransactionModal({
           el("div", { className: "atm-wrapper-clean" }, [
             el("input", {
               id: "hero-atm-input",
-              type: "tel",
+              type: "text",
+              inputmode: "decimal",
               className: `atm-input-field ${selectedType === "invoice" ? "col-danger" : "col-success"}`,
               value: formatATMDisplay(centsBuffer),
               onclick: (e) => {
-                const len = e.target.value.length;
-                e.target.setSelectionRange(len, len);
+                if (!calcMode) {
+                  const len = e.target.value.length;
+                  e.target.setSelectionRange(len, len);
+                }
               },
               onkeydown: (e) => {
+                // Modo calculadora activo
+                if (calcMode) {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    resolveCalcExpression(e.target);
+                    return;
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    calcMode = false;
+                    calcExpression = "";
+                    e.target.classList.remove("calc-mode");
+                    updateATMInput();
+                    updateCalcPreview();
+                    return;
+                  }
+                  // Dejar que el browser maneje backspace/digits normalmente
+                  return;
+                }
+                // Modo normal: Backspace borra de a centavos
                 if (e.key === "Backspace") {
                   e.preventDefault();
                   if (centsBuffer.length > 0)
                     centsBuffer = centsBuffer.slice(0, -1);
                   if (centsBuffer === "") centsBuffer = "0";
-                  e.target.value = formatATMDisplay(centsBuffer);
+                  updateATMInput();
+                  return;
+                }
+                // Activar modo calculadora con + o -
+                if (e.key === "+" || e.key === "-") {
+                  e.preventDefault();
+                  const currentAmount = parseInt(centsBuffer || "0", 10) / 100;
+                  calcExpression = currentAmount.toString() + e.key;
+                  calcMode = true;
+                  e.target.classList.add("calc-mode");
+                  e.target.value = calcExpression;
+                  const pos = calcExpression.length;
+                  e.target.setSelectionRange(pos, pos);
+                  updateCalcPreview();
                 }
               },
               oninput: (e) => {
+                if (calcMode) {
+                  calcExpression = e.target.value;
+                  updateCalcPreview();
+                  return;
+                }
                 const rawNums = e.target.value.replace(/\D/g, "");
                 centsBuffer = rawNums ? parseInt(rawNums, 10).toString() : "0";
-                e.target.value = formatATMDisplay(centsBuffer);
+                updateATMInput();
               },
+              onblur: (e) => {
+                if (calcMode) resolveCalcExpression(e.target);
+              },
+            }),
+            el("span", {
+              id: "calc-preview",
+              className: "calc-preview-text",
             }),
             el("div", { id: "dynamic-suggestions-container" }, [
               renderSuggestions(),

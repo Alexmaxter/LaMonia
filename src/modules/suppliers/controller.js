@@ -416,6 +416,34 @@ export const SupplierController = () => {
                 targetIds,
               ),
 
+            onRepeatMovement: (m) => {
+              const repeatData = {
+                type: m.type,
+                amount: m.amount,
+                concept: m.concept || m.description || "",
+                items: m.items,
+              };
+              showTransactionModal(
+                supplier,
+                repeatData,
+                allProcessedMovements,
+                container,
+              );
+            },
+
+            onEditDescription: async (txId, newDesc) => {
+              try {
+                await SupplierService.updateTransaction(txId, {
+                  concept: newDesc,
+                  description: newDesc,
+                });
+                await loadDetailData(supplier.id, container);
+                toast.success("Descripción actualizada");
+              } catch (e) {
+                toast.error(e.message || "Error al actualizar la descripción");
+              }
+            },
+
             onToggleStatus: async (transaction) => {
               try {
                 const currentStatus =
