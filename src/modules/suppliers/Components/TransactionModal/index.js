@@ -168,6 +168,29 @@ const parseExpression = (expr) => {
   return Math.round(result * 100) / 100;
 };
 
+// --- CALCULADORA: Formateo de expresión con separador de miles ---
+const formatCalcDisplay = (rawExpr) => {
+  return rawExpr.replace(/\d+(?:\.\d*)?/g, (match) => {
+    if (match.includes(".")) {
+      const [intStr, decStr] = match.split(".");
+      const intFormatted = parseInt(intStr || "0", 10).toLocaleString("es-AR");
+      return `${intFormatted},${decStr}`;
+    }
+    return parseInt(match, 10).toLocaleString("es-AR");
+  });
+};
+
+const stripCalcFormatting = (displayStr) => {
+  let result = displayStr;
+  let prev;
+  do {
+    prev = result;
+    result = result.replace(/(\d)\.(\d{3})(?!\d)/g, "$1$2");
+  } while (result !== prev);
+  result = result.replace(/(\d),(\d)/g, "$1.$2");
+  return result;
+};
+
 // --- COMPONENTE PRINCIPAL ---
 export function TransactionModal({
   supplier = null,
@@ -878,15 +901,21 @@ export function TransactionModal({
                   calcExpression = currentAmount.toString() + e.key;
                   calcMode = true;
                   e.target.classList.add("calc-mode");
-                  e.target.value = calcExpression;
-                  const pos = calcExpression.length;
+                  const formatted = formatCalcDisplay(calcExpression);
+                  e.target.value = formatted;
+                  const pos = formatted.length;
                   e.target.setSelectionRange(pos, pos);
                   updateCalcPreview();
                 }
               },
               oninput: (e) => {
                 if (calcMode) {
-                  calcExpression = e.target.value;
+                  const raw = stripCalcFormatting(e.target.value);
+                  calcExpression = raw;
+                  const formatted = formatCalcDisplay(raw);
+                  e.target.value = formatted;
+                  const len = formatted.length;
+                  e.target.setSelectionRange(len, len);
                   updateCalcPreview();
                   return;
                 }
