@@ -13,6 +13,7 @@ import { showLoader, hideLoader } from "../../shared/ui/Loader/index.js";
 import { ConfirmationModal } from "./Components/ConfirmationModal/index.js";
 import { StockReportModal } from "./Components/StockReportModal/index.js";
 import { SupplierSettingsModal } from "./Components/SupplierSettingModal/index.js";
+import { toast } from "../../shared/ui/Toast/index.js"; // <-- IMPORTACIÓN DEL TOAST
 
 // Estado
 import { supplierStore } from "./SupplierStore.js";
@@ -27,27 +28,17 @@ import {
 import { TransactionCalculator } from "./utils/TransactionCalculator.js";
 
 export const SupplierController = () => {
-  let isVisible = SupplierModel.getVisibility();
-  let activeFilter = UI_FILTERS.ALL;
-
   // FIX #5: Referencia al último container para poder re-renderizar
   let lastContainer = null;
 
-  // FIX #5: Reutiliza renderView del mismo closure, preservando
-  // isVisible y activeFilter en lugar de crear una instancia nueva.
+  // FIX #7: isVisible y activeFilter ELIMINADOS del closure.
+  // Ahora viven exclusivamente en supplierStore.
+  // Las vistas se suscriben al store y reaccionan automáticamente.
+
+  // FIX #5: Reutiliza renderView del mismo closure
   const reloadCurrentView = (container) => {
     const target = container || lastContainer;
     if (target) renderView(target);
-  };
-
-  const toggleAmountsVisibility = (visible) => {
-    const amountElements = document.querySelectorAll("[data-amount]");
-    amountElements.forEach((el) => {
-      const amount = parseFloat(el.getAttribute("data-amount"));
-      if (!isNaN(amount)) {
-        el.textContent = SupplierModel.formatAmount(amount, visible);
-      }
-    });
   };
 
   // ============================================================
@@ -69,8 +60,9 @@ export const SupplierController = () => {
       sorted,
     );
 
-    supplierStore.setCurrentSupplier(freshSupplier);
-    supplierStore.setTransactions(allProcessed);
+    // FIX #7: Solo actualizamos el store.
+    // La vista (SupplierDetailView) está suscrita y se repinta sola.
+    supplierStore.setDetailData(freshSupplier, allProcessed);
   }
 
   async function showTransactionModal(supplier, initialData, movements, cont) {
@@ -115,11 +107,15 @@ export const SupplierController = () => {
           }
           hideLoader();
           modal.remove();
+
+          // MOSTRAR TOAST DE ÉXITO
+          toast.success("Transacción guardada correctamente");
+
           if (supplier) await loadDetailData(supplier.id, cont);
           else reloadCurrentView(cont);
         } catch (err) {
           hideLoader();
-          alert(err.message);
+          toast.error(err.message || "Error al guardar la transacción"); // MOSTRAR TOAST DE ERROR
         }
       },
       onDelete: initialData?.id
@@ -151,10 +147,13 @@ export const SupplierController = () => {
           );
           hideLoader();
           confirm.remove();
+
+          toast.success("Transacción eliminada con éxito"); // TOAST DE ÉXITO
+
           await loadDetailData(supplier.id, cont);
         } catch (e) {
           hideLoader();
-          alert(e.message);
+          toast.error(e.message || "Error al eliminar la transacción"); // TOAST DE ERROR
         }
       },
       onCancel: () => confirm.remove(),
@@ -171,10 +170,13 @@ export const SupplierController = () => {
           const newId = await SupplierService.createSupplier(data);
           hideLoader();
           modal.remove();
+
+          toast.success("Proveedor creado exitosamente"); // TOAST DE ÉXITO
+
           window.location.hash = `#suppliers/${newId}`;
         } catch (e) {
           hideLoader();
-          alert(e.message);
+          toast.error(e.message || "Error al crear el proveedor"); // TOAST DE ERROR
         }
       },
     });
@@ -198,10 +200,13 @@ export const SupplierController = () => {
 
           hideLoader();
           modal.remove();
+
+          toast.success("Configuración del proveedor actualizada"); // TOAST DE ÉXITO
+
           await loadDetailData(supplier.id, cont);
         } catch (e) {
           hideLoader();
-          alert(e.message);
+          toast.error(e.message || "Error al actualizar el proveedor"); // TOAST DE ERROR
         }
       },
       onDelete: async (supplierId) => {
@@ -222,10 +227,13 @@ export const SupplierController = () => {
           await SupplierService.deleteSupplier(supplierId);
           hideLoader();
           modal.remove();
+
+          toast.success("Proveedor y su historial eliminados"); // TOAST DE ÉXITO
+
           window.location.hash = "#suppliers";
         } catch (e) {
           hideLoader();
-          alert(e.message);
+          toast.error(e.message || "Error al eliminar el proveedor"); // TOAST DE ERROR
         }
       },
     });
@@ -242,7 +250,7 @@ export const SupplierController = () => {
   ) {
     const totalDebt = parseFloat(supplier.balance) || 0;
     if (totalDebt <= 0 && amountOverride === null)
-      return alert("Sin deuda pendiente.");
+      return toast.warning("Sin deuda pendiente."); // TOAST DE ADVERTENCIA
 
     const finalAmount = amountOverride !== null ? amountOverride : totalDebt;
 
@@ -272,10 +280,13 @@ export const SupplierController = () => {
 
           hideLoader();
           modal.remove();
+
+          toast.success("Pago registrado correctamente"); // TOAST DE ÉXITO
+
           await loadDetailData(supplier.id, cont);
         } catch (err) {
           hideLoader();
-          alert(err.message);
+          toast.error(err.message || "Error al registrar el pago"); // TOAST DE ERROR
         }
       },
     });
@@ -292,10 +303,13 @@ export const SupplierController = () => {
           await SupplierService.createTransaction(data);
           hideLoader();
           modal.remove();
+
+          toast.success("Transacción global guardada"); // TOAST DE ÉXITO
+
           reloadCurrentView(cont);
         } catch (e) {
           hideLoader();
-          alert(e.message);
+          toast.error(e.message || "Error al guardar transacción global"); // TOAST DE ERROR
         }
       },
     });
@@ -339,49 +353,22 @@ export const SupplierController = () => {
           sortedMovements,
         );
 
-        // --- 2. FUNCIÓN DE FILTRADO ---
-        const getFilteredList = () => {
-          if (activeFilter === UI_FILTERS.ALL) return allProcessedMovements;
-
-          return allProcessedMovements.filter((m) => {
-            const t = (m.type || "").toLowerCase();
-            if (activeFilter === UI_FILTERS.INVOICES)
-              return TRANSACTION_GROUPS.DEBTS.includes(t);
-            if (activeFilter === UI_FILTERS.PAYMENTS)
-              return TRANSACTION_GROUPS.PAYMENTS.includes(t);
-            if (activeFilter === UI_FILTERS.NOTES)
-              return TRANSACTION_GROUPS.NOTES.includes(t);
-            return true;
-          });
-        };
-
-        supplierStore.setCurrentSupplier(supplier);
-        supplierStore.setTransactions(allProcessedMovements);
+        // --- 2. Actualizar el Store (única fuente de verdad) ---
+        // FIX #7: El store notifica a la vista, que se repinta sola.
+        // Ya no necesitamos getFilteredList(), onFilterChange, ni
+        // buscar el DOM con querySelector para llamar updateState().
+        supplierStore.setDetailData(supplier, allProcessedMovements);
 
         hideLoader();
         container.innerHTML = "";
 
-        // --- 3. RENDERIZADO CON FILTROS CONECTADOS ---
+        // --- 3. RENDERIZADO ---
+        // FIX #7: Solo pasamos callbacks de acción.
+        // Los datos (supplier, movements, isVisible, activeFilter)
+        // los lee la vista directamente del store via suscripción.
         container.appendChild(
           SupplierDetailView({
             supplier,
-            movements: getFilteredList(),
-            isVisible,
-            currentFilter: activeFilter,
-
-            onFilterChange: (newFilter) => {
-              activeFilter = newFilter;
-              const currentView = container.querySelector(
-                ".supplier-detail-view",
-              );
-              if (currentView && currentView.updateState) {
-                currentView.updateState(
-                  supplier.balance,
-                  getFilteredList(),
-                  activeFilter,
-                );
-              }
-            },
 
             onBack: () => {
               window.location.hash = "#suppliers";
@@ -403,11 +390,6 @@ export const SupplierController = () => {
               }
             },
 
-            onToggleVisibility: () => {
-              isVisible = SupplierModel.toggleVisibility();
-              toggleAmountsVisibility(isVisible);
-              return isVisible;
-            },
             onAddMovement: () =>
               showTransactionModal(
                 supplier,
@@ -454,9 +436,11 @@ export const SupplierController = () => {
                 });
                 await loadDetailData(supplier.id, container);
                 hideLoader();
+
+                toast.success("Estado de transacción actualizado"); // TOAST DE ÉXITO
               } catch (e) {
                 hideLoader();
-                alert(e.message);
+                toast.error(e.message || "Error al cambiar el estado"); // TOAST DE ERROR
               }
             },
           }),
@@ -472,17 +456,18 @@ export const SupplierController = () => {
           balance: parseFloat(s.balance) || 0,
         }));
 
+        // FIX #7: Actualizamos el store. SupplierListView está suscrita
+        // y lee suppliers, totalDebt e isVisible desde el store.
         supplierStore.setSuppliers(suppliersData);
-
-        const totalDebt = suppliersData.reduce((acc, s) => acc + s.balance, 0);
 
         hideLoader();
         container.innerHTML = "";
+
+        // FIX #7: Solo pasamos callbacks de acción.
+        // Los datos (suppliers, totalDebt, isVisible) los lee la vista
+        // directamente del store via suscripción.
         container.appendChild(
           SupplierListView({
-            suppliers: suppliersData,
-            totalDebt,
-            isVisible,
             onSelect: (sId) => {
               window.location.hash = `#suppliers/${sId}`;
             },
@@ -496,11 +481,6 @@ export const SupplierController = () => {
             onNewSupplier: () => handleCreateSupplier(container),
             onGlobalTransaction: () =>
               handleGlobalTransaction(suppliersData, container),
-            onToggleVisibility: () => {
-              isVisible = SupplierModel.toggleVisibility();
-              toggleAmountsVisibility(isVisible);
-              return isVisible;
-            },
             onEditTransaction: (tx) => {
               const s = suppliersData.find((sup) => sup.id === tx.supplierId);
               if (s) showTransactionModal(s, tx, [], container);
@@ -515,6 +495,7 @@ export const SupplierController = () => {
     } catch (err) {
       console.error("Error:", err);
       hideLoader();
+      toast.error(err.message || "Error general del sistema");
       container.innerHTML = `<div class="error-state"><h3>Error</h3><p>${err.message}</p><button onclick="window.location.reload()">Recargar</button></div>`;
     }
   };

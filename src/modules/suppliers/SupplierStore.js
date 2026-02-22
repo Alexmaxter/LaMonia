@@ -47,6 +47,27 @@ class SupplierStore {
     this.notify();
   }
 
+  /**
+   * FIX #7: Actualiza supplier + transactions en una sola notificación.
+   * Evita doble render cuando loadDetailData actualiza ambos juntos.
+   */
+  setDetailData(supplier, transactions) {
+    this.state.currentSupplier = supplier;
+    this.state.transactions = transactions;
+    this.notify();
+  }
+
+  /**
+   * FIX #7: Limpia el estado de detalle al salir de la vista.
+   * Previene datos stale si se navega a otro proveedor.
+   */
+  clearDetail() {
+    this.state.currentSupplier = null;
+    this.state.transactions = [];
+    this.state.activeFilter = UI_FILTERS.ALL;
+    // No notificamos porque la vista ya se desmontó
+  }
+
   // --- ACTIONS PARA A UI ---
 
   toggleAmountsVisibility() {

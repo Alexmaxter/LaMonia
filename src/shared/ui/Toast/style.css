@@ -1,0 +1,307 @@
+/* src/shared/ui/Toast/style.css */
+
+/* ============================================================
+   CONTENEDOR DEL STACK (Esquina inferior derecha)
+   ============================================================ */
+.toast-stack-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 12000; /* Por encima de modales (11000) */
+  display: flex;
+  flex-direction: column-reverse; /* Nuevos toasts aparecen abajo */
+  gap: 10px;
+  pointer-events: none; /* El contenedor no bloquea clicks */
+  max-width: 420px;
+  width: calc(100vw - 48px); /* Respeta márgenes en móvil */
+}
+
+/* ============================================================
+   TOAST ITEM
+   ============================================================ */
+.toast-item {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.15);
+  min-height: 56px;
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto; /* Cada toast sí recibe clicks */
+
+  /* Animación de entrada */
+  animation: toast-enter 0.25s cubic-bezier(0.22, 0.68, 0, 1.1) forwards;
+}
+
+/* ============================================================
+   BARRA LATERAL DE STATUS (Firma Brutalista)
+   ============================================================ */
+.toast-status-bar {
+  width: 6px;
+  flex-shrink: 0;
+  border-right: 1px solid #000;
+}
+
+.toast-success .toast-status-bar {
+  background: #00aa00;
+}
+
+.toast-error .toast-status-bar {
+  background: #d32f2f;
+}
+
+.toast-warning .toast-status-bar {
+  background: #ffc400;
+}
+
+.toast-info .toast-status-bar {
+  background: #000;
+}
+
+/* ============================================================
+   CONTENIDO
+   ============================================================ */
+.toast-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  min-width: 0; /* Permite text-overflow en hijos */
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #000;
+  background: #f4f4f4;
+}
+
+.toast-success .toast-icon {
+  color: #00aa00;
+  border-color: #00aa00;
+  background: #f0fff0;
+}
+
+.toast-error .toast-icon {
+  color: #d32f2f;
+  border-color: #d32f2f;
+  background: #fff5f5;
+}
+
+.toast-warning .toast-icon {
+  color: #e6a800;
+  border-color: #e6a800;
+  background: #fffde7;
+}
+
+.toast-info .toast-icon {
+  color: #000;
+}
+
+.toast-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toast-type-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #999;
+  line-height: 1;
+}
+
+.toast-message {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #000;
+  line-height: 1.3;
+
+  /* Truncar si es muy largo */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================
+   BOTÓN CERRAR
+   ============================================================ */
+.toast-dismiss-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-left: 1px solid #eee;
+  color: #ccc;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.toast-dismiss-btn:hover {
+  color: #000;
+  background: #f4f4f4;
+}
+
+/* ============================================================
+   BARRA DE PROGRESO (Auto-dismiss visual)
+   ============================================================ */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #f0f0f0;
+}
+
+.toast-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  animation: toast-countdown linear forwards;
+  /* animation-duration se define inline desde JS */
+}
+
+.toast-success .toast-progress-bar {
+  background: #00aa00;
+}
+
+.toast-error .toast-progress-bar {
+  background: #d32f2f;
+}
+
+.toast-warning .toast-progress-bar {
+  background: #e6a800;
+}
+
+.toast-info .toast-progress-bar {
+  background: #000;
+}
+
+/* ============================================================
+   ANIMACIONES
+   ============================================================ */
+
+/* Entrada: Desliza desde la derecha con efecto mecánico */
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Salida: Se encoge y desvanece */
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 100px;
+    margin-bottom: 0;
+  }
+  40% {
+    opacity: 0;
+    transform: translateX(80px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(80px);
+    max-height: 0;
+    margin-bottom: -10px;
+    padding: 0;
+    border-width: 0;
+    overflow: hidden;
+  }
+}
+
+.toast-exit {
+  animation: toast-exit 0.35s ease-in forwards;
+  pointer-events: none;
+}
+
+/* Countdown: La barra se encoge de izquierda a derecha */
+@keyframes toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ============================================================
+   VARIANTE OSCURA: Toast de error con fondo invertido
+   ============================================================ */
+.toast-error {
+  background: #1a1a1a;
+  border-color: #d32f2f;
+  box-shadow: 6px 6px 0px rgba(211, 47, 47, 0.2);
+}
+
+.toast-error .toast-message {
+  color: #fff;
+}
+
+.toast-error .toast-type-label {
+  color: #ff6b6b;
+}
+
+.toast-error .toast-dismiss-btn {
+  border-left-color: #333;
+  color: #666;
+}
+
+.toast-error .toast-dismiss-btn:hover {
+  color: #fff;
+  background: #333;
+}
+
+.toast-error .toast-progress {
+  background: #333;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+  .toast-stack-container {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+    width: auto;
+  }
+
+  .toast-item {
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  .toast-message {
+    font-size: 0.82rem;
+  }
+}

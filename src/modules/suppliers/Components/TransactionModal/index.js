@@ -1,5 +1,7 @@
 import { el } from "../../../../core/dom.js";
 import { FirebaseDB } from "../../../../core/firebase/db.js";
+import { ConfirmationModal } from "../ConfirmationModal/index.js";
+import { toast } from "../../../../shared/ui/Toast/index.js";
 import "./style.css";
 
 // --- HELPERS ---
@@ -187,13 +189,12 @@ export function TransactionModal({
   };
 
   const closeModal = () => {
-    if (isDestroyed) return; // Evita doble ejecución
+    if (isDestroyed) return;
     isDestroyed = true;
     document.removeEventListener("keydown", handleEsc);
     onClose();
   };
 
-  // Registramos el listener una sola vez
   document.addEventListener("keydown", handleEsc);
 
   // --- LOGICA DE GUARDADO ---
@@ -204,7 +205,7 @@ export function TransactionModal({
     }
 
     if (!currentSupplier) {
-      alert("Por favor selecciona un proveedor");
+      toast.warning("Por favor seleccioná un proveedor");
       return;
     }
 
@@ -215,7 +216,7 @@ export function TransactionModal({
     const isStock = currentSupplier?.type === "stock";
 
     if (!isStock && finalAmount <= 0) {
-      alert("El monto debe ser mayor a cero");
+      toast.warning("El monto debe ser mayor a cero");
       return;
     }
 
@@ -254,13 +255,19 @@ export function TransactionModal({
 
     if (!isEdit || !initialData?.id) return;
 
-    const confirmDelete = confirm(
-      "¿Estás seguro de eliminar esta transacción? Esta acción no se puede deshacer.",
-    );
-
-    if (confirmDelete && typeof onDelete === "function") {
-      onDelete(initialData.id);
-    }
+    const modal = ConfirmationModal({
+      title: "Eliminar transacción",
+      message:
+        "Esta acción no se puede deshacer. El saldo se ajustará automáticamente.",
+      onConfirm: () => {
+        modal.remove();
+        if (typeof onDelete === "function") {
+          onDelete(initialData.id);
+        }
+      },
+      onCancel: () => modal.remove(),
+    });
+    document.body.appendChild(modal);
   };
 
   const formatATMDisplay = (bufferStr) => {
@@ -395,7 +402,7 @@ export function TransactionModal({
 
     const exists = itemsState.find((i) => i.name.toUpperCase() === normalized);
     if (exists) {
-      alert("Ya existe un ítem con ese nombre");
+      toast.warning("Ya existe un ítem con ese nombre");
       return;
     }
 
@@ -693,7 +700,7 @@ export function TransactionModal({
         ]),
         el("button", {
           className: "btn-close-fusion",
-          onclick: closeModal, // <-- Usa closeModal en lugar de onClose
+          onclick: closeModal,
           innerHTML: iconClose,
         }),
       ]),
@@ -876,7 +883,7 @@ export function TransactionModal({
               {
                 type: "button",
                 className: "btn-fusion-cancel",
-                onclick: closeModal, // <-- Usa closeModal
+                onclick: closeModal,
               },
               "CANCELAR",
             ),
@@ -900,7 +907,7 @@ export function TransactionModal({
     {
       className: "fusion-overlay mesh-bg",
       onclick: (e) => {
-        if (e.target === overlay) closeModal(); // <-- Usa closeModal
+        if (e.target === overlay) closeModal();
       },
     },
     [modalContent],
