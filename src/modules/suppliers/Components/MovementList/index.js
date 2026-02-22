@@ -24,10 +24,13 @@ export function MovementList({
   onSelectionChange,
   onToggleStatus,
   selectedIds = new Set(),
+  onRepeat,
+  onEditDescription,
 }) {
   // FIX #4: Path SVG corregido — removido "h4a2 2 0 0 1 2-2" duplicado
   const iconTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
   const iconCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  const iconRepeat = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>`;
 
   const typeLabels = {
     invoice: "BOLETA",
@@ -36,6 +39,54 @@ export function MovementList({
     compra: "COMPRA",
     payment: "PAGO",
     credit: "NOTA",
+  };
+
+  const createEditableDesc = (m, rawDesc) => {
+    const span = el(
+      "span",
+      {
+        className: `desc-text${onEditDescription ? " editable-desc" : ""}`,
+        title: onEditDescription ? "Doble click para editar" : "",
+      },
+      rawDesc,
+    );
+
+    if (!onEditDescription) return span;
+
+    span.ondblclick = (e) => {
+      e.stopPropagation();
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = rawDesc;
+      input.className = "desc-inline-input";
+      input.style.cssText =
+        "font-family:monospace;font-size:inherit;background:transparent;border:none;border-bottom:1px solid #888;outline:none;color:inherit;width:160px;padding:0;";
+      span.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let saved = false;
+      const save = () => {
+        if (saved) return;
+        saved = true;
+        const newVal = input.value.trim();
+        const restored = el("span", { className: "desc-text editable-desc" }, newVal || rawDesc);
+        input.replaceWith(restored);
+        if (newVal !== rawDesc) onEditDescription(m.id, newVal);
+      };
+      const cancel = () => {
+        if (saved) return;
+        saved = true;
+        input.replaceWith(span);
+      };
+      input.onblur = save;
+      input.onkeydown = (ev) => {
+        if (ev.key === "Enter") { ev.preventDefault(); save(); }
+        if (ev.key === "Escape") { ev.preventDefault(); cancel(); }
+      };
+    };
+
+    return span;
   };
 
   const renderCard = (m) => {
@@ -199,7 +250,7 @@ export function MovementList({
               itemsPills
                 ? itemsPills
                 : hasDesc
-                  ? el("span", { className: "desc-text" }, rawDesc)
+                  ? createEditableDesc(m, rawDesc)
                   : null,
             ]),
             (itemsPills && hasDesc) ||
@@ -251,6 +302,19 @@ export function MovementList({
             },
             [
               statusBadgeElement,
+              onRepeat
+                ? el("button", {
+                    className: "btn-row-repeat",
+                    title: "Repetir movimiento",
+                    style:
+                      "background:none;border:none;cursor:pointer;opacity:0.45;padding:2px;display:flex;align-items:center;justify-content:center;",
+                    onclick: (e) => {
+                      e.stopPropagation();
+                      onRepeat(m);
+                    },
+                    innerHTML: iconRepeat,
+                  })
+                : null,
               el("button", {
                 className: "btn-row-del",
                 onclick: (e) => {
