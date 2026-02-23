@@ -1,4 +1,8 @@
 /* src/modules/suppliers/views/SupplierListView/style.css */
+/* ============================================================
+   RESPONSIVE REFACTOR — Mismos nombres de clase, mismo estilo brutalista.
+   Breakpoints: xs <480 | sm <640 | md <768 | lg <1024 | xl ≥1280
+   ============================================================ */
 
 .supplier-list-view {
   display: flex;
@@ -9,7 +13,9 @@
   padding-top: 0;
 }
 
-/* --- HEADER TECH PANEL --- */
+/* ============================================================
+   HEADER TECH PANEL
+   ============================================================ */
 .tech-panel-header {
   background: #fff;
   border-bottom: 2px solid #000;
@@ -17,26 +23,24 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-
   position: sticky;
   top: 0;
   z-index: 1000;
-  margin-top: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* ============================================================
    FILA PRINCIPAL: Título | Search | Deuda + Botones
-   Todo en una sola fila horizontal.
    ============================================================ */
 .tech-header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
-/* — Título + badge (izquierda, fijo) — */
+/* — Título + badge (izquierda) — */
 .tech-title-group {
   display: flex;
   align-items: center;
@@ -62,27 +66,28 @@
   font-size: 0.85rem;
   padding: 2px 6px;
   border-radius: 0;
+  white-space: nowrap;
 }
 
-/* — Search (centro, crece) — */
+/* — Search (crece, centro) — */
 .tech-search-container {
-  flex: 1;
+  flex: 1 1 200px;
   min-width: 0;
   max-width: 420px;
 }
 
-/* — Derecha: deuda + botones juntos — */
+/* — Derecha: deuda + botones — */
 .tech-right-group {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .tech-debt-group {
   text-align: right;
-  /* Ancho fijo para que el search no se mueva al cambiar el monto */
-  min-width: 160px;
+  min-width: 130px;
 }
 
 .debt-label-row {
@@ -109,6 +114,10 @@
   display: flex;
   color: #666;
   transition: color 0.2s;
+  min-width: 24px;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
 }
 .btn-icon-toggle:hover {
   color: #000;
@@ -121,18 +130,17 @@
   color: #000;
   line-height: 1;
   letter-spacing: -1px;
-  /* Evita que el texto corto/largo empuje el layout */
   white-space: nowrap;
   display: block;
   text-align: right;
 }
 
-/* — Grupo de botones de acción (Nuevo + Boleta + Configuración) — */
-/* Sin borde ni sombra en el contenedor — cada botón se define solo */
+/* — Acciones: Nuevo + Boleta + Configuración — */
 .tech-actions-container {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .btn-primary {
@@ -154,6 +162,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 .btn-primary:hover {
   background: #333;
@@ -178,18 +187,18 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 .btn-secondary:hover {
   background: #f4f4f4;
 }
 
-/* Botón configuración — idéntico a btn-secondary */
 .btn-settings {
   background: #fff;
   color: #000;
   border: 1px solid #000;
   height: 40px;
-  padding: 0 20px;
+  padding: 0 16px;
   font-family: var(--font-mono, monospace);
   font-weight: 700;
   font-size: 0.8rem;
@@ -203,6 +212,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 .btn-settings:hover {
   background: #f4f4f4;
@@ -216,7 +226,9 @@
   transform: rotate(60deg);
 }
 
-/* --- TOOLBAR TABS & FILTERS --- */
+/* ============================================================
+   TOOLBAR: Tabs + Filtros
+   ============================================================ */
 .toolbar-container {
   display: flex;
   justify-content: space-between;
@@ -224,14 +236,13 @@
   padding: 12px 0 16px 0;
   margin-top: 8px;
   border-top: 1px dashed #ccc;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .tabs-group {
   display: flex;
-  gap: -1px;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
+  gap: 0;
 }
 
 .tab-btn {
@@ -251,6 +262,7 @@
   letter-spacing: 0.5px;
   transition: all 0.2s;
   z-index: 0;
+  white-space: nowrap;
 }
 .tab-btn:hover {
   border-color: #999;
@@ -267,6 +279,7 @@
 .controls-group {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-sort,
@@ -285,6 +298,7 @@
   gap: 6px;
   text-transform: uppercase;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .btn-sort:hover,
 .filter-chip:hover {
@@ -298,25 +312,20 @@
   border-color: #000;
 }
 
-.filter-chip[data-type="invoice"].active {
-  background: #d32f2f;
-  border-color: #d32f2f;
-}
-.filter-chip[data-type="payment"].active {
-  background: #2e7d32;
-  border-color: #2e7d32;
-}
-
-/* --- CONTENT --- */
+/* ============================================================
+   CONTENIDO
+   ============================================================ */
 .content-wrapper {
   flex: 1;
   padding: 24px;
 }
+
 .suppliers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
+
 .empty-state {
   display: flex;
   justify-content: center;
@@ -326,9 +335,13 @@
   font-family: var(--font-mono, monospace);
   border: 1px dashed #ccc;
   background: #fafafa;
+  text-align: center;
+  padding: 16px;
 }
 
-/* --- ACTIVITY LIST --- */
+/* ============================================================
+   LISTA DE ACTIVIDAD
+   ============================================================ */
 .activity-list-container {
   display: flex;
   flex-direction: column;
@@ -336,124 +349,197 @@
   width: 100%;
 }
 
-.group-separator-modern {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 24px 0 12px 0;
-  padding-bottom: 4px;
-  border-bottom: 2px solid #000;
-}
-.separator-date {
-  font-family: var(--font-mono, monospace);
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-}
-.separator-totals {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.total-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
-}
-.total-tag.debt .separator-amount {
-  color: #d32f2f;
-  font-weight: 700;
-}
-.total-tag.payment .separator-amount {
-  color: #2e7d32;
-  font-weight: 700;
-}
-
-/* --- RESPONSIVE --- */
+/* ============================================================
+   RESPONSIVE — lg (≤1024px)
+   ============================================================ */
 @media (max-width: 1024px) {
   .tech-search-container {
-    max-width: 260px;
+    max-width: 280px;
+  }
+  .tech-debt-group {
+    min-width: 110px;
+  }
+  .header-debt-value {
+    font-size: 1.5rem;
   }
 }
 
+/* ============================================================
+   RESPONSIVE — md (≤768px)
+   Panel deja de ser sticky, layout se reorganiza en 2 filas
+   ============================================================ */
 @media (max-width: 768px) {
   .tech-panel-header {
     position: relative;
     top: auto;
     padding: 12px 16px 0 16px;
-    gap: 12px;
+    gap: 10px;
   }
 
-  /* En mobile: título + deuda arriba / search abajo / botones debajo */
   .tech-header-top {
-    flex-wrap: wrap;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    align-items: center;
   }
 
+  /* Título: fila 1, col 1 */
   .tech-title-group {
-    flex-shrink: 0;
+    grid-column: 1;
+    grid-row: 1;
   }
 
+  /* Deuda + botones: fila 1, col 2 */
   .tech-right-group {
-    margin-left: auto;
-    gap: 12px;
+    grid-column: 2;
+    grid-row: 1;
+    gap: 10px;
+    align-items: center;
   }
 
+  /* Search: fila 2, span completo */
   .tech-search-container {
-    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
     max-width: 100%;
-    order: 10; /* va al final del flex-wrap */
-    flex-basis: 100%;
-  }
-
-  .tech-actions-container {
-    box-shadow: none;
+    flex: none;
   }
 
   .page-title {
     font-size: 1.25rem;
   }
   .header-debt-value {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
+    letter-spacing: -0.5px;
+  }
+
+  .tech-debt-group {
+    min-width: 0;
+    text-align: right;
+  }
+
+  .debt-label {
+    font-size: 0.65rem;
   }
 
   .toolbar-container {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
+    padding-bottom: 12px;
   }
 
   .tabs-group {
     width: 100%;
-    justify-content: space-between;
   }
+
   .tab-btn {
     flex: 1;
     justify-content: center;
     font-size: 0.75rem;
+    padding: 8px 12px;
   }
 
   .controls-group {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 4px;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Scrollbar invisible en controles */
+  .controls-group::-webkit-scrollbar {
+    display: none;
   }
 
   .content-wrapper {
     padding: 16px;
   }
+
+  /* Grid de tarjetas: 1 columna en mobile */
+  .suppliers-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
-@media (max-width: 480px) {
-  .btn-secondary span:last-child,
-  .btn-primary span:last-child {
-    display: none; /* solo ícono en pantallas muy chicas */
+/* ============================================================
+   RESPONSIVE — sm (≤640px)
+   Botones de acción: solo icono
+   ============================================================ */
+@media (max-width: 640px) {
+  .tech-actions-container {
+    gap: 6px;
   }
+
+  /* Oculta el texto, deja solo el ícono */
+  .btn-secondary > span:last-child,
+  .btn-primary > span:last-child,
+  .btn-settings > span:last-child {
+    display: none;
+  }
+
+  .btn-primary,
   .btn-secondary,
-  .btn-primary {
-    padding: 0 12px;
+  .btn-settings {
+    padding: 0 10px;
+    min-width: 40px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — xs (≤480px)
+   Header más compacto, deuda visible pero pequeña
+   ============================================================ */
+@media (max-width: 480px) {
+  .tech-panel-header {
+    padding: 10px 12px 0 12px;
+  }
+
+  .tech-header-top {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+  }
+
+  .badge-count {
+    font-size: 0.75rem;
+    padding: 2px 5px;
+  }
+
+  .header-debt-value {
+    font-size: 1.15rem;
+    letter-spacing: -0.5px;
+  }
+
+  .debt-label {
+    font-size: 0.6rem;
+  }
+
+  .tech-right-group {
+    gap: 8px;
+  }
+
+  .content-wrapper {
+    padding: 12px;
+  }
+
+  .suppliers-grid {
+    gap: 10px;
+  }
+
+  .tab-btn {
+    font-size: 0.7rem;
+    padding: 7px 10px;
+    gap: 5px;
+  }
+
+  /* Ocultar ícono en tabs para ganar espacio */
+  .tab-btn svg {
+    display: none;
   }
 }

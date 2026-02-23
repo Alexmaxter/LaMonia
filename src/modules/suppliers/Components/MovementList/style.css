@@ -1,6 +1,12 @@
 /* src/modules/suppliers/Components/MovementList/style.css */
+/* ============================================================
+   RESPONSIVE REFACTOR — Mismos nombres de clase, mismo estilo brutalista.
+   Breakpoints: xs <480 | sm <640 | md <768 | lg <1024
+   ============================================================ */
 
-/* --- MODO DETALLE (Lista Plana) --- */
+/* ============================================================
+   MODO DETALLE (Lista Plana)
+   ============================================================ */
 .movements-block-container {
   display: flex;
   flex-direction: column;
@@ -8,13 +14,16 @@
   gap: 20px;
   padding-bottom: 80px;
 }
+
 .movements-list-stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* --- MODO ACTIVIDAD (Agrupado por día) --- */
+/* ============================================================
+   MODO ACTIVIDAD (Agrupado por día)
+   ============================================================ */
 .movements-timeline-container {
   display: flex;
   flex-direction: column;
@@ -22,10 +31,12 @@
   gap: 0;
   padding-bottom: 80px;
 }
+
 .day-block-group {
   display: flex;
   flex-direction: column;
 }
+
 .day-cards-stack {
   display: flex;
   flex-direction: column;
@@ -33,7 +44,9 @@
   padding: 0 4px;
 }
 
-/* STICKY HEADER */
+/* ============================================================
+   STICKY HEADER DE DÍA
+   ============================================================ */
 .day-sticky-header {
   position: sticky;
   top: -1px;
@@ -46,34 +59,47 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
+
 .day-header-left {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  min-width: 0;
 }
+
 .header-day-num {
   font-family: var(--font-sans, sans-serif);
   font-size: 1.5rem;
   font-weight: 900;
   color: #000;
   line-height: 1;
+  flex-shrink: 0;
 }
+
 .header-month-year {
   font-family: var(--font-mono, monospace);
   font-size: 0.9rem;
   font-weight: 700;
   color: #666;
   text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
 .day-header-right {
   display: flex;
   gap: 12px;
+  flex-shrink: 0;
 }
+
 .mini-stat {
   font-family: var(--font-mono, monospace);
   font-size: 0.8rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 .mini-stat.debt {
   color: #cc0000;
@@ -82,7 +108,9 @@
   color: #008800;
 }
 
-/* --- TARJETA DE MOVIMIENTO --- */
+/* ============================================================
+   TARJETA DE MOVIMIENTO — ESTRUCTURA BASE
+   ============================================================ */
 .tech-movement-card {
   display: flex;
   align-items: stretch;
@@ -95,14 +123,20 @@
     transform 0.1s,
     background 0.1s;
   box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
-}
-.tech-movement-card:hover {
-  background: #fcfcfc;
-  transform: translate(-1px, -1px);
-  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
-/* STATUS BAR */
+@media (hover: hover) {
+  .tech-movement-card:hover {
+    background: #fcfcfc;
+    transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* ============================================================
+   STATUS BAR
+   ============================================================ */
 .mov-status-bar {
   width: 6px;
   flex-shrink: 0;
@@ -118,7 +152,9 @@
   background: #1565c0;
 }
 
-/* --- COLUMNA DE SELECCIÓN --- */
+/* ============================================================
+   COLUMNA DE SELECCIÓN
+   ============================================================ */
 .selection-col {
   width: 48px;
   flex-shrink: 0;
@@ -129,8 +165,11 @@
   background-color: #fafafa;
   transition: background-color 0.2s;
 }
-.selection-col:hover {
-  background-color: #eee;
+
+@media (hover: hover) {
+  .selection-col:hover {
+    background-color: #eee;
+  }
 }
 
 .select-square {
@@ -163,7 +202,9 @@
   filter: brightness(0.6);
 }
 
-/* --- CONTENIDO --- */
+/* ============================================================
+   CONTENIDO PRINCIPAL
+   ============================================================ */
 .mov-content {
   flex: 1;
   display: flex;
@@ -171,7 +212,10 @@
   padding: 10px 14px;
   gap: 12px;
   overflow: hidden;
+  min-width: 0;
 }
+
+/* --- Columna fecha --- */
 .mov-date-col {
   display: flex;
   flex-direction: column;
@@ -179,13 +223,17 @@
   border-right: 2px solid #000;
   padding-right: 15px;
   min-width: 75px;
+  flex-shrink: 0;
 }
+
 .date-day {
   font-family: var(--font-sans, sans-serif);
   font-size: 1.4rem;
   font-weight: 900;
   color: #000;
+  line-height: 1;
 }
+
 .date-month {
   font-family: var(--font-mono, monospace);
   font-size: 0.85rem;
@@ -193,19 +241,23 @@
   color: #000;
 }
 
+/* --- Columna info --- */
 .mov-info-col {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
   overflow: hidden;
+  min-width: 0;
 }
+
 .info-row-primary {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .type-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
@@ -216,6 +268,7 @@
   flex-shrink: 0;
   text-transform: uppercase;
 }
+
 .supplier-name-bold {
   font-family: var(--font-sans, sans-serif);
   font-size: 1.1rem;
@@ -224,7 +277,12 @@
   text-transform: uppercase;
   letter-spacing: -0.5px;
   border-bottom: 2px solid transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
+
 .desc-text {
   font-family: var(--font-sans, sans-serif);
   font-size: 1rem;
@@ -234,19 +292,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .desc-subtext {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   color: #888;
   font-style: italic;
   margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Pills */
 .items-pills-row {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  overflow: hidden;
 }
+
 .tech-item-pill {
   display: inline-flex;
   align-items: center;
@@ -257,7 +322,10 @@
   font-family: var(--font-mono, monospace);
   font-size: 0.8rem;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
+
 .pill-name {
   font-weight: 700;
   color: #000;
@@ -276,37 +344,47 @@
   margin-left: 2px;
 }
 
+/* --- Columna dinero --- */
 .mov-money-col {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   min-width: 90px;
+  flex-shrink: 0;
 }
+
 .amount-main {
   font-family: var(--font-mono, monospace);
   font-size: 1.1rem;
   font-weight: 900;
+  white-space: nowrap;
 }
+
 .amount-placeholder {
   font-family: var(--font-mono, monospace);
   font-size: 1.1rem;
   font-weight: 900;
   color: #ddd;
+  white-space: nowrap;
 }
+
 .val-invoice {
   color: #d32f2f;
 }
 .val-payment {
   color: #2e7d32;
 }
+
 .balance-partial {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   font-weight: 700;
   color: #666;
   margin-top: 2px;
+  white-space: nowrap;
 }
 
+/* Botón eliminar fila */
 .btn-row-del {
   background: transparent;
   border: none;
@@ -314,20 +392,24 @@
   cursor: pointer;
   padding: 8px;
   transition: color 0.2s;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .btn-row-del:hover {
   color: #000;
 }
 
-/* ========================================================
-   ESTILOS NUEVOS (SISTEMA HÍBRIDO & BADGES)
-   ======================================================== */
-
-/* Boleta Pagada: Visualmente "apagada" en el cuerpo, pero viva en el badge */
+/* ============================================================
+   SISTEMA HÍBRIDO & BADGES
+   ============================================================ */
 .tech-movement-card.card-paid {
   background-color: #f9f9f9;
   border-color: #ddd;
-  opacity: 0.9; /* Menos opacidad para que se lea el badge verde */
+  opacity: 0.9;
 }
 .tech-movement-card.card-paid:hover {
   background-color: #f9f9f9;
@@ -339,7 +421,6 @@
   border-right-color: #ccc;
 }
 
-/* Indicador de check fijo para selección */
 .paid-indicator {
   background-color: #eee;
   border-color: #ccc;
@@ -350,14 +431,12 @@
   color: #999;
 }
 
-/* Bloqueo de columna */
 .selection-col.locked {
   cursor: default;
   background: #f9f9f9;
   border-right-color: #ddd;
 }
 
-/* Badge Parcial (Estética técnica) */
 .badge-partial-status {
   font-family: var(--font-mono, monospace);
   font-size: 0.65rem;
@@ -371,57 +450,410 @@
   text-transform: uppercase;
 }
 
-/* Ajuste al contenedor de acciones */
 .actions-col {
   min-width: 60px;
   justify-content: center;
 }
 
-/* --- BOTÓN BADGE INTERACTIVO (Reemplazo del Switch) --- */
+/* --- STATUS BTN BADGE --- */
 .status-btn-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.6rem;
   font-weight: 800;
   text-transform: uppercase;
   padding: 5px 8px;
-  border: 2px solid #000; /* Borde brutalista siempre */
+  border: 2px solid #000;
   cursor: pointer;
   min-width: 55px;
   text-align: center;
   transition: all 0.1s;
   letter-spacing: 0.5px;
   line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* 1. PENDIENTE (Rojo Alerta) */
 .status-btn-badge.is-pending {
-  background-color: #ff1744; /* Rojo vibrante */
+  background-color: #ff1744;
   color: #fff;
   border-color: #000;
 }
-.status-btn-badge.is-pending:hover {
-  background-color: #d50000;
-  transform: translateY(-1px);
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+@media (hover: hover) {
+  .status-btn-badge.is-pending:hover {
+    background-color: #d50000;
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+  }
 }
 
-/* 2. PARCIAL (Amarillo/Naranja Precaución) */
 .status-btn-badge.is-partial {
-  background-color: #ffc400; /* Amarillo anaranjado */
+  background-color: #ffc400;
   color: #000;
   border-color: #000;
 }
-.status-btn-badge.is-partial:hover {
-  background-color: #ffab00;
+@media (hover: hover) {
+  .status-btn-badge.is-partial:hover {
+    background-color: #ffab00;
+  }
 }
 
-/* 3. PAGADA (Verde Éxito) */
 .status-btn-badge.is-paid {
-  background-color: #00e676; /* Verde Brillante */
+  background-color: #00e676;
   color: #000;
-  border-color: #004d40; /* Borde verde oscuro */
-  text-decoration: none; /* Quitamos tachado para que se vea limpio */
+  border-color: #004d40;
 }
-.status-btn-badge.is-paid:hover {
-  background-color: #69f0ae;
+@media (hover: hover) {
+  .status-btn-badge.is-paid:hover {
+    background-color: #69f0ae;
+  }
+}
+
+/* ============================================================
+   MOV-BODY — wrapper que agrupa mov-content + actions-col
+   Desktop: columna (contenido arriba, acciones a la derecha via flex-row en card)
+   ============================================================ */
+.mov-body {
+  flex: 1;
+  display: flex;
+  flex-direction: row; /* desktop: content + actions en fila */
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* desktop: actions-col vuelve a la derecha, vertical */
+.actions-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.btn-row-repeat {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.45;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+}
+.btn-row-repeat:hover {
+  opacity: 1;
+}
+
+/* ============================================================
+   RESPONSIVE — md (<=768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .day-cards-stack {
+    gap: 10px;
+    padding: 0 2px;
+  }
+  .movements-list-stack {
+    gap: 10px;
+  }
+
+  .day-sticky-header {
+    padding: 7px 12px;
+    margin: 10px 0;
+  }
+  .header-day-num {
+    font-size: 1.3rem;
+  }
+  .header-month-year {
+    font-size: 0.82rem;
+  }
+  .mini-stat {
+    font-size: 0.75rem;
+  }
+  .day-header-right {
+    gap: 10px;
+  }
+
+  .tech-movement-card {
+    min-height: 60px;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
+  }
+  .selection-col {
+    width: 40px;
+  }
+  .mov-date-col {
+    min-width: 62px;
+    padding-right: 12px;
+  }
+  .date-day {
+    font-size: 1.2rem;
+  }
+  .date-month {
+    font-size: 0.78rem;
+  }
+  .mov-content {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .desc-text {
+    font-size: 0.9rem;
+  }
+  .desc-subtext {
+    font-size: 0.7rem;
+  }
+
+  .items-pills-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .items-pills-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mov-money-col {
+    min-width: 78px;
+  }
+  .amount-main,
+  .amount-placeholder {
+    font-size: 1rem;
+  }
+  .actions-col {
+    min-width: 50px;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .status-btn-badge {
+    font-size: 0.55rem;
+    padding: 4px 6px;
+    min-width: 46px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — sm (<=640px)
+   mov-body pasa a column: mov-content arriba, actions-col abajo en fila
+   ============================================================ */
+@media (max-width: 640px) {
+  .tech-movement-card {
+    min-height: 0;
+  }
+  .selection-col {
+    width: 36px;
+  }
+  .select-square {
+    width: 17px;
+    height: 17px;
+  }
+  .select-square svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* mov-body: apila contenido y acciones verticalmente */
+  .mov-body {
+    flex-direction: column;
+  }
+
+  /* Fila superior: fecha + info + dinero */
+  .mov-content {
+    padding: 8px 10px 6px 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .mov-date-col {
+    min-width: 50px;
+    padding-right: 10px;
+    flex-shrink: 0;
+  }
+  .date-day {
+    font-size: 1.05rem;
+  }
+  .date-month {
+    font-size: 0.7rem;
+  }
+
+  .mov-info-col {
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+  }
+  .info-row-primary {
+    gap: 5px;
+  }
+  .type-badge {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+  }
+  .desc-text {
+    font-size: 0.84rem;
+  }
+  .desc-subtext {
+    font-size: 0.67rem;
+  }
+
+  .items-pills-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .items-pills-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mov-money-col {
+    flex-shrink: 0;
+    min-width: 0;
+    align-items: flex-end;
+  }
+  .amount-main,
+  .amount-placeholder {
+    font-size: 0.9rem;
+    letter-spacing: -0.3px;
+  }
+  .balance-partial {
+    font-size: 0.62rem;
+  }
+  .badge-partial-status {
+    font-size: 0.58rem;
+    padding: 1px 4px;
+  }
+
+  /* Fila inferior: acciones en horizontal */
+  .actions-col {
+    flex-direction: row; /* horizontal */
+    justify-content: flex-end; /* pegado a la derecha */
+    align-items: center;
+    min-width: 0;
+    padding: 5px 10px 8px 10px;
+    gap: 8px;
+    border-top: 1px solid #eee;
+  }
+
+  /* Badge empuja a la izquierda */
+  .status-btn-badge {
+    margin-right: auto;
+    font-size: 0.6rem;
+    padding: 5px 10px;
+    min-width: 56px;
+  }
+
+  .btn-row-repeat {
+    opacity: 0.5;
+  }
+  .btn-row-del {
+    padding: 4px 6px;
+    min-width: 30px;
+    min-height: 30px;
+  }
+
+  /* Sticky header día */
+  .day-sticky-header {
+    padding: 6px 10px;
+    margin: 8px 0;
+  }
+  .header-day-num {
+    font-size: 1.1rem;
+  }
+  .header-month-year {
+    font-size: 0.75rem;
+  }
+  .mini-stat {
+    font-size: 0.7rem;
+  }
+  .day-header-right {
+    gap: 8px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — xs (<=480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .day-sticky-header {
+    padding: 5px 8px;
+    margin: 6px 0;
+  }
+  .header-day-num {
+    font-size: 1rem;
+  }
+  .header-month-year {
+    font-size: 0.68rem;
+  }
+  .mini-stat {
+    font-size: 0.62rem;
+  }
+  .day-header-right {
+    gap: 6px;
+  }
+
+  .selection-col {
+    width: 32px;
+  }
+  .select-square {
+    width: 15px;
+    height: 15px;
+  }
+  .select-square svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .mov-content {
+    padding: 7px 8px 5px 8px;
+    gap: 6px;
+  }
+  .mov-date-col {
+    min-width: 42px;
+    padding-right: 8px;
+  }
+  .date-day {
+    font-size: 0.95rem;
+  }
+  .date-month {
+    font-size: 0.62rem;
+  }
+
+  .type-badge {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+  }
+  .desc-text {
+    font-size: 0.8rem;
+  }
+  .desc-subtext {
+    font-size: 0.62rem;
+  }
+
+  .amount-main,
+  .amount-placeholder {
+    font-size: 0.84rem;
+  }
+
+  .actions-col {
+    padding: 4px 8px 7px 8px;
+    gap: 6px;
+  }
+  .status-btn-badge {
+    font-size: 0.56rem;
+    padding: 4px 8px;
+    min-width: 50px;
+  }
+  .btn-row-del {
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .movements-block-container,
+  .movements-timeline-container {
+    padding-bottom: 100px;
+  }
 }

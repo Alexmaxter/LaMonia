@@ -128,7 +128,7 @@ export function SupplierDetailView({
     "button",
     {
       className: "btn-settle-mini",
-      style: `margin-left: 10px; padding: 4px 8px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; gap: 4px; text-transform: uppercase; font-weight: 700; display: none`,
+      style: "display: none",
       onclick: (e) => {
         e.stopPropagation();
         if (onSettleDebt) onSettleDebt(null, "Cancelación total");
@@ -164,10 +164,8 @@ export function SupplierDetailView({
           el("span", { className: "debt-label" }, "SALDO ACTUAL"),
           toggleVisibilityBtn,
         ]),
-        el("div", { style: "display: flex; align-items: center;" }, [
-          debtValueDisplay,
-          settleTotalBtn,
-        ]),
+        debtValueDisplay,
+        settleTotalBtn,
       ]),
     ]),
     el("div", { className: "tech-controls-row" }, [

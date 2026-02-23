@@ -1,5 +1,11 @@
+/* src/modules/suppliers/views/SuppplierDetailView/style.css */
+/* ============================================================
+   RESPONSIVE REFACTOR — Mismos nombres de clase, mismo estilo brutalista.
+   Breakpoints: xs <480 | sm <640 | md <768 | lg <1024 | xl ≥1280
+   ============================================================ */
+
 /* =========================================
-   VISTA DETALLE PROVEEDOR (Brutalist / Tech Style)
+   VISTA DETALLE PROVEEDOR
    ========================================= */
 .supplier-detail-view {
   display: flex;
@@ -9,7 +15,9 @@
   position: relative;
 }
 
-/* HEADER */
+/* ============================================================
+   HEADER
+   ============================================================ */
 .tech-panel-header-detail {
   padding: 24px 32px 20px 32px;
   background-color: #ffffff;
@@ -17,7 +25,11 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
+
 .tech-header-top {
   display: flex;
   justify-content: space-between;
@@ -25,15 +37,19 @@
   flex-wrap: wrap;
   gap: 16px;
 }
+
 .left-group {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
+  min-width: 0;
+  flex: 1;
 }
 
 .btn-back-arrow {
   width: 40px;
   height: 40px;
+  min-width: 40px; /* Evita que se comprima */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,17 +72,28 @@
 .title-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
 }
+
 .page-title {
-  font-size: 1.75rem;
+  /* Fluido: crece desde 2rem hasta 3.5rem según el viewport */
+  font-size: clamp(2rem, 3.5vw, 3.5rem);
   font-weight: 800;
   margin: 0;
   color: #000;
-  line-height: 1.1;
+  line-height: 1;
   text-transform: uppercase;
-  letter-spacing: -0.5px;
+  letter-spacing: -1.5px;
+  /* Permite 2 líneas en nombres largos antes de truncar */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
 }
+
 .supplier-type-badge {
   display: inline-block;
   font-size: 0.7rem;
@@ -79,17 +106,21 @@
   border: 1px solid #000;
 }
 
+/* — Bloque deuda — */
 .tech-debt-group {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  flex-shrink: 0;
 }
+
 .debt-label-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .debt-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -97,6 +128,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
 .btn-icon-toggle {
   background: none;
   border: none;
@@ -106,25 +138,42 @@
   align-items: center;
   color: #999;
   transition: color 0.2s;
+  min-width: 28px;
+  min-height: 28px;
+  justify-content: center;
 }
 .btn-icon-toggle:hover {
   color: #000;
 }
+
 .header-debt-value {
   font-size: 2rem;
   font-weight: 900;
   color: #000;
   line-height: 1;
   letter-spacing: -1px;
+  white-space: nowrap;
 }
 
 .btn-settle-mini {
   font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  white-space: nowrap;
+  border-radius: 0 !important;
   transition:
     transform 0.1s,
     background-color 0.2s;
-  white-space: nowrap;
-  border-radius: 0 !important;
 }
 .btn-settle-mini:hover {
   background-color: #333 !important;
@@ -133,24 +182,31 @@
   transform: translateY(2px);
 }
 
+/* — Fila de controles — */
 .tech-controls-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: 8px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
+
 .info-mini-container {
   display: flex;
   align-items: center;
+  min-width: 0;
+  overflow: hidden;
 }
+
 .no-alias {
   font-size: 0.85rem;
   color: #999;
   font-style: italic;
   font-family: monospace;
+  white-space: nowrap;
 }
+
 .alias-chip {
   display: flex;
   align-items: center;
@@ -164,6 +220,14 @@
   font-size: 0.9rem;
   color: #000;
   transition: all 0.1s;
+  /* Truncar alias largo */
+  max-width: 240px;
+  overflow: hidden;
+}
+.alias-chip .alias-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .alias-chip:hover {
   background: #e0e0e0;
@@ -172,7 +236,9 @@
 .tech-actions-container {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
+
 .btn-secondary,
 .btn-secondary-icon {
   height: 36px;
@@ -189,15 +255,19 @@
   text-transform: uppercase;
   transition: all 0.1s;
   border-radius: 0;
+  white-space: nowrap;
+  gap: 6px;
 }
 .btn-secondary-icon {
   padding: 0;
   width: 36px;
+  flex-shrink: 0;
 }
 .btn-secondary:hover,
 .btn-secondary-icon:hover {
   background: #f0f0f0;
 }
+
 .btn-primary {
   height: 36px;
   display: flex;
@@ -214,6 +284,7 @@
   text-transform: uppercase;
   transition: all 0.1s;
   border-radius: 0;
+  white-space: nowrap;
 }
 .btn-primary:hover {
   background: #333;
@@ -223,6 +294,9 @@
   transform: translate(2px, 2px);
 }
 
+/* ============================================================
+   ÁREA DE CONTENIDO
+   ============================================================ */
 .detail-content-wrapper {
   flex: 1;
   overflow-y: auto;
@@ -231,19 +305,90 @@
   position: relative;
 }
 
-/* GRID LAYOUT (Stock) */
+/* ============================================================
+   GRID LAYOUT (Stock: panel lateral + lista)
+   ============================================================ */
 .detail-grid-layout {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 24px;
   align-items: start;
   width: 100%;
 }
+
 .grid-list-column {
   min-width: 0;
 }
 
-/* SNACKBAR FLOTANTE */
+/* ============================================================
+   FILTROS
+   ============================================================ */
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-bottom: 3px solid #000;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filters-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  background-color: #fff;
+  border: 2px solid #000;
+  padding: 8px 16px;
+  color: #000;
+  font-family: "Courier New", Courier, monospace, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 4px 4px 0px #000;
+  cursor: pointer;
+  transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  flex-shrink: 0;
+  position: relative;
+  top: 0;
+  left: 0;
+}
+.filter-pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000;
+  background-color: #fdfdfd;
+}
+.filter-pill.active {
+  background-color: #000;
+  color: #fff;
+  border-color: #000;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+.filter-pill.active:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+.filter-pill:nth-child(3).active {
+  background-color: #00aa00;
+  color: #000;
+}
+.filter-pill:nth-child(2).active {
+  background-color: #ff0000;
+  color: #fff;
+}
+.filter-pill:nth-child(4).active {
+  background-color: #1565c0;
+  color: #fff;
+}
+
+/* ============================================================
+   SNACKBAR FLOTANTE
+   ============================================================ */
 .selection-snackbar {
   position: fixed;
   bottom: 24px;
@@ -260,13 +405,14 @@
   justify-content: space-between;
   gap: 32px;
   z-index: 1000;
-  min-width: 360px;
-  max-width: 90vw;
+  min-width: 320px;
+  max-width: calc(100vw - 32px);
   transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
 }
 .selection-snackbar.active {
   transform: translateX(-50%) translateY(0);
 }
+
 .snackbar-info {
   display: flex;
   flex-direction: column;
@@ -299,6 +445,8 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: all 0.1s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .btn-snackbar-pay:hover {
   background-color: #e0e0e0;
@@ -309,145 +457,204 @@
   box-shadow: none;
 }
 
-/* RESPONSIVE */
+/* ============================================================
+   RESPONSIVE — lg (≤1024px): Stack del grid de stock
+   ============================================================ */
 @media (max-width: 1024px) {
   .detail-grid-layout {
     grid-template-columns: 1fr;
     gap: 20px;
   }
+
+  .tech-panel-header-detail {
+    padding: 20px 24px 16px 24px;
+  }
+
+  .detail-content-wrapper {
+    padding: 20px 24px;
+  }
 }
+
+/* ============================================================
+   RESPONSIVE — md (≤768px): Layout vertical completo
+   ============================================================ */
 @media (max-width: 768px) {
   .tech-panel-header-detail {
-    padding: 16px;
-    gap: 16px;
+    padding: 14px 16px 12px 16px;
+    gap: 12px;
+    position: relative; /* Deja de ser sticky en mobile (scroll natural) */
   }
+
   .tech-header-top {
     flex-direction: column;
     align-items: stretch;
-    gap: 20px;
-  }
-  .tech-debt-group {
-    align-items: flex-start;
-    margin-top: -10px;
-  }
-  .page-title {
-    font-size: 1.5rem;
-  }
-  .tech-controls-row {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 12px;
   }
+
+  .left-group {
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+    -webkit-line-clamp: 1; /* En mobile: 1 línea con ellipsis */
+  }
+
+  /* Saldo: columna — label / monto / botón */
+  .tech-debt-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 14px 16px;
+  }
+
+  .debt-label-row {
+    justify-content: flex-start;
+  }
+
+  .debt-label {
+    font-size: 0.7rem;
+  }
+
+  .header-debt-value {
+    font-size: 2.4rem;
+    letter-spacing: -2px;
+    line-height: 1;
+    white-space: normal;
+  }
+
+  .btn-settle-mini {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.82rem !important;
+    padding: 11px 14px !important;
+    height: auto !important;
+    margin-top: 2px;
+  }
+
+  .tech-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
   .tech-actions-container {
     width: 100%;
-    justify-content: space-between;
+    justify-content: stretch;
   }
+
   .btn-primary {
     flex: 1;
+    justify-content: center;
   }
+
+  .btn-secondary {
+    flex-shrink: 0;
+  }
+
   .detail-content-wrapper {
-    padding: 16px;
+    padding: 14px 16px;
   }
+
+  .filters-bar {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .filter-pill {
+    padding: 7px 12px;
+    font-size: 0.75rem;
+    box-shadow: 3px 3px 0px #000;
+  }
+
+  /* Snackbar: ancho completo pegado al fondo */
   .selection-snackbar {
     bottom: 0;
     left: 0;
     transform: translateY(100%);
     width: 100%;
     max-width: 100%;
+    min-width: unset;
     border: none;
-    padding: 20px 24px 24px 24px;
+    border-top: 2px solid #fff;
+    padding: 16px 20px 20px 20px;
     box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.1);
+    gap: 16px;
   }
   .selection-snackbar.active {
     transform: translateY(0);
   }
-}
-/* =========================================
-   ESTILO BRUTALISTA - FILTROS
-   ========================================= */
 
-.filters-bar {
-  display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  background-color: #fff;
-  border-bottom: 3px solid #000; /* Línea divisoria gruesa */
-  overflow-x: auto;
-  white-space: nowrap;
-
-  /* Ocultar scrollbar pero mantener funcionalidad */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  .btn-snackbar-pay {
+    height: 44px;
+    font-size: 1rem;
+  }
 }
 
-.filters-bar::-webkit-scrollbar {
-  display: none;
+/* ============================================================
+   RESPONSIVE — sm (≤640px)
+   ============================================================ */
+@media (max-width: 640px) {
+  .btn-secondary > span:last-child {
+    display: none;
+  }
+  .btn-secondary {
+    padding: 0 12px;
+  }
+
+  .alias-chip {
+    max-width: 180px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
 }
 
-.filter-pill {
-  /* Caja */
-  background-color: #fff;
-  border: 2px solid #000;
-  padding: 8px 16px;
+/* ============================================================
+   RESPONSIVE — xs (≤480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .tech-panel-header-detail {
+    padding: 12px 12px 10px 12px;
+  }
 
-  /* Tipografía */
-  color: #000;
-  font-family:
-    "Courier New", Courier, monospace, sans-serif; /* O la fuente de tu proyecto */
-  font-size: 0.8rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  .page-title {
+    font-size: 1.15rem;
+  }
 
-  /* Sombra Dura (La clave del Brutalismo) */
-  box-shadow: 4px 4px 0px #000;
+  .btn-back-arrow {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
 
-  /* Comportamiento */
-  cursor: pointer;
-  transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Transición rápida y seca */
-  flex-shrink: 0;
-  position: relative;
-  top: 0;
-  left: 0;
-}
+  .supplier-type-badge {
+    font-size: 0.6rem;
+  }
 
-/* Hover: El botón se levanta un poco más */
-.filter-pill:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0px #000;
-  background-color: #fdfdfd;
-}
+  .header-debt-value {
+    font-size: 1.4rem;
+  }
 
-/* Active (Seleccionado): Inversión de color o estilo "hundido" */
-.filter-pill.active {
-  background-color: #000;
-  color: #fff;
-  border-color: #000;
+  .filter-pill {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
 
-  /* Efecto de "botón presionado" */
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2); /* Sombra residual muy pequeña */
-}
+  .detail-content-wrapper {
+    padding: 10px 12px;
+  }
 
-/* Active Hover: Mantener estado */
-.filter-pill.active:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
-}
-
-/* --- Variaciones de Color (Opcional, si quieres que cada filtro tenga su "personalidad" brutalista) --- */
-
-/* Si quieres que "Pagos" se ponga verde neón al activarse, usa esto: */
-
-.filter-pill:nth-child(3).active {
-  background-color: #00aa00;
-  color: #000;
-}
-.filter-pill:nth-child(2).active {
-  background-color: #ff0000;
-  color: #fff;
-}
-.filter-pill:nth-child(4).active {
-  background-color: #1565c0;
-  color: #fff;
+  .snackbar-count {
+    font-size: 0.65rem;
+  }
+  .snackbar-total {
+    font-size: 1.1rem;
+  }
+  .btn-snackbar-pay {
+    padding: 0 16px;
+    font-size: 0.85rem;
+  }
 }

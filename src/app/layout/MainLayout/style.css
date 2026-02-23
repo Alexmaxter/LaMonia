@@ -1,3 +1,7 @@
+/* ============================================================
+   src/app/layout/MainLayout/style.css — RESPONSIVE REFACTOR
+   ============================================================ */
+
 .main-layout {
   display: flex;
   flex-direction: column;
@@ -12,4 +16,191 @@
   overflow-y: auto;
   height: 0;
   position: relative;
+}
+
+/* ---- No requiere media queries: es el wrapper raíz ---- */
+
+/* ============================================================
+   src/app/layout/Sidebar/style.css — RESPONSIVE REFACTOR
+   ============================================================ */
+
+.sidebar {
+  width: var(--sidebar-width, 220px);
+  min-width: var(--sidebar-width, 220px);
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar-header {
+  display: none;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .menu-item:hover {
+    background-color: var(--hover-overlay);
+    color: var(--text-main);
+  }
+}
+
+.menu-item.active {
+  background-color: #eff6ff;
+  color: var(--primary);
+  border-left-color: var(--primary);
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ============================================================
+   MOBILE: sidebar se convierte en barra inferior
+   ============================================================ */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  /* Sidebar va al fondo como bottom nav */
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    min-height: 56px;
+    border-right: none;
+    border-top: 2px solid #000;
+    flex-direction: row;
+    order: 2; /* Va después del contenido */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    display: flex;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .sidebar-menu li {
+    flex: 1;
+    display: flex;
+  }
+
+  .menu-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-left: none;
+    border-top: 3px solid transparent;
+    flex: 1;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-align: center;
+    min-width: 64px;
+  }
+
+  .menu-item.active {
+    background-color: transparent;
+    color: var(--primary);
+    border-left: none;
+    border-top-color: var(--primary);
+    background-color: #eff6ff;
+  }
+
+  .menu-item span {
+    font-size: 0.6rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .menu-item:active {
+    background-color: var(--hover-overlay);
+  }
+
+  .sidebar-header,
+  .sidebar-footer {
+    display: none;
+  }
+
+  /* El contenido principal toma el resto */
+  .main-content {
+    order: 1;
+    flex: 1;
+    height: 0;
+  }
+}
+
+/* ============================================================
+   xs (≤480px): Bottom nav aún más compacta
+   ============================================================ */
+@media (max-width: 480px) {
+  .sidebar {
+    min-height: 52px;
+  }
+
+  .menu-item {
+    min-width: 56px;
+    padding: 6px 8px;
+    gap: 3px;
+  }
+
+  .menu-item span {
+    font-size: 0.55rem;
+  }
 }

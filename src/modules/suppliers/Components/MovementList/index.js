@@ -212,108 +212,101 @@ export function MovementList({
     return el(
       "div",
       {
-        // Añadimos la clase si viene seleccionado desde props
         className: `tech-movement-card ${typeClass} ${isPaid ? "card-paid" : ""} ${isRowSelected ? "row-selected" : ""}`,
         onclick: () => onEdit && onEdit(m),
       },
       [
         el("div", { className: "mov-status-bar" }),
         selectionElement,
-        el("div", { className: "mov-content" }, [
-          !groupByDay
-            ? el("div", { className: "mov-date-col" }, [
-                el("span", { className: "date-day" }, day),
-                el("span", { className: "date-month" }, `${month}.${year}`),
-              ])
-            : null,
-          el("div", { className: "mov-info-col" }, [
-            el("div", { className: "info-row-primary" }, [
-              el(
-                "span",
-                { className: "type-badge" },
-                typeLabels[type] || "MOV",
-              ),
-              showSupplierName && m.supplierName
-                ? el(
-                    "span",
-                    { className: "supplier-name-bold" },
-                    m.supplierName,
-                  )
-                : null,
-              itemsPills
-                ? itemsPills
-                : hasDesc
-                  ? createEditableDesc(m, rawDesc)
-                  : null,
-            ]),
-            (itemsPills && hasDesc) ||
-            (showSupplierName && hasDesc && !itemsPills)
-              ? el("div", { className: "desc-subtext" }, rawDesc)
-              : null,
-          ]),
-          el("div", { className: "mov-money-col" }, [
-            shouldShowMoney
-              ? el(
-                  "span",
-                  {
-                    className: `amount-main ${isDebt ? "val-invoice" : "val-payment"}`,
-                    style: isPaid
-                      ? "text-decoration: line-through; opacity: 0.5;"
-                      : "",
-                  },
-                  SupplierModel.formatAmount(m.amount, isVisible),
-                )
-              : el("span", { className: "amount-placeholder" }, "-"),
-            isDebt && isPartial && remaining > 0
-              ? el(
-                  "span",
-                  { className: "badge-partial-status" },
-                  `RESTA: $${remaining.toLocaleString()}`,
-                )
-              : null,
-            shouldShowMoney && m.partialBalance !== undefined
-              ? el("div", { className: "balance-partial" }, [
-                  el("span", { className: "balance-label" }, "Saldo: "),
-                  el(
-                    "span",
-                    {},
-                    SupplierModel.formatAmount(m.partialBalance, isVisible),
-                  ),
+        // mov-body agrupa las dos filas: contenido arriba, acciones abajo
+        el("div", { className: "mov-body" }, [
+          el("div", { className: "mov-content" }, [
+            !groupByDay
+              ? el("div", { className: "mov-date-col" }, [
+                  el("span", { className: "date-day" }, day),
+                  el("span", { className: "date-month" }, `${month}.${year}`),
                 ])
               : null,
-          ]),
-          el(
-            "div",
-            {
-              className: "actions-col",
-              style:
-                "display:flex; flex-direction:column; align-items:center; gap:8px; margin-left:8px;",
-            },
-            [
-              statusBadgeElement,
-              onRepeat
-                ? el("button", {
-                    className: "btn-row-repeat",
-                    title: "Repetir movimiento",
-                    style:
-                      "background:none;border:none;cursor:pointer;opacity:0.45;padding:2px;display:flex;align-items:center;justify-content:center;",
-                    onclick: (e) => {
-                      e.stopPropagation();
-                      onRepeat(m);
-                    },
-                    innerHTML: iconRepeat,
-                  })
+            el("div", { className: "mov-info-col" }, [
+              el("div", { className: "info-row-primary" }, [
+                el(
+                  "span",
+                  { className: "type-badge" },
+                  typeLabels[type] || "MOV",
+                ),
+                showSupplierName && m.supplierName
+                  ? el(
+                      "span",
+                      { className: "supplier-name-bold" },
+                      m.supplierName,
+                    )
+                  : null,
+                itemsPills
+                  ? itemsPills
+                  : hasDesc
+                    ? createEditableDesc(m, rawDesc)
+                    : null,
+              ]),
+              (itemsPills && hasDesc) ||
+              (showSupplierName && hasDesc && !itemsPills)
+                ? el("div", { className: "desc-subtext" }, rawDesc)
                 : null,
-              el("button", {
-                className: "btn-row-del",
-                onclick: (e) => {
-                  e.stopPropagation();
-                  onDelete && onDelete(m);
-                },
-                innerHTML: iconTrash,
-              }),
-            ],
-          ),
+            ]),
+            el("div", { className: "mov-money-col" }, [
+              shouldShowMoney
+                ? el(
+                    "span",
+                    {
+                      className: `amount-main ${isDebt ? "val-invoice" : "val-payment"}`,
+                      style: isPaid
+                        ? "text-decoration: line-through; opacity: 0.5;"
+                        : "",
+                    },
+                    SupplierModel.formatAmount(m.amount, isVisible),
+                  )
+                : el("span", { className: "amount-placeholder" }, "-"),
+              isDebt && isPartial && remaining > 0
+                ? el(
+                    "span",
+                    { className: "badge-partial-status" },
+                    `RESTA: $${remaining.toLocaleString()}`,
+                  )
+                : null,
+              shouldShowMoney && m.partialBalance !== undefined
+                ? el("div", { className: "balance-partial" }, [
+                    el("span", { className: "balance-label" }, "Saldo: "),
+                    el(
+                      "span",
+                      {},
+                      SupplierModel.formatAmount(m.partialBalance, isVisible),
+                    ),
+                  ])
+                : null,
+            ]),
+          ]),
+          // actions-col: hermano de mov-content dentro de mov-body
+          el("div", { className: "actions-col" }, [
+            statusBadgeElement,
+            onRepeat
+              ? el("button", {
+                  className: "btn-row-repeat",
+                  title: "Repetir movimiento",
+                  onclick: (e) => {
+                    e.stopPropagation();
+                    onRepeat(m);
+                  },
+                  innerHTML: iconRepeat,
+                })
+              : null,
+            el("button", {
+              className: "btn-row-del",
+              onclick: (e) => {
+                e.stopPropagation();
+                onDelete && onDelete(m);
+              },
+              innerHTML: iconTrash,
+            }),
+          ]),
         ]),
       ],
     );
