@@ -19,6 +19,8 @@ export function SupplierDetailView({
   onOpenSettings,
   onSettleDebt,
   onToggleStatus,
+  onRepeatMovement,
+  onEditDescription,
 }) {
   // =========================================================
   // ESTADO LOCAL DE SELECCIÓN (Checkbox)
@@ -330,6 +332,8 @@ export function SupplierDetailView({
       isStockView: supplier.type === "stock",
       onSelectionChange: handleSelection,
       onToggleStatus: onToggleStatus,
+      onRepeat: onRepeatMovement,
+      onEditDescription: onEditDescription,
     });
 
     if (supplier.type === "stock" && movementsWithBalance.length > 0) {
