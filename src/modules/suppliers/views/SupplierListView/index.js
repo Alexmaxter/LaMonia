@@ -22,7 +22,18 @@ export function SupplierListView({
   let recentTransactions = [];
   let currentActivityFilter = "all";
   let isLoadingActivity = false;
-  let searchTermText = "";
+
+  /**
+   * FIX #8: searchTermText ahora es un objeto con una clave por tab,
+   * de modo que cada tab recuerda su propio término de búsqueda.
+   * Así el usuario puede buscar "harina" en Directorio, cambiar a
+   * Actividad, buscar "pago", y al volver a Directorio su término
+   * anterior sigue en el input.
+   */
+  const searchTerms = {
+    directory: "",
+    activity: "",
+  };
 
   // --- ELEMENTOS DOM ---
   let debtValueDisplay = null;
@@ -32,6 +43,13 @@ export function SupplierListView({
   const controlsGroupRight = el("div", { className: "controls-group" });
   let btnTabDirectory = null;
   let btnTabActivity = null;
+
+  /**
+   * FIX #8: El SearchBox necesita poder actualizar su placeholder
+   * y su valor según el tab activo. Guardamos referencia al input
+   * interno para poder manipularlo directamente.
+   */
+  let searchInputEl = null;
 
   // --- ICONOS ---
   const iconPlus = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
@@ -66,11 +84,32 @@ export function SupplierListView({
     }
   };
 
+  // ============================================================
+  // FIX #8: syncSearchInput
+  // Al cambiar de tab, actualizamos el placeholder y el valor del
+  // input para reflejar el estado de búsqueda del tab destino.
+  // El usuario ve exactamente qué está buscando en cada contexto.
+  // ============================================================
+  const SEARCH_PLACEHOLDERS = {
+    directory: "Buscar proveedor...",
+    activity: "Buscar en actividad...",
+  };
+
+  const syncSearchInput = (tab) => {
+    if (!searchInputEl) return;
+    searchInputEl.placeholder = SEARCH_PLACEHOLDERS[tab];
+    searchInputEl.value = searchTerms[tab];
+  };
+
   const switchTab = (tab) => {
     if (activeTab === tab) return;
     activeTab = tab;
     btnTabDirectory.classList.toggle("active", tab === "directory");
     btnTabActivity.classList.toggle("active", tab === "activity");
+
+    // FIX #8: Sincronizar el input con el estado del nuevo tab
+    syncSearchInput(tab);
+
     if (tab === "activity" && recentTransactions.length === 0) {
       fetchActivity();
     } else {
@@ -98,9 +137,43 @@ export function SupplierListView({
     });
   };
 
-  const getFilteredActivity = () => {
-    if (currentActivityFilter === "all") return recentTransactions;
-    return recentTransactions.filter((tx) => tx.type === currentActivityFilter);
+  // ============================================================
+  // FIX #8: getFilteredActivity ahora también aplica la búsqueda
+  // del tab "activity". Busca por nombre de proveedor, descripción
+  // del movimiento y tipo.
+  // ============================================================
+  const getFilteredActivity = (state) => {
+    const term = searchTerms.activity.toLowerCase().trim();
+
+    let list = recentTransactions;
+
+    // Filtro por tipo (invoice / payment / all)
+    if (currentActivityFilter !== "all") {
+      list = list.filter((tx) => tx.type === currentActivityFilter);
+    }
+
+    // FIX #8: Filtro por término de búsqueda
+    if (term) {
+      list = list.filter((tx) => {
+        // Buscar por nombre del proveedor
+        const sup = state.suppliers.find((s) => s.id === tx.supplierId);
+        const supplierName = sup ? sup.name.toLowerCase() : "";
+
+        // Buscar por descripción/concepto del movimiento
+        const desc = (tx.description || tx.concept || "").toLowerCase();
+
+        // Buscar por tipo de movimiento
+        const type = (tx.type || "").toLowerCase();
+
+        return (
+          supplierName.includes(term) ||
+          desc.includes(term) ||
+          type.includes(term)
+        );
+      });
+    }
+
+    return list;
   };
 
   const setActivityFilter = (type) => {
@@ -110,9 +183,14 @@ export function SupplierListView({
 
   const handleToggle = () => supplierStore.toggleAmountsVisibility();
 
+  // ============================================================
+  // FIX #8: handleSearch ahora guarda el término en la clave
+  // correcta según el tab activo, y siempre dispara el render
+  // sin importar en qué tab esté el usuario.
+  // ============================================================
   const handleSearch = (term) => {
-    searchTermText = term.toLowerCase();
-    if (activeTab === "directory") triggerRender();
+    searchTerms[activeTab] = term.toLowerCase().trim();
+    triggerRender();
   };
 
   // --- RENDERS ---
@@ -191,21 +269,24 @@ export function SupplierListView({
     if (activeTab === "directory") {
       const gridContainer = el("div", { className: "suppliers-grid" });
 
+      // FIX #8: usa searchTerms.directory en lugar de searchTermText global
+      const term = searchTerms.directory;
       const currentFilteredList = state.suppliers.filter(
         (s) =>
-          (s.name || "").toLowerCase().includes(searchTermText) ||
-          (s.alias || "").toLowerCase().includes(searchTermText),
+          (s.name || "").toLowerCase().includes(term) ||
+          (s.alias || "").toLowerCase().includes(term),
       );
 
       const sortedList = getSortedData(currentFilteredList);
 
       if (sortedList.length === 0) {
+        // FIX #8: mensaje diferente si hay búsqueda activa o no
+        const emptyMsg = term
+          ? `Sin resultados para "${term}"`
+          : "No se encontraron proveedores";
+
         gridContainer.appendChild(
-          el(
-            "div",
-            { className: "empty-state" },
-            "No se encontraron proveedores",
-          ),
+          el("div", { className: "empty-state" }, emptyMsg),
         );
       } else {
         const fragment = document.createDocumentFragment();
@@ -224,20 +305,25 @@ export function SupplierListView({
       }
       contentWrapper.appendChild(gridContainer);
     } else {
+      // --- TAB ACTIVIDAD ---
       if (isLoadingActivity) {
         contentWrapper.innerHTML = `<div class="empty-state">Buscando movimientos...</div>`;
         return;
       }
 
-      const visibleTransactions = getFilteredActivity();
+      // FIX #8: pasamos state para que getFilteredActivity pueda
+      // resolver los nombres de proveedor al filtrar por búsqueda
+      const visibleTransactions = getFilteredActivity(state);
 
       if (visibleTransactions.length === 0) {
+        // FIX #8: mensaje contextual según si hay búsqueda activa o no
+        const term = searchTerms.activity;
+        const emptyMsg = term
+          ? `Sin resultados para "${term}"`
+          : "No se encontraron movimientos recientes.";
+
         contentWrapper.appendChild(
-          el(
-            "div",
-            { className: "empty-state" },
-            "No se encontraron movimientos recientes.",
-          ),
+          el("div", { className: "empty-state" }, emptyMsg),
         );
         return;
       }
@@ -290,21 +376,35 @@ export function SupplierListView({
 
   // =========================================================
   // CONSTRUCCIÓN DEL HEADER
-  //
-  // NUEVA ESTRUCTURA:
-  //
-  // ┌─────────────────────────────────────────────────────┐
-  // │ FILA 1: [Título + badge] [Search] [Deuda label+monto]│
-  // ├─────────────────────────────────────────────────────┤
-  // │ FILA 2: [Tabs] [Filtros orden] [Btn nuevo + boleta] │
-  // └─────────────────────────────────────────────────────┘
   // =========================================================
 
-  const searchComponent = SearchBox({
-    placeholder: "Buscar proveedor...",
-    onSearch: handleSearch,
-    delay: 300,
+  // FIX #8: Creamos el SearchBox y capturamos la referencia al
+  // input interno para poder cambiar su placeholder y valor
+  // al cambiar de tab, sin re-montar el componente completo.
+  const searchWrapper = el("div", { className: "search-box-wrapper" });
+
+  // Icono SVG del buscador
+  const searchIconDiv = el("div", { className: "search-box-icon" }, [
+    el("div", {
+      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+    }),
+  ]);
+
+  searchInputEl = el("input", {
+    type: "text",
+    className: "search-box-input",
+    placeholder: SEARCH_PLACEHOLDERS.directory, // placeholder inicial
+    value: "",
   });
+
+  let debounceTimer;
+  searchInputEl.addEventListener("input", (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => handleSearch(e.target.value), 300);
+  });
+
+  searchWrapper.appendChild(searchIconDiv);
+  searchWrapper.appendChild(searchInputEl);
 
   btnTabDirectory = el(
     "button",
@@ -326,30 +426,19 @@ export function SupplierListView({
     onclick: handleToggle,
   });
 
-  // Ícono engranaje
   const iconSettings = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
-  // =========================================================
-  // CONSTRUCCIÓN DEL HEADER
-  //
-  // tech-header-top:  [Título+badge] [Search—crece] [Deuda | Nuevo+Boleta+⚙]
-  // toolbar-container: [Tabs] [Filtros orden]
-  // =========================================================
-
-  // Fila principal
   const headerTop = el("div", { className: "tech-header-top" }, [
-    // Título + badge
     el("div", { className: "tech-title-group" }, [
       el("h1", { className: "page-title" }, "PROVEEDORES"),
       badgeCountDisplay,
     ]),
 
-    // Search (centro, crece)
-    el("div", { className: "tech-search-container" }, [searchComponent]),
+    // FIX #8: usamos el searchWrapper que construimos manualmente
+    // (en vez del componente SearchBox) para poder manipular el input
+    el("div", { className: "tech-search-container" }, [searchWrapper]),
 
-    // Derecha: deuda + botones juntos
     el("div", { className: "tech-right-group" }, [
-      // Bloque deuda
       el("div", { className: "tech-debt-group" }, [
         el("div", { className: "debt-label-row" }, [
           el("span", { className: "debt-label" }, "DEUDA TOTAL"),
@@ -358,7 +447,6 @@ export function SupplierListView({
         debtValueDisplay,
       ]),
 
-      // Botones agrupados: Nuevo | Boleta | ⚙
       el("div", { className: "tech-actions-container" }, [
         el("button", { className: "btn-secondary", onclick: onNewSupplier }, [
           el("span", { innerHTML: iconPlus }),
@@ -390,7 +478,6 @@ export function SupplierListView({
     ]),
   ]);
 
-  // Toolbar: tabs + filtros
   const toolbarContainer = el("div", { className: "toolbar-container" }, [
     el("div", { className: "tabs-group" }, [btnTabDirectory, btnTabActivity]),
     controlsGroupRight,
@@ -414,7 +501,10 @@ export function SupplierListView({
   triggerRender();
   if (supplierStore.getState().suppliers.length > 0) fetchActivity();
 
-  viewContainer.destroy = () => unsubscribe();
+  viewContainer.destroy = () => {
+    unsubscribe();
+    clearTimeout(debounceTimer);
+  };
 
   return viewContainer;
 }

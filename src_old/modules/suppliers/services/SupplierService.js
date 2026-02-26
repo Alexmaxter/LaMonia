@@ -27,7 +27,7 @@ class SupplierService {
   async getSuppliers() {
     const q = query(
       collection(db, this.collectionName),
-      orderBy("name", "asc")
+      orderBy("name", "asc"),
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -110,36 +110,87 @@ class SupplierService {
   }
 
   // Borrar (Revertir saldo)
-  async deleteTransaction(txId) {
-    await runTransaction(db, async (t) => {
-      const ref = doc(db, TRANSACTION_COLLECTION, txId);
-      const snap = await t.get(ref);
-      if (!snap.exists()) throw "No existe";
-      const tx = snap.data();
-      const supRef = doc(db, this.collectionName, tx.supplierId);
+  async deleteTransaction(transactionId, supplierId, amount, type) {
+    // PASO 1: Eliminar documento del pago, revertir boletas y corregir supplier.balance de forma atómica
+    await runTransaction(db, async (transaction) => {
+      const supplierRef = doc(db, COLLECTION_NAME, supplierId);
+      const txRef = doc(db, TRANSACTIONS_COLLECTION, transactionId);
 
-      const revMult = tx.type === "invoice" ? -1 : 1;
+      const supplierDoc = await transaction.get(supplierRef);
+      if (!supplierDoc.exists()) throw new Error("Proveedor no encontrado");
 
-      // Revertir dinero
-      if (tx.amount) {
-        t.update(supRef, { balance: increment(tx.amount * revMult) });
+      const txDoc = await transaction.get(txRef);
+      if (!txDoc.exists()) throw new Error("Transacción no encontrada");
+
+      const txData = txDoc.data();
+
+      // --- CORRECCIÓN: Revertir las boletas si este pago saldó alguna ---
+      if (txData.settledInvoices && Array.isArray(txData.settledInvoices)) {
+        for (const settled of txData.settledInvoices) {
+          const invRef = doc(db, TRANSACTIONS_COLLECTION, settled.id);
+          const invDoc = await transaction.get(invRef);
+
+          if (invDoc.exists()) {
+            const invData = invDoc.data();
+            const currentPaid = parseFloat(invData.paidAmount || 0);
+            const invAmount = parseFloat(invData.amount || 0);
+            const appliedAmount = parseFloat(settled.amountApplied || 0);
+
+            // Restamos exactamente lo que este pago le había sumado a esta boleta
+            const newPaid = Math.max(0, currentPaid - appliedAmount);
+
+            // Recalculamos el estado en base al nuevo monto pagado
+            let newStatus = TRANSACTION_STATUS.PENDING;
+            if (newPaid >= invAmount - 0.1) {
+              newStatus = TRANSACTION_STATUS.PAID;
+            } else if (newPaid > 0) {
+              newStatus = TRANSACTION_STATUS.PARTIAL;
+            }
+
+            // Actualizamos la boleta para que vuelva a figurar como adeudada
+            transaction.update(invRef, {
+              paidAmount: newPaid,
+              status: newStatus,
+            });
+          }
+        }
       }
-      // Revertir items
-      if (tx.items) {
-        tx.items.forEach((i) => {
-          const q = parseFloat(i.quantity) * revMult;
-          t.update(supRef, { [`stockDebt.${i.name}`]: increment(q) });
-        });
+      // -------------------------------------------------------------------
+
+      // Corregir el balance global del proveedor
+      const currentBalance = parseFloat(supplierDoc.data().balance || 0);
+      const numAmount = parseFloat(amount || 0);
+      const t = (type || "").toLowerCase();
+
+      let correction = 0;
+      if (TRANSACTION_GROUPS.DEBTS.includes(t)) {
+        // Si borramos una deuda (ej. una factura), el balance global baja
+        correction = -numAmount;
+      } else if (TRANSACTION_GROUPS.PAYMENTS.includes(t)) {
+        // Si borramos un pago, el balance global (la deuda) vuelve a subir
+        correction = numAmount;
       }
-      t.delete(ref);
+
+      const newBalance = Math.round((currentBalance + correction) * 100) / 100;
+
+      // Eliminamos el registro del pago y actualizamos el balance del proveedor
+      transaction.delete(txRef);
+      transaction.update(supplierRef, { balance: newBalance });
     });
+
+    // PASO 2: Recalcular los saldos históricos (savedBalance)
+    // Nota: Asegúrate de que el nombre de esta función coincida con la que importas
+    // en tu archivo (probablemente desde utils/recalcBalance.js)
+    if (typeof recalculateSupplierBalances === "function") {
+      await recalculateSupplierBalances(supplierId);
+    }
   }
 
   async getTransactions(supplierId) {
     const q = query(
       collection(db, TRANSACTION_COLLECTION),
       where("supplierId", "==", supplierId),
-      orderBy("date", "desc")
+      orderBy("date", "desc"),
     );
     const s = await getDocs(q);
     return s.docs.map((d) => ({ id: d.id, ...d.data() }));

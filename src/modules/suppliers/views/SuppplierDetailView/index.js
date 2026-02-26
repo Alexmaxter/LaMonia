@@ -212,7 +212,36 @@ export function SupplierDetailView({
   // LOGICA REACTIVA (Escucha al Store)
   // =========================================================
 
+  // =========================================================
+  // FIX #5: LIMPIAR SELECCIÓN AL CAMBIAR FILTRO
+  //
+  // PROBLEMA ORIGINAL:
+  //   Al cambiar el filtro activo, contentContainer.innerHTML = ""
+  //   limpia el DOM. Las tarjetas reaparecen sin .row-selected porque
+  //   el DOM se reconstruyó. Pero selectedInvoices y selectedTotal
+  //   no se limpiaban, así que el snackbar seguía mostrando facturas
+  //   "seleccionadas" que el usuario no puede ver ni deseleccionar.
+  //   Si presionaba PAGAR intentaba pagar ids fantasmas.
+  //
+  // SOLUCIÓN:
+  //   Trackear el filtro anterior. Cuando cambia, limpiar la selección
+  //   y ocultar el snackbar antes de re-renderizar la lista.
+  // =========================================================
+  let lastActiveFilter = null;
+
+  const clearSelection = () => {
+    selectedInvoices.clear();
+    selectedTotal = 0;
+    snackbar.classList.remove("active");
+  };
+
   const updateUI = (state) => {
+    // FIX #5: limpiar selección si el filtro cambió
+    if (lastActiveFilter !== null && lastActiveFilter !== state.activeFilter) {
+      clearSelection();
+    }
+    lastActiveFilter = state.activeFilter;
+
     // 1. Ocultar/Mostrar Saldos Globales
     toggleVisibilityBtn.innerHTML = state.amountsVisible ? iconEye : iconEyeOff;
     const currentBalance = parseFloat(

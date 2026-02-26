@@ -38,62 +38,164 @@ export function MovementList({
     credit: "NOTA",
   };
 
+  // =========================================================
+  // FIX #7: DOBLE EDICIÓN INLINE
+  //
+  // PROBLEMAS ORIGINALES:
+  //   A) Race condition: doble click en descripción A abre input,
+  //      doble click en B abre otro. El onblur de A dispara
+  //      onEditDescription(A) pisando la edición de B.
+  //
+  //   B) Tab/click fuera guarda pero el DOM se reconstruye vía
+  //      loadDetailData antes de que el usuario vea el nuevo valor,
+  //      causando un "parpadeo" de la descripción.
+  //
+  // SOLUCIÓN:
+  //   - `activeEdit` es un objeto compartido en el closure de
+  //     MovementList que trackea qué input está abierto y cómo
+  //     cancelarlo. Si el usuario abre otro, el primero se cancela
+  //     (sin guardar) antes de abrir el nuevo.
+  //   - onblur verifica si el foco va a otro input de descripción
+  //     (via relatedTarget.dataset.editId) — si es así, cancela
+  //     en lugar de guardar.
+  //   - Actualización optimista: el span muestra el nuevo valor
+  //     inmediatamente, sin esperar a que Firebase responda y
+  //     reconstruya la lista.
+  // =========================================================
+  const activeEdit = { id: null, cancel: null };
+
   const createEditableDesc = (m, rawDesc) => {
-    const span = el(
-      "span",
-      {
-        className: `desc-text${onEditDescription ? " editable-desc" : ""}`,
-        title: onEditDescription ? "Doble click para editar" : "",
-      },
-      rawDesc,
-    );
+    // currentDesc trackea el valor más reciente guardado,
+    // así el modal siempre recibe el valor correcto aunque
+    // no se haya recargado la lista desde Firebase.
+    let currentDesc = rawDesc;
 
-    if (!onEditDescription) return span;
+    const makeSpan = (text) => {
+      const span = el(
+        "span",
+        {
+          className: `desc-text${onEditDescription ? " editable-desc" : ""}`,
+          title: onEditDescription ? "Doble click para editar" : "",
+        },
+        text,
+      );
 
-    span.ondblclick = (e) => {
-      e.stopPropagation();
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = rawDesc;
-      input.className = "desc-inline-input";
-      input.style.cssText =
-        "font-family:monospace;font-size:inherit;background:transparent;border:none;border-bottom:1px solid #888;outline:none;color:inherit;width:160px;padding:0;";
-      span.replaceWith(input);
-      input.focus();
-      input.select();
+      if (!onEditDescription) return span;
 
-      let saved = false;
-      const save = () => {
-        if (saved) return;
-        saved = true;
-        const newVal = input.value.trim();
-        const restored = el(
-          "span",
-          { className: "desc-text editable-desc" },
-          newVal || rawDesc,
-        );
-        input.replaceWith(restored);
-        if (newVal !== rawDesc) onEditDescription(m.id, newVal);
-      };
-      const cancel = () => {
-        if (saved) return;
-        saved = true;
-        input.replaceWith(span);
-      };
-      input.onblur = save;
-      input.onkeydown = (ev) => {
-        if (ev.key === "Enter") {
-          ev.preventDefault();
+      // Detener propagación en click simple para que el doble click
+      // no dispare dos veces el onclick de la card (que abre el modal)
+      span.onclick = (e) => e.stopPropagation();
+
+      span.ondblclick = (e) => {
+        e.stopPropagation();
+
+        // Si hay otro input activo, cancelarlo primero
+        if (activeEdit.id !== null && activeEdit.id !== m.id) {
+          activeEdit.cancel?.();
+        }
+        if (activeEdit.id === m.id) return;
+
+        activeEdit.id = m.id;
+
+        // --- WRAPPER: input + botones brutalistas ---
+        const wrapper = document.createElement("div");
+        wrapper.className = "desc-edit-wrapper";
+        wrapper.dataset.editId = m.id;
+        wrapper.style.cssText =
+          "display:inline-flex;align-items:center;gap:4px;";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = currentDesc;
+        input.className = "desc-inline-input";
+        input.dataset.editId = m.id;
+
+        const btnSave = document.createElement("button");
+        btnSave.className = "desc-btn-save";
+        btnSave.textContent = "✓";
+        btnSave.title = "Guardar (Enter)";
+        btnSave.type = "button";
+
+        const btnCancel = document.createElement("button");
+        btnCancel.className = "desc-btn-cancel";
+        btnCancel.textContent = "✕";
+        btnCancel.title = "Cancelar (Esc)";
+        btnCancel.type = "button";
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(btnSave);
+        wrapper.appendChild(btnCancel);
+        span.replaceWith(wrapper);
+        input.focus();
+        input.select();
+
+        let done = false;
+
+        const cancel = () => {
+          if (done) return;
+          done = true;
+          activeEdit.id = null;
+          activeEdit.cancel = null;
+          wrapper.replaceWith(makeSpan(currentDesc));
+        };
+
+        const save = () => {
+          if (done) return;
+          done = true;
+          activeEdit.id = null;
+          activeEdit.cancel = null;
+
+          const newVal = input.value.trim();
+          const finalVal = newVal || currentDesc;
+
+          // Actualización optimista con el valor nuevo
+          wrapper.replaceWith(makeSpan(finalVal));
+
+          if (newVal && newVal !== currentDesc) {
+            currentDesc = newVal; // actualizar para futuras ediciones
+            onEditDescription(m.id, newVal);
+          }
+        };
+
+        activeEdit.cancel = cancel;
+
+        btnSave.onclick = (ev) => {
+          ev.stopPropagation();
           save();
-        }
-        if (ev.key === "Escape") {
-          ev.preventDefault();
+        };
+        btnCancel.onclick = (ev) => {
+          ev.stopPropagation();
           cancel();
-        }
+        };
+
+        input.onblur = (ev) => {
+          // Si el foco va a los botones del mismo wrapper, no hacer nada
+          const rt = ev.relatedTarget;
+          if (rt && wrapper.contains(rt)) return;
+          // Si el foco va a otro input de descripción, cancelar
+          if (rt?.dataset?.editId) {
+            cancel();
+            return;
+          }
+          save();
+        };
+
+        input.onkeydown = (ev) => {
+          if (ev.key === "Enter") {
+            ev.preventDefault();
+            save();
+          }
+          if (ev.key === "Escape") {
+            ev.preventDefault();
+            cancel();
+          }
+        };
       };
+
+      return span;
     };
 
-    return span;
+    return makeSpan(currentDesc);
   };
 
   const renderCard = (m) => {

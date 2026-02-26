@@ -25,28 +25,46 @@ const COLLECTION_NAME = "suppliers";
 const TRANSACTIONS_COLLECTION = "supplier_transactions";
 
 // ============================================================
-// HELPER INTERNO: Recalcula savedBalance en TODO el historial
-// de un proveedor usando un writeBatch.
+// FIX #4: MUTEX DE RECÁLCULO POR PROVEEDOR
 //
-// CUÁNDO SE LLAMA:
-//   - Después de editar una transacción (updateTransactionWithBalanceEffect)
-//   - Después de eliminar una transacción (deleteTransaction)
+// PROBLEMA ORIGINAL:
+//   updateTransactionWithBalanceEffect y deleteTransaction ambos
+//   llaman recalcularSavedBalances(supplierId). Si el usuario hace
+//   doble click en "Guardar" o "Eliminar", dos Promises corren en
+//   paralelo sobre el mismo proveedor:
+//     - Ambas traen el historial completo de Firebase
+//     - Ambas calculan saldos sobre el mismo snapshot
+//     - Ambas commitean un batch → el resultado final depende de
+//       cuál llega último, y puede ser incorrecto.
 //
-// LÓGICA:
-//   1. Trae TODAS las transacciones del proveedor ordenadas por fecha ASC.
-//   2. Calcula el saldo acumulado cronológicamente.
-//   3. Guarda el saldo correcto en el campo `savedBalance` de cada doc.
+// SOLUCIÓN — recalcQueue (Map de supplierId → estado):
+//   Cada entrada tiene:
+//     - running: Promise del recálculo actualmente en ejecución
+//     - pending: boolean que indica si hay UNA solicitud esperando
 //
-// Por qué NO se usa en createTransaction:
-//   runTransaction ya guarda el savedBalance correcto en el momento
-//   de creación. Solo se desincroniza cuando se edita o elimina algo
-//   posterior en el tiempo.
+//   Comportamiento:
+//     1. Si no hay nada corriendo → ejecutar inmediatamente.
+//     2. Si ya hay algo corriendo → marcar pending = true y esperar.
+//     3. Cuando el recálculo activo termina, si pending es true,
+//        lanzar exactamente UN recálculo más (con el estado fresco
+//        de Firebase) y limpiar el flag.
+//     4. Si pending es false al terminar → limpiar la entrada del Map.
+//
+//   Esto garantiza:
+//     - Nunca corren dos recálculos simultáneos para el mismo proveedor.
+//     - Nunca se pierde una solicitud: siempre se corre al menos
+//       una vez más después del último cambio.
+//     - No se acumulan N ejecuciones por N clicks: sólo 1 "pendiente"
+//       a la vez, sin importar cuántas operaciones lleguen en paralelo.
 // ============================================================
-async function recalcularSavedBalances(supplierId, batchRef = null) {
+const recalcQueue = new Map();
+// Estructura de cada entrada:
+// recalcQueue.get(supplierId) = { running: Promise | null, pending: boolean }
+
+async function recalcularSavedBalancesCore(supplierId) {
   const debtTypes = TRANSACTION_GROUPS.DEBTS;
   const paymentTypes = TRANSACTION_GROUPS.PAYMENTS;
 
-  // 1. Traer TODAS las transacciones ordenadas cronológicamente (ASC)
   const q = query(
     collection(db, TRANSACTIONS_COLLECTION),
     where("supplierId", "==", supplierId),
@@ -56,8 +74,7 @@ async function recalcularSavedBalances(supplierId, batchRef = null) {
 
   if (snap.empty) return;
 
-  // 2. Calcular saldo acumulado y escribir
-  const batch = batchRef || writeBatch(db);
+  const batch = writeBatch(db);
   let runningBalance = 0;
 
   snap.docs.forEach((txDoc) => {
@@ -72,13 +89,49 @@ async function recalcularSavedBalances(supplierId, batchRef = null) {
     }
 
     runningBalance = Math.round(runningBalance * 100) / 100;
-
     batch.update(txDoc.ref, { savedBalance: runningBalance });
   });
 
-  // Solo commitear si no nos pasaron un batch externo
-  if (!batchRef) {
-    await batch.commit();
+  await batch.commit();
+}
+
+async function recalcularSavedBalances(supplierId) {
+  const existing = recalcQueue.get(supplierId);
+
+  if (existing && existing.running) {
+    // Ya hay un recálculo en curso: marcar pending y esperar
+    existing.pending = true;
+    await existing.running;
+    // Cuando termine el que estaba corriendo, el loop interno
+    // se encargó de lanzar el siguiente. Solo retornar.
+    return;
+  }
+
+  // No hay nada corriendo: iniciar el ciclo
+  const entry = { running: null, pending: false };
+  recalcQueue.set(supplierId, entry);
+
+  while (true) {
+    // Lanzar el recálculo y guardar la Promise en el Map
+    // para que los llamadores concurrentes puedan "adjuntarse"
+    entry.running = recalcularSavedBalancesCore(supplierId);
+
+    try {
+      await entry.running;
+    } finally {
+      entry.running = null;
+    }
+
+    if (entry.pending) {
+      // Hubo al menos una solicitud mientras corríamos.
+      // Lanzar exactamente UN recálculo más con datos frescos.
+      entry.pending = false;
+      // Continuar el while (siguiente iteración = nuevo recálculo)
+    } else {
+      // No hay nada pendiente → limpiar y salir
+      recalcQueue.delete(supplierId);
+      break;
+    }
   }
 }
 
@@ -121,8 +174,6 @@ export const SupplierService = {
   // ESCRITURA BÁSICA (LEDGER)
   // ============================================================
 
-  // createTransaction: sin cambios. El savedBalance se guarda
-  // correctamente en el momento de creación dentro del runTransaction.
   async createTransaction(transactionData) {
     return runTransaction(db, async (transaction) => {
       const supplierRef = doc(db, COLLECTION_NAME, transactionData.supplierId);
@@ -167,15 +218,6 @@ export const SupplierService = {
     });
   },
 
-  // ============================================================
-  // FIX PRINCIPAL: updateTransactionWithBalanceEffect
-  //
-  // ANTES: Solo actualizaba el supplier.balance y el doc editado.
-  //        Todos los savedBalance posteriores quedaban desincronizados.
-  //
-  // AHORA: Después del runTransaction atómico, dispara
-  //        recalcularSavedBalances() para corregir todo el historial.
-  // ============================================================
   async updateTransactionWithBalanceEffect(
     transactionId,
     updates,
@@ -204,8 +246,7 @@ export const SupplierService = {
       }
     });
 
-    // PASO 2: Recalcular savedBalance en TODO el historial del proveedor
-    // Esto corrige la desincronización en cascada que producía el bug.
+    // PASO 2: Recalcular savedBalance con protección de concurrencia
     await recalcularSavedBalances(supplierId);
   },
 
@@ -213,24 +254,61 @@ export const SupplierService = {
     await updateDoc(doc(db, TRANSACTIONS_COLLECTION, id), data);
   },
 
-  // ============================================================
-  // FIX PRINCIPAL: deleteTransaction
-  //
-  // ANTES: Eliminaba el doc y corregía supplier.balance,
-  //        pero dejaba todos los savedBalance posteriores incorrectos.
-  //
-  // AHORA: Después del runTransaction atómico, dispara
-  //        recalcularSavedBalances() para corregir todo el historial.
-  // ============================================================
   async deleteTransaction(transactionId, supplierId, amount, type) {
-    // PASO 1: Eliminar doc y corregir supplier.balance atómicamente
     await runTransaction(db, async (transaction) => {
+      // ==========================================
+      // FASE 1: TODAS LAS LECTURAS (READS)
+      // ==========================================
       const supplierRef = doc(db, COLLECTION_NAME, supplierId);
       const txRef = doc(db, TRANSACTIONS_COLLECTION, transactionId);
 
       const supplierDoc = await transaction.get(supplierRef);
       if (!supplierDoc.exists()) throw new Error("Proveedor no encontrado");
 
+      const txDoc = await transaction.get(txRef);
+      if (!txDoc.exists()) throw new Error("Transacción no encontrada");
+
+      const txData = txDoc.data();
+
+      // Recolectamos la información de las boletas sin modificar nada aún
+      const invoicesToUpdate = [];
+      if (txData.settledInvoices && Array.isArray(txData.settledInvoices)) {
+        for (const settled of txData.settledInvoices) {
+          const invRef = doc(db, TRANSACTIONS_COLLECTION, settled.id);
+          const invDoc = await transaction.get(invRef);
+
+          if (invDoc.exists()) {
+            invoicesToUpdate.push({
+              ref: invRef,
+              data: invDoc.data(),
+              appliedAmount: parseFloat(settled.amountApplied || 0),
+            });
+          }
+        }
+      }
+
+      // ==========================================
+      // FASE 2: TODAS LAS ESCRITURAS (WRITES)
+      // ==========================================
+
+      // 1. Actualizamos los estados de las boletas que leímos
+      for (const inv of invoicesToUpdate) {
+        const currentPaid = parseFloat(inv.data.paidAmount || 0);
+        const invAmount = parseFloat(inv.data.amount || 0);
+
+        const newPaid = Math.max(0, currentPaid - inv.appliedAmount);
+        let newStatus = TRANSACTION_STATUS.PENDING;
+
+        if (newPaid >= invAmount - 0.1) {
+          newStatus = TRANSACTION_STATUS.PAID;
+        } else if (newPaid > 0) {
+          newStatus = TRANSACTION_STATUS.PARTIAL;
+        }
+
+        transaction.update(inv.ref, { paidAmount: newPaid, status: newStatus });
+      }
+
+      // 2. Calculamos el nuevo balance del proveedor
       const currentBalance = parseFloat(supplierDoc.data().balance || 0);
       const numAmount = parseFloat(amount || 0);
       const t = (type || "").toLowerCase();
@@ -244,11 +322,12 @@ export const SupplierService = {
 
       const newBalance = Math.round((currentBalance + correction) * 100) / 100;
 
+      // 3. Borramos el pago y actualizamos el proveedor
       transaction.delete(txRef);
       transaction.update(supplierRef, { balance: newBalance });
     });
 
-    // PASO 2: Recalcular savedBalance en TODO el historial del proveedor
+    // Recalcular los saldos históricos con protección de concurrencia
     await recalcularSavedBalances(supplierId);
   },
 
@@ -277,19 +356,9 @@ export const SupplierService = {
       }
 
       const newBalance = Math.round((currentBalance - amount) * 100) / 100;
-      const newPaymentPayload = {
-        ...paymentData,
-        amount: amount,
-        supplierId: supplierId,
-        paidAmount: 0,
-        status: TRANSACTION_STATUS.PAID,
-        createdAt: serverTimestamp(),
-        savedBalance: newBalance,
-      };
-
-      transaction.set(newTxRef, newPaymentPayload);
-
       let moneyToDistribute = amount;
+      const settledInvoicesList = [];
+
       for (const inv of invoiceDocs) {
         if (moneyToDistribute <= 0) break;
 
@@ -311,9 +380,26 @@ export const SupplierService = {
           status: newStatus,
         });
 
+        settledInvoicesList.push({
+          id: inv.ref.id,
+          amountApplied: paymentForThis,
+        });
+
         moneyToDistribute -= paymentForThis;
       }
 
+      const newPaymentPayload = {
+        ...paymentData,
+        amount: amount,
+        supplierId: supplierId,
+        paidAmount: 0,
+        status: TRANSACTION_STATUS.PAID,
+        createdAt: serverTimestamp(),
+        savedBalance: newBalance,
+        settledInvoices: settledInvoicesList,
+      };
+
+      transaction.set(newTxRef, newPaymentPayload);
       transaction.update(supplierRef, {
         balance: newBalance,
         lastTransactionDate: serverTimestamp(),
@@ -399,9 +485,6 @@ export const SupplierService = {
 
   // ============================================================
   // UTILIDAD DE REPARACIÓN MASIVA (Consola)
-  //
-  // Exponer globalmente para correr una vez y sanear los datos
-  // históricos corruptos que ya existen en Firebase.
   //
   // Uso: await window.repararSavedBalances()
   // ============================================================
